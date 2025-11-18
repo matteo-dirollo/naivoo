@@ -3,7 +3,7 @@ import {Text, TextInput, TouchableOpacity, View} from 'react-native'
 import {useSignUp} from '@clerk/clerk-expo'
 import {Link, useRouter} from 'expo-router'
 
-export default function SignUpScreen() {
+export function SignUpScreen() {
     const {isLoaded, signUp, setActive} = useSignUp()
     const router = useRouter()
 
@@ -79,6 +79,8 @@ export default function SignUpScreen() {
         )
     }
 
+    // @ts-ignore
+    // @ts-ignore
     return (
         <View>
             <>
@@ -98,6 +100,7 @@ export default function SignUpScreen() {
                 <TouchableOpacity onPress={onSignUpPress}>
                     <Text>Continue</Text>
                 </TouchableOpacity>
+                {/*// @ts-ignore*/}
                 <View className={{display: 'flex', flexDirection: 'row', gap: 3}}>
                     <Text>Already have an account?</Text>
                     <Link href="/sign-in">
