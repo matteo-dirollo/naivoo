@@ -3,7 +3,7 @@ import {Text, TextInput, TouchableOpacity, View} from 'react-native'
 import {useSignUp} from '@clerk/clerk-expo'
 import {Link, useRouter} from 'expo-router'
 
-export function SignUpScreen() {
+export default function SignUp() {
     const {isLoaded, signUp, setActive} = useSignUp()
     const router = useRouter()
 
