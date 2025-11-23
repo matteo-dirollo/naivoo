@@ -20,6 +20,7 @@ import {
 import { Button, ButtonText } from "@/components/ui/button";
 import { Box } from "@/components/ui/box";
 import { ClerkAPIError } from "@clerk/types";
+import {Image} from "@/components/ui/image";
 
 export default function Page() {
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -27,7 +28,6 @@ export default function Page() {
 
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
-  // TODO: check how to integrate and add error handling
   const [isEmailInvalid, setIsEmailInvalid] = React.useState(false);
   const [isPasswordInvalid, setIsPasswordInvalid] = React.useState(false);
   const [errors, setErrors] = React.useState<ClerkAPIError[]>();
@@ -68,7 +68,7 @@ export default function Page() {
       // and redirect the user
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
-        router.replace("/");
+        router.replace("/(root)/tabs/home");
       } else {
         // If the status isn't complete, check why. User might need to
         // complete further steps.
@@ -90,9 +90,21 @@ export default function Page() {
 
   return (
     <SafeAreaView>
-      <Box className="p-4 border border-outline-200 rounded-lg w-full">
-        <VStack className="gap-4">
-          <Heading className="text-typography-900">Sign In</Heading>
+        <Box className="w-full h-64 bg-image-500 mb-8">
+            <Image
+                size={'2xl'}
+                source={{
+                    uri: 'https://images.unsplash.com/photo-1617721042495-04e739b9739d?q=80&w=986&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+                }}
+                alt={'image'}
+                className="w-full h-64 mb-6"
+            />
+        </Box>
+
+      <Box className="px-8 rounded-lg w-full">
+
+        <VStack className="gap-4 mb-6">
+          <Heading className="text-center text-typography-900">Sign In</Heading>
           <VStack space="xs">
             <FormControl
               isInvalid={isEmailInvalid}
@@ -106,7 +118,6 @@ export default function Page() {
                   Email
                 </FormControlLabelText>
               </FormControlLabel>
-
               <Input>
                 <InputField
                   type="text"
@@ -171,21 +182,24 @@ export default function Page() {
           </VStack>
           <VStack>
             {errors && (
-              <ul>
+              <Box>
                 {errors.map((el, index) => (
-                  <li key={index}>{el.longMessage}</li>
+                  <Text key={index}>{el.longMessage}</Text>
                 ))}
-              </ul>
+              </Box>
             )}
           </VStack>
-          <Button className="ml-auto" onPress={onSignInPress}>
-            <ButtonText>Sign In</ButtonText>
-          </Button>
+            <VStack>
+                <Button className="ml-auto w-full" onPress={onSignInPress}>
+                    <ButtonText>Sign In</ButtonText>
+                </Button>
+            </VStack>
         </VStack>
-        <VStack style={{ display: "flex", flexDirection: "row", gap: 3 }}>
-          <Link href="/sign-up">
-            <Text>Sign up</Text>
-          </Link>
+        <VStack className='mt-4' style={{ display: "flex", flexDirection: "row", gap: 3 }}>
+            <Text className="text-center text-typography-500">Don't have an account?</Text>
+            <Link href="/sign-up">
+                <Text className="text-center text-typography-900 font-bold">Sign Up</Text>
+            </Link>
         </VStack>
       </Box>
     </SafeAreaView>
