@@ -1,7 +1,7 @@
 import { isClerkAPIResponseError, useSignIn } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
 import { Text } from "react-native";
-import React from "react";
+import { useCallback, useState } from "react";
 import { VStack } from "@/components/ui/vstack";
 import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { AlertCircleIcon, EyeIcon, EyeOffIcon } from "@/components/ui/icon";
@@ -20,32 +20,30 @@ import {
 import { Button, ButtonText } from "@/components/ui/button";
 import { Box } from "@/components/ui/box";
 import { ClerkAPIError } from "@clerk/types";
-import {Image} from "@/components/ui/image";
+import { Image } from "@/components/ui/image";
 
 export default function Page() {
   const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
 
-  const [emailAddress, setEmailAddress] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [isEmailInvalid, setIsEmailInvalid] = React.useState(false);
-  const [isPasswordInvalid, setIsPasswordInvalid] = React.useState(false);
-  const [errors, setErrors] = React.useState<ClerkAPIError[]>();
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [isEmailInvalid, setIsEmailInvalid] = useState(false);
+  const [isPasswordInvalid, setIsPasswordInvalid] = useState(false);
+  const [errors, setErrors] = useState<ClerkAPIError[]>();
+  const emailRegex =
+    /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g;
 
   // Handle the submission of the sign-in form
-  const onSignInPress = async (e: React.FormEvent) => {
-    const emailRegex =
-      /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g;
-    const isEmailValid = emailRegex.test(emailAddress);
-    const isPasswordValid = password.length >= 6;
-    e.preventDefault();
-
-    // Clear any errors that may have occurred during previous form submission
+  const onSignInPress = useCallback(async () => {
     setErrors(undefined);
-
+    const isEmailValid = emailRegex.test(form.email);
+    const isPasswordValid = form.password.length >= 6;
     if (!isEmailValid) {
       setIsEmailInvalid(true);
-
       return;
     }
     if (!isPasswordValid) {
@@ -56,19 +54,19 @@ export default function Page() {
       setIsPasswordInvalid(false);
     }
     if (!isLoaded) return;
-
     // Start the sign-in process using the email and password provided
     try {
       const signInAttempt = await signIn.create({
-        identifier: emailAddress,
-        password,
+        identifier: form.email,
+        password: form.password,
       });
 
       // If sign-in process is complete, set the created session as active
       // and redirect the user
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
-        router.replace("/(root)/tabs/home");
+        // @ts-ignore
+        router.replace("/(root)/(tabs)/home");
       } else {
         // If the status isn't complete, check why. User might need to
         // complete further steps.
@@ -80,8 +78,9 @@ export default function Page() {
       if (isClerkAPIResponseError(err)) setErrors(err.errors);
       console.error(JSON.stringify(err, null, 2));
     }
-  };
-  const [showPassword, setShowPassword] = React.useState(false);
+  }, [isLoaded, form]);
+
+  const [showPassword, setShowPassword] = useState(false);
   const handleState = () => {
     setShowPassword((showState) => {
       return !showState;
@@ -90,19 +89,18 @@ export default function Page() {
 
   return (
     <SafeAreaView>
-        <Box className="w-full h-64 bg-image-500 mb-8">
-            <Image
-                size={'2xl'}
-                source={{
-                    uri: 'https://images.unsplash.com/photo-1617721042495-04e739b9739d?q=80&w=986&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
-                }}
-                alt={'image'}
-                className="w-full h-64 mb-6"
-            />
-        </Box>
+      <Box className="w-full h-64 bg-image-500 mb-8">
+        <Image
+          size={"2xl"}
+          source={{
+            uri: "https://images.unsplash.com/photo-1617721042495-04e739b9739d?q=80&w=986&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+          }}
+          alt={"image"}
+          className="w-full h-64 mb-6"
+        />
+      </Box>
 
       <Box className="px-8 rounded-lg w-full">
-
         <VStack className="gap-4 mb-6">
           <Heading className="text-center text-typography-900">Sign In</Heading>
           <VStack space="xs">
@@ -121,13 +119,10 @@ export default function Page() {
               <Input>
                 <InputField
                   type="text"
-                  value={emailAddress}
-                  onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
+                  value={form.email}
+                  onChangeText={(value) => setForm({ ...form, email: value })}
                 />
               </Input>
-              <FormControlHelper>
-                <FormControlHelperText>{""}</FormControlHelperText>
-              </FormControlHelper>
               <FormControlError>
                 <FormControlErrorIcon
                   as={AlertCircleIcon}
@@ -157,8 +152,10 @@ export default function Page() {
               <Input textAlign="center">
                 <InputField
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChangeText={(password) => setPassword(password)}
+                  value={form.password}
+                  onChangeText={(value) =>
+                    setForm({ ...form, password: value })
+                  }
                 />
                 <InputSlot className="pr-3" onPress={handleState}>
                   <InputIcon as={showPassword ? EyeIcon : EyeOffIcon} />
@@ -189,17 +186,24 @@ export default function Page() {
               </Box>
             )}
           </VStack>
-            <VStack>
-                <Button className="ml-auto w-full" onPress={onSignInPress}>
-                    <ButtonText>Sign In</ButtonText>
-                </Button>
-            </VStack>
+          <VStack>
+            <Button className="ml-auto w-full" onPress={onSignInPress}>
+              <ButtonText>Sign In</ButtonText>
+            </Button>
+          </VStack>
         </VStack>
-        <VStack className='mt-4' style={{ display: "flex", flexDirection: "row", gap: 3 }}>
-            <Text className="text-center text-typography-500">Don't have an account?</Text>
-            <Link href="/sign-up">
-                <Text className="text-center text-typography-900 font-bold">Sign Up</Text>
-            </Link>
+        <VStack
+          className="mt-4"
+          style={{ display: "flex", flexDirection: "row", gap: 3 }}
+        >
+          <Text className="text-center text-typography-500">
+            Don&#39;t have an account?
+          </Text>
+          <Link href="/sign-up">
+            <Text className="text-center text-typography-900 font-bold">
+              Sign Up
+            </Text>
+          </Link>
         </VStack>
       </Box>
     </SafeAreaView>
