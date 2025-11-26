@@ -4,10 +4,8 @@ declare interface Driver {
   id: number;
   first_name: string;
   last_name: string;
+  email: string;
   profile_image_url: string;
-  car_image_url: string;
-  car_seats: number;
-  rating: number;
 }
 
 declare interface MarkerData {
@@ -16,21 +14,16 @@ declare interface MarkerData {
   id: number;
   title: string;
   profile_image_url: string;
-  car_image_url: string;
-  car_seats: number;
-  rating: number;
   first_name: string;
   last_name: string;
   time?: number;
-  price?: string;
 }
 
 declare interface MapProps {
   destinationLatitude?: number;
   destinationLongitude?: number;
   onDriverTimesCalculated?: (driversWithTimes: MarkerData[]) => void;
-  selectedDriver?: number | null;
-  onMapReady?: () => void;
+  // onMapReady?: () => void;
 }
 
 declare interface Ride {

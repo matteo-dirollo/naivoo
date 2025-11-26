@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-
-import { SignedIn, useUser } from "@clerk/clerk-expo";
+import React, { useEffect, useState } from "react";
+import * as Location from "expo-location";
+import { SignedIn, useAuth, useUser } from "@clerk/clerk-expo";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "@/components/ui/text";
 import {
@@ -12,6 +12,8 @@ import {
 import TripCard from "@/components/TripCard";
 import { Image } from "@/components/ui/image";
 import { icons, images } from "@/constants";
+import { router } from "expo-router";
+import GoogleTextInput from "@/components/GoogleTextInput";
 
 const trips = [
   {
@@ -127,9 +129,53 @@ const trips = [
 
 export default function Home() {
   const { user } = useUser();
+  const { signOut } = useAuth();
   const [loading, setLoading] = useState(false);
+  // const { setUserLocation, setDestinationLocation } = useLocationStore();
   const handleSignOut = () => {
-    // Sign out logic here
+    signOut();
+    router.replace("/(auth)/sign-in");
+  };
+
+  const [hasPermission, setHasPermission] = useState<boolean>(false);
+
+  const {
+    // data: recentRides,
+    loading,
+    error,
+  } = useFetch<Ride[]>(`/(api)/ride/${user?.id}`);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setHasPermission(false);
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+
+      const address = await Location.reverseGeocodeAsync({
+        latitude: location.coords?.latitude!,
+        longitude: location.coords?.longitude!,
+      });
+
+      setUserLocation({
+        latitude: location.coords?.latitude,
+        longitude: location.coords?.longitude,
+        address: `${address[0].name}, ${address[0].region}`,
+      });
+    })();
+  }, []);
+
+  const handleDestinationPress = (location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  }) => {
+    setDestinationLocation(location);
+
+    // router.push("/(root)/find-ride");
   };
 
   return (
@@ -176,6 +222,7 @@ export default function Home() {
                 />
               </TouchableOpacity>
             </View>
+            <GoogleTextInput handlePress={handleDestinationPress} />
           </>
         )}
       />
