@@ -1,65 +1,184 @@
-import React from 'react';
-import Gradient from '@/assets/icons/Gradient';
-import Logo from '@/assets/icons/Logo';
-import {Box} from '@/components/ui/box';
-import {ScrollView} from 'react-native';
-import {Text} from '@/components/ui/text';
+import React, { useState } from "react";
 
-import {Button, ButtonText} from '@/components/ui/button';
-import {useRouter} from 'expo-router';
-import {Icon} from '@/components/ui/icon';
+import { SignedIn, useUser } from "@clerk/clerk-expo";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Text } from "@/components/ui/text";
+import {
+  ActivityIndicator,
+  FlatList,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import TripCard from "@/components/TripCard";
+import { Image } from "@/components/ui/image";
+import { icons, images } from "@/constants";
 
-const FeatureCard = ({iconSvg: IconSvg, name, desc}: any) => {
-    return (
-        <Box
-            className="flex-column md:flex-1 m-2 p-4 rounded-lg bg-background-0/40"
-            key={name}
-        >
-            <Box className="items-center flex flex-row">
-                <Icon as={IconSvg}/>
-                <Text className="font-medium ml-2 text-xl">{name}</Text>
-            </Box>
-            <Text className="mt-2">{desc}</Text>
-        </Box>
-    );
-};
+const trips = [
+  {
+    trip_id: "1",
+    user_id: "1",
+    name: "Daily Errands",
+    start_address: "Via Roma 10, Milano, Italy",
+    start_latitude: "45.464211",
+    start_longitude: "9.191383",
+
+    stops: [
+      {
+        stop_id: "s1",
+        address: "Via Torino 5, Milano, Italy",
+        latitude: "45.459123",
+        longitude: "9.183991",
+      },
+      {
+        stop_id: "s2",
+        address: "Corso Buenos Aires 33, Milano, Italy",
+        latitude: "45.478012",
+        longitude: "9.205123",
+      },
+      {
+        stop_id: "s3",
+        address: "Viale Monza 120, Milano, Italy",
+        latitude: "45.509123",
+        longitude: "9.221733",
+      },
+    ],
+
+    return_to_start: true,
+
+    // Returned from Google Directions "optimize:true"
+    optimized_order: ["s1", "s3", "s2"],
+
+    total_distance_km: 14.3,
+    total_duration_min: 42,
+
+    created_at: "2024-08-12 10:19:20.620007",
+  },
+  {
+    trip_id: "2",
+    user_id: "1",
+    name: "Delivery Route",
+    start_address: "Piazza Garibaldi, Napoli, Italy",
+    start_latitude: "40.852181",
+    start_longitude: "14.268110",
+
+    stops: [
+      {
+        stop_id: "s1",
+        address: "Via Toledo 220, Napoli, Italy",
+        latitude: "40.846578",
+        longitude: "14.249221",
+      },
+      {
+        stop_id: "s2",
+        address: "Via dei Tribunali 138, Napoli, Italy",
+        latitude: "40.852992",
+        longitude: "14.261882",
+      },
+    ],
+
+    return_to_start: false,
+
+    optimized_order: ["s2", "s1"],
+
+    total_distance_km: 6.8,
+    total_duration_min: 21,
+
+    created_at: "2024-08-12 11:02:17.683046",
+  },
+  {
+    trip_id: "3",
+    user_id: "1",
+    name: "Tourist Path in Paris",
+    start_address: "Eiffel Tower, Paris",
+    start_latitude: "48.858373",
+    start_longitude: "2.292292",
+
+    stops: [
+      {
+        stop_id: "s1",
+        address: "Arc de Triomphe, Paris",
+        latitude: "48.873792",
+        longitude: "2.295028",
+      },
+      {
+        stop_id: "s2",
+        address: "Louvre Museum, Paris",
+        latitude: "48.860611",
+        longitude: "2.337644",
+      },
+      {
+        stop_id: "s3",
+        address: "Notre-Dame Cathedral, Paris",
+        latitude: "48.8530",
+        longitude: "2.3499",
+      },
+    ],
+
+    return_to_start: true,
+
+    optimized_order: ["s1", "s2", "s3"],
+
+    total_distance_km: 10.1,
+    total_duration_min: 34,
+
+    created_at: "2024-08-12 14:49:01.809053",
+  },
+];
 
 export default function Home() {
-    const router = useRouter();
-    return (
-        <Box className="flex-1 bg-background-300 h-[100vh]">
-            <Box className="absolute h-[500px] w-[500px] lg:w-[700px] lg:h-[700px]">
-                <Gradient/>
-            </Box>
-            {/* <ScrollView
-        style={{ height: '100%' }}
-        contentContainerStyle={{ flexGrow: 1 }}
-      > */}
-            <Box className="flex flex-1 items-center mx-5 lg:my-24 lg:mx-32 py-safe">
-                <Box className="gap-10 base:flex-col sm:flex-row justify-between sm:w-[80%] md:flex-1">
-                    <Box
-                        className="bg-background-template py-2 px-6 rounded-full items-center flex-column md:flex-row md:self-start">
-                        <Text className="text-white font-medium">
-                            Get started by editing
-                        </Text>
-                        <Text className="text-white font-medium ml-2">./App.tsx or ./app/index.tsx (or whatever entry
-                            point you have)</Text>
-                    </Box>
-                    <Button
-                        size="md"
-                        className="bg-primary-500 px-6 py-2 rounded-full"
-                        onPress={() => {
-                            router.push('/(root)/tab1');
-                        }}
-                    >
-                        <ButtonText>Explore Tab Navigation</ButtonText>
-                    </Button>
-                </Box>
-                <Box className="flex-1 justify-center items-center h-[20px] w-[300px] lg:h-[160px] lg:w-[400px]">
-                    <Logo/>
-                </Box>
-            </Box>
-            {/* </ScrollView> */}
-        </Box>
-    );
+  const { user } = useUser();
+  const [loading, setLoading] = useState(false);
+  const handleSignOut = () => {
+    // Sign out logic here
+  };
+
+  return (
+    <SafeAreaView className="bg-general-500">
+      <FlatList
+        data={trips?.slice(0, 5)}
+        renderItem={({ item }) => <TripCard trip={item} />}
+        className="px-5"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 100 }}
+        ListEmptyComponent={() => (
+          <View className="flex flex-col items-center justify-center">
+            {!loading ? (
+              <>
+                <Image
+                  source={images.noResult}
+                  className="w-40 h-40"
+                  alt="no recent trips found"
+                  resizeMode={"contain"}
+                />
+                <Text className="text-sm">No recent trips found</Text>
+              </>
+            ) : (
+              <ActivityIndicator size={"small"} color={"#000"} />
+            )}
+          </View>
+        )}
+        ListHeaderComponent={() => (
+          <>
+            <View className="flex flex-row items-center justify-center my-5">
+              <Text className={"text-2xl text-weight-bold capitalize"}>
+                Welcome{", "}
+                {user?.firstName ||
+                  user?.emailAddresses[0].emailAddress.split("@")[0]}
+              </Text>
+              <TouchableOpacity
+                onPress={handleSignOut}
+                className={"justify-center items-center w-10 h-10 rounded-full"}
+              >
+                <Image
+                  alt={"icon out"}
+                  source={icons.out}
+                  className={"w-4 h-4"}
+                />
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      />
+    </SafeAreaView>
+  );
 }

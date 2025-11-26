@@ -53,6 +53,35 @@ declare interface Ride {
   };
 }
 
+declare interface Trip {
+  trip_id: string;
+  user_id: string;
+  name: string;
+
+  start_address: string;
+  start_latitude: number;
+  start_longitude: number;
+
+  stops: TripStop[];
+
+  return_to_start: boolean;
+
+  // Returned by Google Directions API ("optimize:true")
+  optimized_order: string[]; // array of stop_id in optimized order
+
+  total_distance_km: number;
+  total_duration_min: number;
+
+  created_at: string;
+}
+
+declare interface TripStop {
+  stop_id: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
 declare interface ButtonProps extends TouchableOpacityProps {
   title: string;
   bgVariant?: "primary" | "secondary" | "danger" | "outline" | "success";

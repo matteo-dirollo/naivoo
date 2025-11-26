@@ -1,10 +1,9 @@
-import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Tabs } from 'expo-router';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import React from "react";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Tabs } from "expo-router";
 
 function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
+  name: React.ComponentProps<typeof FontAwesome>["name"];
   color: string;
 }) {
   return <FontAwesome size={18} style={{ marginBottom: -3 }} {...props} />;
@@ -13,23 +12,49 @@ function TabBarIcon(props: {
 export default function TabLayout() {
   return (
     <Tabs
+      initialRouteName="home"
       screenOptions={{
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
+        // tabBarActiveTintColor: "white",
+        // tabBarInactiveTintColor: "white",
+        headerShown: false,
+        // tabBarShowLabel: false,
+        // tabBarStyle: {
+        //   backgroundColor: "#333",
+        //   borderRadius: 50,
+        //   paddingBottom: 0, // ios only
+        //   overflow: "hidden",
+        //   marginHorizontal: 20,
+        //   marginBottom: 20,
+        //   height: 78,
+        //   display: "flex",
+        //   justifyContent: "space-between",
+        //   alignItems: "center",
+        //   flexDirection: "row",
+        //   position: "absolute",
+        // },
       }}
     >
       <Tabs.Screen
+        name="home"
+        options={{
+          title: "Home",
+          headerShown: false,
+          tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="tab1"
         options={{
-          title: 'Tab 1',
+          title: "Tab 1",
+          headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,
         }}
       />
       <Tabs.Screen
         name="tab2"
         options={{
-          title: 'Tab 2',
+          title: "Tab 2",
+          headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,
         }}
       />
