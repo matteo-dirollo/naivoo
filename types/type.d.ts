@@ -1,161 +1,154 @@
-import { TextInputProps, TouchableOpacityProps } from "react-native";
+import {TextInputProps, TouchableOpacityProps} from "react-native";
 
-declare interface Driver {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  profile_image_url: string;
-}
-
-declare interface MarkerData {
-  latitude: number;
-  longitude: number;
-  id: number;
-  title: string;
-  profile_image_url: string;
-  first_name: string;
-  last_name: string;
-  time?: number;
-}
-
-declare interface MapProps {
-  destinationLatitude?: number;
-  destinationLongitude?: number;
-  onDriverTimesCalculated?: (driversWithTimes: MarkerData[]) => void;
-  // onMapReady?: () => void;
-}
-
-declare interface Ride {
-  origin_address: string;
-  destination_address: string;
-  origin_latitude: number;
-  origin_longitude: number;
-  destination_latitude: number;
-  destination_longitude: number;
-  ride_time: number;
-  fare_price: number;
-  payment_status: string;
-  driver_id: number;
-  user_id: string;
-  created_at: string;
-  driver: {
+declare interface User {
+    id: number;
     first_name: string;
     last_name: string;
-    car_seats: number;
-  };
+    email: string;
+    profile_image_url: string;
+    total_trips?: number;
+}
+
+
+declare interface MapProps {
+    destinationLatitude?: number;
+    destinationLongitude?: number;
+    onUserTimesCalculated?: (usersWithTimes: TripMarker[]) => void;
+    onMapReady?: () => void;
 }
 
 declare interface Trip {
-  trip_id: string;
-  user_id: string;
-  name: string;
+    trip_id: string;
+    user_id: string;
+    user_name: string;
 
-  start_address: string;
-  start_latitude: number;
-  start_longitude: number;
+    start_address: string;
+    start_latitude: number;
+    start_longitude: number;
 
-  stops: TripStop[];
+    stops: TripMarker[];
 
-  return_to_start: boolean;
+    return_to_start: boolean;
 
-  // Returned by Google Directions API ("optimize:true")
-  optimized_order: string[]; // array of stop_id in optimized order
+    // Returned by Google Directions API ("optimize:true")
+    optimized_order: string[]; // array of stop_id in optimized order
 
-  total_distance_km: number;
-  total_duration_min: number;
+    total_distance_km: number;
+    total_duration_min: number;
 
-  created_at: string;
+    created_at: string;
+    active_trip: boolean;
 }
 
-declare interface TripStop {
-  stop_id: string;
-  address: string;
-  latitude: number;
-  longitude: number;
+declare interface TripMarker {
+    stop_id: string;
+    trip_id: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+    expected_duration: number;     // Google Directions duration (seconds)
+    expected_distance: number;
 }
 
 declare interface ButtonProps extends TouchableOpacityProps {
-  title: string;
-  bgVariant?: "primary" | "secondary" | "danger" | "outline" | "success";
-  textVariant?: "primary" | "default" | "secondary" | "danger" | "success";
-  IconLeft?: React.ComponentType<any>;
-  IconRight?: React.ComponentType<any>;
-  className?: string;
+    title: string;
+    bgVariant?: "primary" | "secondary" | "danger" | "outline" | "success";
+    textVariant?: "primary" | "default" | "secondary" | "danger" | "success";
+    IconLeft?: React.ComponentType<any>;
+    IconRight?: React.ComponentType<any>;
+    className?: string;
 }
 
 declare interface GoogleInputProps {
-  icon?: string;
-  initialLocation?: string;
-  containerStyle?: string;
-  textInputBackgroundColor?: string;
-  handlePress: ({
-    latitude,
-    longitude,
-    address,
-  }: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => void;
+    icon?: string;
+    initialLocation?: string;
+    containerStyle?: string;
+    textInputBackgroundColor?: string;
+    handlePress: ({
+                      latitude,
+                      longitude,
+                      address,
+                  }: {
+        latitude: number;
+        longitude: number;
+        address: string;
+    }) => void;
 }
 
 declare interface InputFieldProps extends TextInputProps {
-  label: string;
-  icon?: any;
-  secureTextEntry?: boolean;
-  labelStyle?: string;
-  containerStyle?: string;
-  inputStyle?: string;
-  iconStyle?: string;
-  className?: string;
+    label: string;
+    icon?: any;
+    secureTextEntry?: boolean;
+    labelStyle?: string;
+    containerStyle?: string;
+    inputStyle?: string;
+    iconStyle?: string;
+    className?: string;
 }
 
 declare interface PaymentProps {
-  fullName: string;
-  email: string;
-  amount: string;
-  driverId: number;
-  rideTime: number;
+    userId: number;
+    fullName: string;
+    email: string;
+    amount: string;
 }
+
+// ----------------------- ZUSTAND: LOCATION STORE -----------------------
 
 declare interface LocationStore {
-  userLatitude: number | null;
-  userLongitude: number | null;
-  userAddress: string | null;
-  destinationLatitude: number | null;
-  destinationLongitude: number | null;
-  destinationAddress: string | null;
-  setUserLocation: ({
-    latitude,
-    longitude,
-    address,
-  }: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => void;
-  setDestinationLocation: ({
-    latitude,
-    longitude,
-    address,
-  }: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => void;
+    userLatitude: number | null;
+    userLongitude: number | null;
+    userAddress: string | null;
+    destinationLatitude: number | null;
+    destinationLongitude: number | null;
+    destinationAddress: string | null;
+    setUserLocation: ({
+                          latitude,
+                          longitude,
+                          address,
+                      }: {
+        latitude: number;
+        longitude: number;
+        address: string;
+    }) => void;
+    setDestinationLocation: ({
+                                 latitude,
+                                 longitude,
+                                 address,
+                             }: {
+        latitude: number;
+        longitude: number;
+        address: string;
+    }) => void;
 }
 
-declare interface DriverStore {
-  drivers: MarkerData[];
-  selectedDriver: number | null;
-  setSelectedDriver: (driverId: number) => void;
-  setDrivers: (drivers: MarkerData[]) => void;
-  clearSelectedDriver: () => void;
-}
+// ----------------------- ZUSTAND: TRIP STORE -----------------------
 
-declare interface DriverCardProps {
-  item: MarkerData;
-  selected: number;
-  setSelected: () => void;
+export interface TripStore {
+    activeTrip: Trip | null;       // trip being created or used now
+    userTrips: Trip[];             // past trips belonging to current user
+
+    // admin-wide list (optional but useful)
+    // ACTIONS: FETCHING & SYNC
+    setActiveTrip: (trip: Trip | null) => void;
+    setUserTrips: (trips: Trip[]) => void;
+
+    // CRUD OPERATIONS
+    createTrip: (trip: Trip) => void;
+    updateTrip: (trip_id: string, updated: Partial<Trip>) => void;
+    deleteTrip: (Trip_id: string) => void;
+
+    // STOP MANAGEMENT
+    addStop: (stop: TripMarker) => void;
+    removeStop: (stop_id: string) => void;
+    updateStop: (stop_id: string, updated: Partial<TripMarker>) => void;
+
+    // ORDER OPTIMIZATION (before/after calling Google Directions)
+    setOptimizedOrder: (optimizedIds: string[]) => void;
+    reorderStopsAccordingToOptimization: () => void; // reorder stops[] to match optimized_order[]
+
+    // CLEANING
+    clearActiveTrip: () => void;
+    clearUserTrips: () => void;
+    clearAllTrips: () => void;
 }

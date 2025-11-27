@@ -15,7 +15,6 @@ const TripCard = ({
     created_at,
     total_duration_min,
     total_distance_km,
-    name,
   },
 }: {
   trip: Trip;

@@ -12,8 +12,10 @@ import {
 import TripCard from "@/components/TripCard";
 import { Image } from "@/components/ui/image";
 import { icons, images } from "@/constants";
-import { router } from "expo-router";
+import {router } from "expo-router";
 import GoogleTextInput from "@/components/GoogleTextInput";
+import {useFetch} from "@/lib/fetch";
+import {Trip} from "@/types/type";
 
 const trips = [
   {
@@ -140,10 +142,10 @@ export default function Home() {
   const [hasPermission, setHasPermission] = useState<boolean>(false);
 
   const {
-    // data: recentRides,
+    // data: recentTrips,
     loading,
     error,
-  } = useFetch<Ride[]>(`/(api)/ride/${user?.id}`);
+  } = useFetch<Trip[]>(`/(api)/trip/${user?.id}`);
 
   useEffect(() => {
     (async () => {
@@ -193,7 +195,7 @@ export default function Home() {
                 <Image
                   source={images.noResult}
                   className="w-40 h-40"
-                  alt="no recent trips found"
+                  alt="no recent routes found"
                   resizeMode={"contain"}
                 />
                 <Text className="text-sm">No recent trips found</Text>

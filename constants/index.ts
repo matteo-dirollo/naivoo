@@ -90,7 +90,7 @@ export const onboarding = [
         id: 3,
         title: "Navigate with confidence",
         description:
-            "Get the optimal route and start your journey without wasting time.",
+            "Get the optimal trip and start your journey without wasting time.",
         image: images.onboarding3,
     },
 ];
