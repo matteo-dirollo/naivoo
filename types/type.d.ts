@@ -105,13 +105,6 @@ declare interface InputFieldProps extends TextInputProps {
   className?: string;
 }
 
-declare interface PaymentProps {
-  userId: number;
-  fullName: string;
-  email: string;
-  amount: string;
-}
-
 // ----------------------- ZUSTAND: LOCATION STORE -----------------------
 
 declare interface LocationStore {
@@ -144,29 +137,33 @@ declare interface LocationStore {
 // ----------------------- ZUSTAND: TRIP STORE -----------------------
 
 export interface TripStore {
-  activeTrip: Trip | null; // trip being created or used now
-  userTrips: Trip[]; // past trips belonging to current user
+  activeTrip: Trip | null;
+  userTrips: Trip[];
 
-  // admin-wide list (optional but useful)
-  // ACTIONS: FETCHING & SYNC
+  // SERVER SYNC
+  fetchUserTrips: (userId: number) => Promise<void>;
+  fetchActiveTrip: (userId: number) => Promise<void>;
+  saveActiveTrip: () => Promise<void>; // inserts or updates DB
+
+  // LOCAL STATE
   setActiveTrip: (trip: Trip | null) => void;
   setUserTrips: (trips: Trip[]) => void;
 
-  // CRUD OPERATIONS
-  createTrip: (trip: Trip) => void;
-  updateTrip: (trip_id: string, updated: Partial<Trip>) => void;
-  deleteTrip: (Trip_id: string) => void;
+  // CRUD
+  createTrip: (trip: Trip) => Promise<void>; // inserts into DB
+  updateTrip: (trip_id: string, updated: Partial<Trip>) => Promise<void>;
+  deleteTrip: (trip_id: string) => Promise<void>;
 
   // STOP MANAGEMENT
-  addStop: (stop: TripMarker) => void;
-  removeStop: (stop_id: string) => void;
-  updateStop: (stop_id: string, updated: Partial<TripMarker>) => void;
+  addStop: (stop: TripMarker) => Promise<void>;
+  removeStop: (stop_id: string) => Promise<void>;
+  updateStop: (stop_id: string, updated: Partial<TripMarker>) => Promise<void>;
 
-  // ORDER OPTIMIZATION (before/after calling Google Directions)
+  // OPTIMIZATION
   setOptimizedOrder: (optimizedIds: string[]) => void;
-  reorderStopsAccordingToOptimization: () => void; // reorder stops[] to match optimized_order[]
+  reorderStopsAccordingToOptimization: () => void;
 
-  // CLEANING
+  // CLEAR
   clearActiveTrip: () => void;
   clearUserTrips: () => void;
   clearAllTrips: () => void;
