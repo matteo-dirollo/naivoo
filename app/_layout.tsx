@@ -9,9 +9,7 @@ import {
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import { useColorScheme } from "@/components/useColorScheme";
 import { Slot, usePathname } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { Fab, FabIcon } from "@/components/ui/fab";
 import { MoonIcon, SunIcon } from "@/components/ui/icon";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";

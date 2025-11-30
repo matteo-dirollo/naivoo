@@ -12,10 +12,11 @@ import {
 import TripCard from "@/components/TripCard";
 import { Image } from "@/components/ui/image";
 import { icons, images } from "@/constants";
-import {router } from "expo-router";
+import { router } from "expo-router";
 import GoogleTextInput from "@/components/GoogleTextInput";
-import {useFetch} from "@/lib/fetch";
-import {Trip} from "@/types/type";
+import { useFetch } from "@/lib/fetch";
+import { Trip } from "@/types/type";
+import Map from "@/components/Map";
 
 const trips = [
   {
@@ -29,18 +30,21 @@ const trips = [
     stops: [
       {
         stop_id: "s1",
+        trip_id: "1",
         address: "Via Torino 5, Milano, Italy",
         latitude: "45.459123",
         longitude: "9.183991",
       },
       {
         stop_id: "s2",
+        trip_id: "1",
         address: "Corso Buenos Aires 33, Milano, Italy",
         latitude: "45.478012",
         longitude: "9.205123",
       },
       {
         stop_id: "s3",
+        trip_id: "1",
         address: "Viale Monza 120, Milano, Italy",
         latitude: "45.509123",
         longitude: "9.221733",
@@ -68,12 +72,14 @@ const trips = [
     stops: [
       {
         stop_id: "s1",
+        trip_id: "2",
         address: "Via Toledo 220, Napoli, Italy",
         latitude: "40.846578",
         longitude: "14.249221",
       },
       {
         stop_id: "s2",
+        trip_id: "2",
         address: "Via dei Tribunali 138, Napoli, Italy",
         latitude: "40.852992",
         longitude: "14.261882",
@@ -100,18 +106,21 @@ const trips = [
     stops: [
       {
         stop_id: "s1",
+        trip_id: "3",
         address: "Arc de Triomphe, Paris",
         latitude: "48.873792",
         longitude: "2.295028",
       },
       {
         stop_id: "s2",
+        trip_id: "3",
         address: "Louvre Museum, Paris",
         latitude: "48.860611",
         longitude: "2.337644",
       },
       {
         stop_id: "s3",
+        trip_id: "3",
         address: "Notre-Dame Cathedral, Paris",
         latitude: "48.8530",
         longitude: "2.3499",
@@ -143,7 +152,7 @@ export default function Home() {
 
   const {
     // data: recentTrips,
-    loading,
+    // loading,
     error,
   } = useFetch<Trip[]>(`/(api)/trip/${user?.id}`);
 
@@ -162,11 +171,11 @@ export default function Home() {
         longitude: location.coords?.longitude!,
       });
 
-      setUserLocation({
-        latitude: location.coords?.latitude,
-        longitude: location.coords?.longitude,
-        address: `${address[0].name}, ${address[0].region}`,
-      });
+      // setUserLocation({
+      //   latitude: location.coords?.latitude,
+      //   longitude: location.coords?.longitude,
+      //   address: `${address[0].name}, ${address[0].region}`,
+      // });
     })();
   }, []);
 
@@ -175,8 +184,7 @@ export default function Home() {
     longitude: number;
     address: string;
   }) => {
-    setDestinationLocation(location);
-
+    // setDestinationLocation(location);
     // router.push("/(root)/find-ride");
   };
 
@@ -224,7 +232,19 @@ export default function Home() {
                 />
               </TouchableOpacity>
             </View>
-            <GoogleTextInput handlePress={handleDestinationPress} />
+            <GoogleTextInput
+              icon={icons.search}
+              containerStyle={"bg-white shadow-md shadow-neutral-300"}
+              handlePress={handleDestinationPress}
+            />
+            <Text className={"text-xl font-bold mt-5 mb-3"}>
+              Your Current Location
+            </Text>
+            <View
+              className={"flex flex-row items-center bg-transparent h-[300px]"}
+            >
+              <Map />
+            </View>
           </>
         )}
       />
