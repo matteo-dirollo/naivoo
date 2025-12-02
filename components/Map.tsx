@@ -1,13 +1,14 @@
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Platform, View } from "react-native";
+import { useLocationStore } from "@/store";
+import { calculateRegion } from "@/lib/map";
 
 const Map = () => {
-  const region = {
-    latitude: 45.464211,
-    longitude: 9.191383,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  };
+  const { currentUserLatitude, currentUserLongitude } = useLocationStore();
+  const region = calculateRegion({
+    latitude: currentUserLatitude!,
+    longitude: currentUserLongitude!,
+  });
 
   return (
     <View className="w-full h-full rounded-2xl">
@@ -21,8 +22,8 @@ const Map = () => {
       >
         <Marker
           coordinate={{
-            latitude: region.latitude,
-            longitude: region.longitude,
+            latitude: currentUserLatitude,
+            longitude: currentUserLongitude,
           }}
         />
       </MapView>

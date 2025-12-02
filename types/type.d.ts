@@ -29,13 +29,6 @@ declare interface User {
   subscription_renewal_reminder_sent: boolean;
 }
 
-declare interface MapProps {
-  destinationLatitude?: number;
-  destinationLongitude?: number;
-  onUserTimesCalculated?: (usersWithTimes: TripMarker[]) => void;
-  onMapReady?: () => void;
-}
-
 declare interface Trip {
   trip_id: string;
   user_id: string;
@@ -67,6 +60,8 @@ declare interface TripMarker {
   longitude: number;
   expected_duration: number; // Google Directions duration (seconds)
   expected_distance: number;
+  // TODO: add fields below in the db
+  isUserLocation?: boolean;
 }
 
 declare interface ButtonProps extends TouchableOpacityProps {

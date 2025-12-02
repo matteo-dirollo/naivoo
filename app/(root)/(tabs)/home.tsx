@@ -17,6 +17,7 @@ import GoogleTextInput from "@/components/GoogleTextInput";
 import { useFetch } from "@/lib/fetch";
 import { Trip } from "@/types/type";
 import Map from "@/components/Map";
+import { useLocationStore } from "@/store";
 
 const trips = [
   {
@@ -142,7 +143,7 @@ export default function Home() {
   const { user } = useUser();
   const { signOut } = useAuth();
   const [loading, setLoading] = useState(false);
-  // const { setUserLocation, setDestinationLocation } = useLocationStore();
+  const { setCurrentUserLocation } = useLocationStore();
   const handleSignOut = () => {
     signOut();
     router.replace("/(auth)/sign-in");
@@ -171,11 +172,11 @@ export default function Home() {
         longitude: location.coords?.longitude!,
       });
 
-      // setUserLocation({
-      //   latitude: location.coords?.latitude,
-      //   longitude: location.coords?.longitude,
-      //   address: `${address[0].name}, ${address[0].region}`,
-      // });
+      setCurrentUserLocation({
+        latitude: location.coords?.latitude,
+        longitude: location.coords?.longitude,
+        address: `${address[0].name}, ${address[0].region}`,
+      });
     })();
   }, []);
 
