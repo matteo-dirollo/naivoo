@@ -4,26 +4,15 @@ import { create } from "zustand";
 import { LocationStore, TripStore, Trip, TripMarker } from "@/types/type";
 
 export const useLocationStore = create<LocationStore>((set) => ({
-  userLatitude: null,
-  userLongitude: null,
-  userAddress: null,
+  currentUserLatitude: null,
+  currentUserLongitude: null,
+  currentUserAddress: null,
 
-  destinationLatitude: null,
-  destinationLongitude: null,
-  destinationAddress: null,
-
-  setUserLocation: ({ latitude, longitude, address }) =>
+  setCurrentUserLocation: ({ latitude, longitude, address }) =>
     set(() => ({
-      userLatitude: latitude,
-      userLongitude: longitude,
-      userAddress: address,
-    })),
-
-  setDestinationLocation: ({ latitude, longitude, address }) =>
-    set(() => ({
-      destinationLatitude: latitude,
-      destinationLongitude: longitude,
-      destinationAddress: address,
+      currentUserLatitude: latitude,
+      currentUserLongitude: longitude,
+      currentUserAddress: address,
     })),
 }));
 
