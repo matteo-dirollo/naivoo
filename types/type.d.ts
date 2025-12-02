@@ -108,22 +108,10 @@ declare interface InputFieldProps extends TextInputProps {
 // ----------------------- ZUSTAND: LOCATION STORE -----------------------
 
 declare interface LocationStore {
-  userLatitude: number | null;
-  userLongitude: number | null;
-  userAddress: string | null;
-  destinationLatitude: number | null;
-  destinationLongitude: number | null;
-  destinationAddress: string | null;
-  setUserLocation: ({
-    latitude,
-    longitude,
-    address,
-  }: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => void;
-  setDestinationLocation: ({
+  currentUserLatitude: number | null;
+  currentUserLongitude: number | null;
+  currentUserAddress: string | null;
+  setCurrentUserLocation: ({
     latitude,
     longitude,
     address,
