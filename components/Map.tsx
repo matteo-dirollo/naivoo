@@ -1,19 +1,24 @@
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Platform, View } from "react-native";
-import { useLocationStore } from "@/store";
+import { useLocationStore, useTripStore } from "@/store";
 import { calculateRegion } from "@/lib/map";
-import {useEffect, useRef, useState} from "react";
+import { useEffect, useRef, useState } from "react";
 
 const Map = () => {
-    const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<MapView>(null);
   const { currentUserLatitude, currentUserLongitude } = useLocationStore();
-    const region = calculateRegion({ markers, userLatitude: currentUserLatitude, userLongitude: currentUserLongitude });
+  const { activeTrip } = useTripStore();
+  const region = calculateRegion({
+    markers: activeTrip?.stops || [],
+    userLatitude: currentUserLatitude,
+    userLongitude: currentUserLongitude,
+  });
 
-    useEffect(() => {
-        if (mapRef.current && region) {
-            mapRef.current.animateToRegion(region, 800); // Animate to the calculated region
-        }
-    }, [region]); // Re-run effect when region changes
+  useEffect(() => {
+    if (mapRef.current && region) {
+      mapRef.current.animateToRegion(region, 800); // Animate to the calculated region
+    }
+  }, [region]); // Re-run effect when region changes
 
   return (
     <View className="w-full h-full rounded-2xl">
@@ -25,12 +30,14 @@ const Map = () => {
         showsPointsOfInterest={false}
         region={region}
       >
-        <Marker
-          coordinate={{
-            latitude: currentUserLatitude,
-            longitude: currentUserLongitude,
-          }}
-        />
+        {currentUserLatitude && currentUserLongitude && (
+          <Marker
+            coordinate={{
+              latitude: currentUserLatitude,
+              longitude: currentUserLongitude,
+            }}
+          />
+        )}
       </MapView>
     </View>
   );
