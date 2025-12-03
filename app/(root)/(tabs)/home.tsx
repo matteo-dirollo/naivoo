@@ -18,6 +18,7 @@ import { useFetch } from "@/lib/fetch";
 import { Trip } from "@/types/type";
 import Map from "@/components/Map";
 import { useLocationStore } from "@/store";
+import {calculateRegion} from "@/lib/map";
 
 const trips = [
   {
@@ -149,6 +150,7 @@ export default function Home() {
     router.replace("/(auth)/sign-in");
   };
 
+
   const [hasPermission, setHasPermission] = useState<boolean>(false);
 
   const {
@@ -185,7 +187,7 @@ export default function Home() {
     longitude: number;
     address: string;
   }) => {
-    // setDestinationLocation(location);
+
     // router.push("/(root)/find-ride");
   };
 
