@@ -1,37 +1,36 @@
-import { Trip, TripMarker } from "@/types/type";
+import { Trip, TripMarker, MarkerData } from "@/types/type";
 
 const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
 
-export const generateMapMarkers = (
-  location: {
-    latitude: number | null;
-    longitude: number | null;
-    address: string | null;
-  },
-  trip: Trip | null,
-): TripMarker[] => {
-  const markers: TripMarker[] = [];
+export const generateMarkersFromData = ({
+  data,
+  stopLatitude,
+  stopLongitude,
+}: {
+  data: TripMarker[];
+  stopLatitude: number;
+  stopLongitude: number;
+}): {
+  latitude: number;
+  longitude: number;
+  stop_id: string;
+  trip_id: string;
+  address: string;
+  expected_duration: number;
+  expected_distance: number;
+  isUserLocation?: boolean;
+}[] => {
+  return data.map((stop) => {
+    const latOffset = (Math.random() - 0.5) * 0.01; // Random offset between -0.005 and 0.005
+    const lngOffset = (Math.random() - 0.5) * 0.01; // Random offset between -0.005 and 0.005
 
-  // Add user's current location as a marker
-  if (location.latitude && location.longitude) {
-    markers.push({
-      stop_id: "user_location",
-      trip_id: trip?.trip_id || "N/A",
-      address: location.address || "Your Location",
-      latitude: location.latitude,
-      longitude: location.longitude,
-      expected_duration: 0,
-      expected_distance: 0,
-      isUserLocation: true,
-    });
-  }
-
-  // Add trip stops as markers
-  if (trip && trip.stops) {
-    markers.push(...trip.stops);
-  }
-
-  return markers;
+    return {
+      latitude: stopLatitude + latOffset,
+      longitude: stopLongitude + lngOffset,
+      // title: `${stop.first_name} ${driver.last_name}`,
+      ...stop,
+    };
+  });
 };
 
 export const getDirectionsForTrip = async (

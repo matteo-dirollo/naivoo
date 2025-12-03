@@ -64,6 +64,15 @@ declare interface TripMarker {
   isUserLocation?: boolean;
 }
 
+declare interface MarkerData {
+  latitude: number;
+  longitude: number;
+  id: number;
+  title?: string;
+  address: string;
+  time?: number;
+}
+
 declare interface ButtonProps extends TouchableOpacityProps {
   title: string;
   bgVariant?: "primary" | "secondary" | "danger" | "outline" | "success";
