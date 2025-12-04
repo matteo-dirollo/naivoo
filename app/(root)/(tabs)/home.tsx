@@ -145,7 +145,6 @@ export default function Home() {
   const { signOut } = useAuth();
   const [loading, setLoading] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean>(false);
-  const [status, requestPermission] = Location.useForegroundPermissions();
 
   const { setCurrentUserLocation } = useLocationStore();
   const handleSignOut = () => {
