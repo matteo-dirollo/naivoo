@@ -19,7 +19,6 @@ const Map = () => {
       mapRef.current.animateToRegion(region, 800); // Animate to the calculated region
     }
   }, [region]); // Re-run effect when region changes
-
   return (
     <View className="w-full h-full rounded-2xl">
       <MapView
@@ -30,7 +29,7 @@ const Map = () => {
         showsPointsOfInterest={false}
         region={region}
       >
-        {currentUserLatitude && currentUserLongitude && (
+        {currentUserLatitude != null && currentUserLongitude != null && (
           <Marker
             coordinate={{
               latitude: currentUserLatitude,

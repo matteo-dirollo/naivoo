@@ -18,7 +18,6 @@ import { useFetch } from "@/lib/fetch";
 import { Trip } from "@/types/type";
 import Map from "@/components/Map";
 import { useLocationStore } from "@/store";
-import {calculateRegion} from "@/lib/map";
 
 const trips = [
   {
@@ -150,8 +149,10 @@ export default function Home() {
     router.replace("/(auth)/sign-in");
   };
 
-
-  const [hasPermission, setHasPermission] = useState<boolean>(false);
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null,
+  );
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const {
     // data: recentTrips,
@@ -160,34 +161,48 @@ export default function Home() {
   } = useFetch<Trip[]>(`/(api)/trip/${user?.id}`);
 
   useEffect(() => {
-    (async () => {
+    async function getCurrentLocation() {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setHasPermission(false);
+        setErrorMsg("Permission to access location was denied");
         return;
       }
 
       let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+    }
 
-      const address = await Location.reverseGeocodeAsync({
-        latitude: location.coords?.latitude!,
-        longitude: location.coords?.longitude!,
-      });
-
-      setCurrentUserLocation({
-        latitude: location.coords?.latitude,
-        longitude: location.coords?.longitude,
-        address: `${address[0].name}, ${address[0].region}`,
-      });
-    })();
+    getCurrentLocation();
   }, []);
+
+  // useEffect(() => {
+  //   (async () => {
+  //     let { status } = await Location.requestForegroundPermissionsAsync();
+  //     if (status !== "granted") {
+  //       setHasPermission(false);
+  //       return;
+  //     }
+  //
+  //     let location = await Location.getCurrentPositionAsync({});
+  //
+  //     const address = await Location.reverseGeocodeAsync({
+  //       latitude: location.coords?.latitude!,
+  //       longitude: location.coords?.longitude!,
+  //     });
+  //
+  //     setCurrentUserLocation({
+  //       latitude: location.coords?.latitude,
+  //       longitude: location.coords?.longitude,
+  //       address: `${address[0].name}, ${address[0].region}`,
+  //     });
+  //   })();
+  // }, []);
 
   const handleDestinationPress = (location: {
     latitude: number;
     longitude: number;
     address: string;
   }) => {
-
     // router.push("/(root)/find-ride");
   };
 
