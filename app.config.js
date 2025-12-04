@@ -5,7 +5,7 @@ export default {
     slug: "naivoo",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/images/icon.png",
+    icon: "./assets/icons/adaptive.png",
     scheme: "naivoo",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
