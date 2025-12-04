@@ -19,6 +19,7 @@ import { useFetch } from "@/lib/fetch";
 import { Trip } from "@/types/type";
 import Map from "@/components/Map";
 import { useLocationStore } from "@/store";
+import {googleReverseGeocode} from "@/lib/utils";
 
 const trips = [
   {
@@ -162,44 +163,59 @@ export default function Home() {
     error,
   } = useFetch<Trip[]>(`/(api)/trip/${user?.id}`);
 
-  useEffect(() => {
-    let cancelled = false;
+    useEffect(() => {
+        let cancelled = false;
 
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      console.log("Location permission:", status);
+        const getLocation = async () => {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== "granted") {
+                setHasPermission(false);
+                return;
+            }
 
-      if (status !== "granted") {
-        setHasPermission(false);
-        return;
-      }
+            try {
+                const pos = await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.High,
+                });
 
-      try {
-        const pos = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
+                if (cancelled) return;
 
-        if (cancelled) return;
+                let address;
 
-        const address = await Location.reverseGeocodeAsync({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        });
+                try {
+                    address = await Location.reverseGeocodeAsync({
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude,
+                    });
+                    // Normalize to same shape as Google fallback
+                    address = [
+                        {
+                            name: address[0]?.name ?? "",
+                            region: address[0]?.region ?? "",
+                        },
+                    ];
+                } catch {
+                    address = [await googleReverseGeocode(pos.coords.latitude, pos.coords.longitude)];
+                }
 
-        setCurrentUserLocation({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          address: `${address[0]?.name ?? ""}, ${address[0]?.region ?? ""}`,
-        });
-      } catch (e) {
-        console.log("Location error:", e);
-      }
-    })();
+                if (!cancelled) {
+                    setCurrentUserLocation({
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude,
+                        address: `${address[0].name}, ${address[0].region}`,
+                    });
+                }
+            } catch (e) {
+                console.log("Location error:", e);
+            }
+        };
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+        getLocation();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
   const handleDestinationPress = (location: {
     latitude: number;
