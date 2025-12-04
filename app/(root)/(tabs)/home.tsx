@@ -8,7 +8,7 @@ import {
   FlatList,
   TouchableOpacity,
   View,
-    PermissionsAndroid
+  PermissionsAndroid,
 } from "react-native";
 import TripCard from "@/components/TripCard";
 import { Image } from "@/components/ui/image";
@@ -144,18 +144,19 @@ export default function Home() {
   const { user } = useUser();
   const { signOut } = useAuth();
   const [loading, setLoading] = useState(false);
-    const [hasPermission, setHasPermission] = useState<boolean>(false);
+  const [hasPermission, setHasPermission] = useState<boolean>(false);
+  const [status, requestPermission] = Location.useForegroundPermissions();
+
   const { setCurrentUserLocation } = useLocationStore();
   const handleSignOut = () => {
     signOut();
     router.replace("/(auth)/sign-in");
   };
 
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null,
-  );
+  const [deviceLocation, setDeviceLocation] =
+    useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-console.log(location);
+
   const {
     // data: recentTrips,
     // loading,
@@ -163,26 +164,42 @@ console.log(location);
   } = useFetch<Trip[]>(`/(api)/trip/${user?.id}`);
 
   useEffect(() => {
+    let cancelled = false;
+
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      console.log("Location permission:", status);
+
       if (status !== "granted") {
         setHasPermission(false);
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      try {
+        const pos = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
 
-      const address = await Location.reverseGeocodeAsync({
-        latitude: location.coords?.latitude!,
-        longitude: location.coords?.longitude!,
-      });
+        if (cancelled) return;
+
+        const address = await Location.reverseGeocodeAsync({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
 
         setCurrentUserLocation({
-            latitude: location.coords?.latitude,
-            longitude: location.coords?.longitude,
-            address: `${address[0].name}, ${address[0].region}`,
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          address: `${address[0]?.name ?? ""}, ${address[0]?.region ?? ""}`,
         });
+      } catch (e) {
+        console.log("Location error:", e);
+      }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleDestinationPress = (location: {

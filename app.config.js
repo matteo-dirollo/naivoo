@@ -32,6 +32,11 @@ export default {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#ffffff",
       },
+      permissions: [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+      ],
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
     },
@@ -47,13 +52,14 @@ export default {
           origin: "https://dummy-host-theta.vercel.app/",
         },
       ],
-        [
-            "expo-location",
-            {
-                "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
-                "isAndroidForegroundServiceEnabled": true,
-            }
-        ],
+      [
+        "expo-location",
+        {
+          locationAlwaysAndWhenInUsePermission:
+            "Allow $(PRODUCT_NAME) to use your location.",
+          isAndroidForegroundServiceEnabled: true,
+        },
+      ],
       [
         "expo-splash-screen",
         {
