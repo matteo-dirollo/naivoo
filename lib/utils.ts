@@ -12,18 +12,6 @@
 // };
 
 
-export function formatTime(minutes: number): string {
-  const formattedMinutes = +minutes?.toFixed(0) || 0;
-
-  if (formattedMinutes < 60) {
-    return `${minutes} min`;
-  } else {
-    const hours = Math.floor(formattedMinutes / 60);
-    const remainingMinutes = formattedMinutes % 60;
-    return `${hours}h ${remainingMinutes}m`;
-  }
-}
-
 export async function googleReverseGeocode(lat: number, lng: number) {
     const apiKey = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_API_KEY
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
@@ -36,6 +24,19 @@ export async function googleReverseGeocode(lat: number, lng: number) {
     }
 
     return json.results[0]; // returns full address object
+}
+
+
+export function formatTime(minutes: number): string {
+  const formattedMinutes = +minutes?.toFixed(0) || 0;
+
+  if (formattedMinutes < 60) {
+    return `${minutes} min`;
+  } else {
+    const hours = Math.floor(formattedMinutes / 60);
+    const remainingMinutes = formattedMinutes % 60;
+    return `${hours}h ${remainingMinutes}m`;
+  }
 }
 
 
