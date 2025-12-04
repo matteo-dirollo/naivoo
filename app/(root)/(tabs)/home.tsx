@@ -8,6 +8,7 @@ import {
   FlatList,
   TouchableOpacity,
   View,
+    PermissionsAndroid
 } from "react-native";
 import TripCard from "@/components/TripCard";
 import { Image } from "@/components/ui/image";
@@ -143,6 +144,7 @@ export default function Home() {
   const { user } = useUser();
   const { signOut } = useAuth();
   const [loading, setLoading] = useState(false);
+    const [hasPermission, setHasPermission] = useState<boolean>(false);
   const { setCurrentUserLocation } = useLocationStore();
   const handleSignOut = () => {
     signOut();
@@ -153,7 +155,7 @@ export default function Home() {
     null,
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
+console.log(location);
   const {
     // data: recentTrips,
     // loading,
@@ -161,42 +163,27 @@ export default function Home() {
   } = useFetch<Trip[]>(`/(api)/trip/${user?.id}`);
 
   useEffect(() => {
-    async function getCurrentLocation() {
+    (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
+        setHasPermission(false);
         return;
       }
 
       let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-    }
 
-    getCurrentLocation();
+      const address = await Location.reverseGeocodeAsync({
+        latitude: location.coords?.latitude!,
+        longitude: location.coords?.longitude!,
+      });
+
+        setCurrentUserLocation({
+            latitude: location.coords?.latitude,
+            longitude: location.coords?.longitude,
+            address: `${address[0].name}, ${address[0].region}`,
+        });
+    })();
   }, []);
-
-  // useEffect(() => {
-  //   (async () => {
-  //     let { status } = await Location.requestForegroundPermissionsAsync();
-  //     if (status !== "granted") {
-  //       setHasPermission(false);
-  //       return;
-  //     }
-  //
-  //     let location = await Location.getCurrentPositionAsync({});
-  //
-  //     const address = await Location.reverseGeocodeAsync({
-  //       latitude: location.coords?.latitude!,
-  //       longitude: location.coords?.longitude!,
-  //     });
-  //
-  //     setCurrentUserLocation({
-  //       latitude: location.coords?.latitude,
-  //       longitude: location.coords?.longitude,
-  //       address: `${address[0].name}, ${address[0].region}`,
-  //     });
-  //   })();
-  // }, []);
 
   const handleDestinationPress = (location: {
     latitude: number;

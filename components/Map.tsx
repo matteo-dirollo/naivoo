@@ -2,7 +2,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Platform, View } from "react-native";
 import { useLocationStore, useTripStore } from "@/store";
 import { calculateRegion } from "@/lib/map";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 const Map = () => {
   const mapRef = useRef<MapView>(null);

@@ -47,6 +47,13 @@ export default {
           origin: "https://dummy-host-theta.vercel.app/",
         },
       ],
+        [
+            "expo-location",
+            {
+                "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
+                "isAndroidForegroundServiceEnabled": true,
+            }
+        ],
       [
         "expo-splash-screen",
         {
