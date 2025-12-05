@@ -42,3 +42,5 @@ const Map = () => {
   );
 };
 export default Map;
+
+// We weren't using react-native-maps, but we ran into a similar situation with a custom implementation of animating markers on a map. What made the animation a lot smoother was setting the animation time to equal the interval we were sending location data through the websocket. That way the marker would be finishing its animation to the previous lat/lon just as the new lat/lon value was provided. This allowed for continuously smooth animation (as long as data was still being provided on the websocket).
