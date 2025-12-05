@@ -5,7 +5,7 @@ export default {
     slug: "naivoo",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/icons/adaptive.png",
+    icon: "./assets/images/naivoo-logo_v1.png.png",
     scheme: "naivoo",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
@@ -29,7 +29,7 @@ export default {
         },
       },
       adaptiveIcon: {
-        foregroundImage: "./assets/images/adaptive-icon.png",
+        foregroundImage: "./assets/images/naivoo-logo_v1.png.png",
         backgroundColor: "#ffffff",
       },
       permissions: [
