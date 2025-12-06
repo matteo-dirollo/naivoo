@@ -8,7 +8,6 @@ import {
   FlatList,
   TouchableOpacity,
   View,
-  PermissionsAndroid,
 } from "react-native";
 import TripCard from "@/components/TripCard";
 import { Image } from "@/components/ui/image";
@@ -153,13 +152,11 @@ export default function Home() {
     router.replace("/(auth)/sign-in");
   };
 
-  const [deviceLocation, setDeviceLocation] =
-    useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const {
-    // data: recentTrips,
-    // loading,
+    data: recentTrips,
+    loading,
     error,
   } = useFetch<Trip[]>(`/(api)/trip/${user?.id}`);
 
