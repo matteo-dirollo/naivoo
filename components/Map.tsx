@@ -40,6 +40,17 @@ const Map = () => {
             <LocationCluster size="20" fill="#0075b2" />
           </Marker>
         )}
+        {/* Trip Markers */}
+        {activeTrip?.stops?.map((stop) => (
+          <Marker
+            key={stop.stop_id}
+            coordinate={{
+              latitude: stop.latitude,
+              longitude: stop.longitude,
+            }}
+            title={stop.address}
+          />
+        ))}
       </MapView>
     </View>
   );
