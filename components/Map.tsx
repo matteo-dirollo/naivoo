@@ -3,6 +3,7 @@ import { Platform, View } from "react-native";
 import { useLocationStore, useTripStore } from "@/store";
 import { calculateRegion } from "@/lib/map";
 import { useEffect, useRef } from "react";
+import LocationCluster from "@/components/LocationCluster";
 
 const Map = () => {
   const mapRef = useRef<MapView>(null);
@@ -35,7 +36,9 @@ const Map = () => {
               latitude: currentUserLatitude,
               longitude: currentUserLongitude,
             }}
-          />
+          >
+            <LocationCluster size="20" fill="#0075b2" />
+          </Marker>
         )}
       </MapView>
     </View>
