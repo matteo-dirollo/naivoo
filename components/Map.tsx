@@ -1,9 +1,10 @@
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import { useLocationStore, useTripStore } from "@/store";
 import { calculateRegion } from "@/lib/map";
 import { useEffect, useRef } from "react";
 import LocationCluster from "@/components/LocationCluster";
+import StopMarker from "@/components/StopMarker";
 
 const Map = () => {
   const mapRef = useRef<MapView>(null);
@@ -49,7 +50,9 @@ const Map = () => {
               longitude: stop.longitude,
             }}
             title={stop.address}
-          />
+          >
+              <StopMarker width="40" height="40" text={stop.stop_id} />
+          </Marker>
         ))}
       </MapView>
     </View>
