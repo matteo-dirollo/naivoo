@@ -14,24 +14,24 @@ export default function TabLayout() {
     <Tabs
       initialRouteName="home"
       screenOptions={{
-        // tabBarActiveTintColor: "white",
-        // tabBarInactiveTintColor: "white",
+        tabBarActiveTintColor: "white",
+        tabBarInactiveTintColor: "white",
         headerShown: false,
-        // tabBarShowLabel: false,
-        // tabBarStyle: {
-        //   backgroundColor: "#333",
-        //   borderRadius: 50,
-        //   paddingBottom: 0, // ios only
-        //   overflow: "hidden",
-        //   marginHorizontal: 20,
-        //   marginBottom: 20,
-        //   height: 78,
-        //   display: "flex",
-        //   justifyContent: "space-between",
-        //   alignItems: "center",
-        //   flexDirection: "row",
-        //   position: "absolute",
-        // },
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          backgroundColor: "#333",
+          borderRadius: 50,
+          paddingBottom: 0, // ios only
+          overflow: "hidden",
+          marginHorizontal: 20,
+          marginBottom: 20,
+          height: 78,
+          display: "none",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexDirection: "row",
+          position: "absolute",
+        },
       }}
     >
       <Tabs.Screen
@@ -43,21 +43,22 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="tab1"
+        name="trips"
         options={{
-          title: "Tab 1",
+          title: "Trips",
           headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="tab2"
-        options={{
-          title: "Tab 2",
-          headerShown: false,
-          tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,
-        }}
-      />
+
+        <Tabs.Screen
+            name="profile"
+            options={{
+                title: "Profile",
+                headerShown: false,
+                tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,
+            }}
+        />
     </Tabs>
   );
 }

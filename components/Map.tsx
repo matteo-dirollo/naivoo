@@ -15,6 +15,32 @@ const Map = () => {
     userLatitude: currentUserLatitude,
     userLongitude: currentUserLongitude,
   });
+    const darkMapStyle = [
+        { elementType: "geometry", stylers: [{ color: "#212121" }] },
+        { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+        {
+            featureType: "administrative",
+            elementType: "geometry",
+            stylers: [{ color: "#757575" }],
+        },
+        {
+            featureType: "poi",
+            elementType: "geometry",
+            stylers: [{ color: "#303030" }],
+        },
+        {
+            featureType: "road",
+            elementType: "geometry",
+            stylers: [{ color: "#383838" }],
+        },
+        {
+            featureType: "water",
+            elementType: "geometry",
+            stylers: [{ color: "#000000" }],
+        },
+    ];
 
   useEffect(() => {
     if (mapRef.current && region) {
@@ -27,6 +53,7 @@ const Map = () => {
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
         tintColor="Black"
+        customMapStyle={darkMapStyle}
         mapType="standard"
         showsPointsOfInterest={false}
         region={region}
