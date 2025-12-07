@@ -61,7 +61,7 @@ export default function SignUp() {
   const onSignUpPress = async () => {
     const isNameValid = nameRegex.test(form.name);
     const isEmailValid = emailRegex.test(form.email);
-    const isPasswordValid = form.password.length >= 6;
+    const isPasswordValid = form.password.length >= 8;
 
     setErrors(undefined);
 
@@ -321,7 +321,7 @@ export default function SignUp() {
               </Input>
               <FormControlHelper>
                 <FormControlHelperText>
-                  Must be at least 6 characters.
+                  Minimum password length 8 characters.
                 </FormControlHelperText>
               </FormControlHelper>
               <FormControlError>
@@ -330,7 +330,7 @@ export default function SignUp() {
                   className="text-red-500"
                 />
                 <FormControlErrorText className="text-red-500">
-                  At least 6 characters are required.
+                  Password too short and/or missing one special character.
                 </FormControlErrorText>
               </FormControlError>
             </FormControl>

@@ -30,7 +30,8 @@ export default function Page() {
     email: "",
     password: "",
   });
-
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [needs2FA, setNeeds2FA] = useState(false);
   const [isEmailInvalid, setIsEmailInvalid] = useState(false);
   const [isPasswordInvalid, setIsPasswordInvalid] = useState(false);
   const [errors, setErrors] = useState<ClerkAPIError[]>();
@@ -39,9 +40,10 @@ export default function Page() {
 
   // Handle the submission of the sign-in form
   const onSignInPress = useCallback(async () => {
+    // ... input validation etc ...
     setErrors(undefined);
     const isEmailValid = emailRegex.test(form.email);
-    const isPasswordValid = form.password.length >= 6;
+    const isPasswordValid = form.password.length >= 8;
     if (!isEmailValid) {
       setIsEmailInvalid(true);
       return;
@@ -49,36 +51,78 @@ export default function Page() {
     if (!isPasswordValid) {
       setIsPasswordInvalid(true);
       return;
-    } else {
-      setIsEmailInvalid(false);
-      setIsPasswordInvalid(false);
     }
-    if (!isLoaded) return;
-    // Start the sign-in process using the email and password provided
+    setIsEmailInvalid(false);
+    setIsPasswordInvalid(false);
+
+    // guard: ensure Clerk is loaded and signIn/setActive are defined
+    if (!isLoaded || !signIn || !setActive) return;
+
     try {
-      const signInAttempt = await signIn.create({
+      let signInAttempt = await signIn.create({
         identifier: form.email,
         password: form.password,
+        strategy: "password", // explicitly set first-factor strategy
       });
 
-      // If sign-in process is complete, set the created session as active
-      // and redirect the user
+      if (signInAttempt.status === "needs_second_factor") {
+        setNeeds2FA(true);
+        return; // wait for user to input 2FA code
+      }
+
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
-        // @ts-ignore
-        router.replace("/(root)/(tabs)/home");
+        router.push("/(root)/(tabs)/home");
       } else {
-        // If the status isn't complete, check why. User might need to
-        // complete further steps.
-        console.error(JSON.stringify(signInAttempt, null, 2));
+        console.warn(
+          "Sign-in incomplete:",
+          signInAttempt.status,
+          signInAttempt,
+        );
+        // Optionally handle other statuses (needs_first_factor, needs_new_password, etc.)
       }
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      if (isClerkAPIResponseError(err)) setErrors(err.errors);
-      console.error(JSON.stringify(err, null, 2));
+      if (isClerkAPIResponseError(err)) {
+        setErrors(err.errors);
+        console.error(JSON.stringify(err, null, 2));
+      } else {
+        console.error("Unknown error", err);
+      }
     }
   }, [isLoaded, form]);
+
+  const onTwoFactorSubmit = useCallback(async () => {
+    if (!isLoaded || !signIn || !setActive) return;
+
+    try {
+      const signInAttempt = await signIn.attemptSecondFactor({
+        strategy: "totp", // or "phone_code" depending on your setup
+        code: twoFactorCode,
+      });
+
+      if (signInAttempt.status === "complete") {
+        await setActive({
+          session: signInAttempt.createdSessionId,
+          navigate: async ({ session }) => {
+            if (session?.currentTask) {
+              // Check for tasks and navigate to custom UI to help users resolve them
+              console.log(session?.currentTask);
+              return;
+            }
+            router.push("/(root)/(tabs)/home");
+          },
+        });
+      } else {
+        console.warn("2FA incomplete", signInAttempt);
+      }
+    } catch (err) {
+      if (isClerkAPIResponseError(err)) {
+        setErrors(err.errors);
+      } else {
+        console.error("Unknown error", err);
+      }
+    }
+  }, [isLoaded, signIn, setActive, twoFactorCode, router]);
 
   const [showPassword, setShowPassword] = useState(false);
   const handleState = () => {
@@ -103,107 +147,87 @@ export default function Page() {
       <Box className="px-8 rounded-lg w-full">
         <VStack className="gap-4 mb-6">
           <Heading className="text-center text-typography-900">Sign In</Heading>
-          <VStack space="xs">
-            <FormControl
-              isInvalid={isEmailInvalid}
-              size="md"
-              isDisabled={false}
-              isReadOnly={false}
-              isRequired={false}
-            >
-              <FormControlLabel>
-                <FormControlLabelText className="text-typography-500">
-                  Email
-                </FormControlLabelText>
-              </FormControlLabel>
-              <Input>
-                <InputField
-                  type="text"
-                  value={form.email}
-                  onChangeText={(value) => setForm({ ...form, email: value })}
-                />
-              </Input>
-              <FormControlError>
-                <FormControlErrorIcon
-                  as={AlertCircleIcon}
-                  className="text-red-500"
-                />
-                <FormControlErrorText className="text-red-500">
-                  Please enter a valid email address.
-                </FormControlErrorText>
-              </FormControlError>
-            </FormControl>
-          </VStack>
-          <VStack space="xs">
-            <FormControl
-              isInvalid={isPasswordInvalid}
-              size="md"
-              isDisabled={false}
-              isReadOnly={false}
-              isRequired={false}
-            >
-              <FormControlLabel>
-                <FormControlLabelText className="text-typography-500">
-                  Password
-                </FormControlLabelText>
-              </FormControlLabel>
+          {!needs2FA ? (
+            <>
+              <VStack space="xs">
+                <FormControl isInvalid={isEmailInvalid}>
+                  <FormControlLabel>
+                    <FormControlLabelText>Email</FormControlLabelText>
+                  </FormControlLabel>
+                  <Input>
+                    <InputField
+                      type="text"
+                      value={form.email}
+                      onChangeText={(v) => setForm({ ...form, email: v })}
+                    />
+                  </Input>
+                  <FormControlError>
+                    <FormControlErrorIcon as={AlertCircleIcon} />
+                    <FormControlErrorText>
+                      Please enter a valid email address.
+                    </FormControlErrorText>
+                  </FormControlError>
+                </FormControl>
+              </VStack>
 
-              {/*@ts-ignore*/}
-              <Input textAlign="center">
-                <InputField
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChangeText={(value) =>
-                    setForm({ ...form, password: value })
-                  }
-                />
-                <InputSlot className="pr-3" onPress={handleState}>
-                  <InputIcon as={showPassword ? EyeIcon : EyeOffIcon} />
-                </InputSlot>
-              </Input>
-              <FormControlHelper>
-                <FormControlHelperText>
-                  Must be at least 6 characters.
-                </FormControlHelperText>
-              </FormControlHelper>
-              <FormControlError>
-                <FormControlErrorIcon
-                  as={AlertCircleIcon}
-                  className="text-red-500"
-                />
-                <FormControlErrorText className="text-red-500">
-                  At least 6 characters are required.
-                </FormControlErrorText>
-              </FormControlError>
-            </FormControl>
+              <VStack space="xs">
+                <FormControl isInvalid={isPasswordInvalid}>
+                  <FormControlLabel>
+                    <FormControlLabelText>Password</FormControlLabelText>
+                  </FormControlLabel>
+                  <Input>
+                    <InputField
+                      type={showPassword ? "text" : "password"}
+                      value={form.password}
+                      onChangeText={(v) => setForm({ ...form, password: v })}
+                    />
+                    <InputSlot onPress={handleState}>
+                      <InputIcon as={showPassword ? EyeIcon : EyeOffIcon} />
+                    </InputSlot>
+                  </Input>
+                  <FormControlHelper>
+                    <FormControlHelperText>
+                      Minimum password length 8 characters
+                    </FormControlHelperText>
+                  </FormControlHelper>
+                </FormControl>
+              </VStack>
+
+              <Button onPress={onSignInPress}>
+                <ButtonText>Sign In</ButtonText>
+              </Button>
+            </>
+          ) : (
+            <>
+              <VStack space="xs">
+                <FormControl>
+                  <FormControlLabel>
+                    <FormControlLabelText>Enter 2FA code</FormControlLabelText>
+                  </FormControlLabel>
+                  <Input>
+                    <InputField
+                      keyboardType="numeric"
+                      value={twoFactorCode}
+                      onChangeText={setTwoFactorCode}
+                    />
+                  </Input>
+                </FormControl>
+              </VStack>
+
+              <Button onPress={onTwoFactorSubmit}>
+                <ButtonText>Verify Code</ButtonText>
+              </Button>
+            </>
+          )}
+
+          {errors && errors.map((e, i) => <Text key={i}>{e.longMessage}</Text>)}
+
+          <VStack className="mt-4" style={{ flexDirection: "row", gap: 3 }}>
+            <Text>Don't have an account?</Text>
+            <Link href="/sign-up">
+              <Text className="font-bold">Sign Up</Text>
+            </Link>
           </VStack>
-          <VStack>
-            {errors && (
-              <Box>
-                {errors.map((el, index) => (
-                  <Text key={index}>{el.longMessage}</Text>
-                ))}
-              </Box>
-            )}
-          </VStack>
-          <VStack>
-            <Button className="ml-auto w-full" onPress={onSignInPress}>
-              <ButtonText>Sign In</ButtonText>
-            </Button>
-          </VStack>
-        </VStack>
-        <VStack
-          className="mt-4"
-          style={{ display: "flex", flexDirection: "row", gap: 3 }}
-        >
-          <Text className="text-center text-typography-500">
-            Don&#39;t have an account?
-          </Text>
-          <Link href="/sign-up">
-            <Text className="text-center text-typography-900 font-bold">
-              Sign Up
-            </Text>
-          </Link>
         </VStack>
       </Box>
     </SafeAreaView>

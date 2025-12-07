@@ -26,7 +26,7 @@ const GoogleTextInput = ({
           textInputContainer: {
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 20,
+            borderRadius: 50,
             marginHorizontal: 20,
             position: "relative",
             shadowColor: "#d4d4d4",
@@ -65,7 +65,7 @@ const GoogleTextInput = ({
           language: "en",
         }}
         renderLeftButton={() => (
-          <View className="justify-center items-center w-6 h-6">
+          <View className="justify-center items-center w-6 h-6 mr-2">
             <Image
               source={icon ? icon : icons.search}
               className="w-6 h-6"

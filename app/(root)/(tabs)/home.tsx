@@ -7,7 +7,6 @@ import React, {
 } from "react";
 import * as Location from "expo-location";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useFetch } from "@/lib/fetch";
 import { Trip } from "@/types/type";
@@ -15,9 +14,11 @@ import Map from "@/components/Map";
 import { useLocationStore } from "@/store";
 import { googleReverseGeocode } from "@/lib/utils";
 import SheetContent from "@/components/BottomSheet";
-import BottomSheet from "@gorhom/bottom-sheet";
-import { Button, Text, View } from "react-native";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { Text, View } from "react-native";
 import { Portal } from "@gorhom/portal";
+import GoogleTextInput from "@/components/GoogleTextInput";
+import { icons } from "@/constants";
 
 // TODO: set camera
 // getCamera
@@ -112,39 +113,39 @@ export default function Home() {
     // router.push("/(root)/find-ride");
   };
 
-  const snapPoints = useMemo(() => ["25%", "50%"], []);
+  const snapPoints = useMemo(() => ["25%", "50%", "100%"], []);
 
   const openSheet = useCallback(() => {
     sheetRef.current?.expand();
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1">
       {/* MAP BACKGROUND */}
-      <View className="absolute inset-0">
+      <View className="absolute inset-0" pointerEvents="none">
         <Map />
       </View>
 
-      {/* BUTTON ABOVE MAP */}
-      <View className="absolute top-16 left-5">
-        <Button title="Open Bottom Sheet" onPress={openSheet} />
-      </View>
-
-      {/* BOTTOM SHEET */}
       <Portal>
         <BottomSheet
           ref={sheetRef}
-          index={-1}
+          index={1}
           snapPoints={snapPoints}
-          enablePanDownToClose
+          enablePanDownToClose={false}
+          backgroundStyle={{ backgroundColor: "#141714" }}
         >
-          <View className="flex-1 items-center justify-center p-5">
-            <Text className="text-lg font-semibold">
-              Hello from inside a portal sheet!
-            </Text>
-          </View>
+          <BottomSheetView>
+            <View className="flex-1 items-center justify-center p-5">
+              <GoogleTextInput
+                icon={icons.search}
+                containerStyle="bg-#141714 shadow-md shadow-neutral-300"
+                handlePress={handleDestinationPress}
+                textInputBackgroundColor="#E6E6E6"
+              />
+            </View>
+          </BottomSheetView>
         </BottomSheet>
       </Portal>
-    </SafeAreaView>
+    </View>
   );
 }
