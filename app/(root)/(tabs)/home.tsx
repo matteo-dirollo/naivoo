@@ -31,6 +31,10 @@ export default function Home() {
   const [hasPermission, setHasPermission] = useState<boolean>(false);
   const sheetRef = useRef<BottomSheet>(null);
 
+  const onPressInputField = () => {
+    sheetRef.current?.snapToIndex(2);
+  };
+
   const { setCurrentUserLocation } = useLocationStore();
   const handleSignOut = () => {
     signOut();
@@ -105,9 +109,9 @@ export default function Home() {
   }, []);
 
   const handleDestinationPress = (location: {
-    // latitude: number;
-    // longitude: number;
-    // address: string;
+    latitude: number;
+    longitude: number;
+    address: string;
   }) => {
     // router.push("/(root)/find-ride");
   };
@@ -132,6 +136,8 @@ export default function Home() {
           snapPoints={snapPoints}
           enablePanDownToClose={false}
           backgroundStyle={{ backgroundColor: "#141714" }}
+          keyboardBehavior="extend"
+          onChange={(i) => console.log("BOTTOMSHEET INDEX:", i)}
         >
           <BottomSheetView className="flex-1">
             <View className="flex-1 items-center justify-center p-5 space-y-4">
@@ -139,6 +145,7 @@ export default function Home() {
                 icon={icons.search}
                 containerStyle={"bg-[#1f201e] shadow-md shadow-neutral-300"}
                 handlePress={handleDestinationPress}
+                onTextInputFocus={onPressInputField}
                 textInputBackgroundColor="#1f201e"
               />
             </View>

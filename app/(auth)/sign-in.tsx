@@ -38,7 +38,6 @@ export default function Page() {
   const emailRegex =
     /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g;
 
-  // Handle the submission of the sign-in form
   const onSignInPress = useCallback(async () => {
     // ... input validation etc ...
     setErrors(undefined);

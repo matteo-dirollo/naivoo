@@ -12,18 +12,19 @@ const GoogleTextInput = ({
   containerStyle,
   textInputBackgroundColor,
   handlePress,
+  onTextInputFocus,
 }: GoogleInputProps) => {
-
   return (
     <View
-      className={`flex flex-row items-center justify-center relative z-99 rounded-xl ${containerStyle}`} pointerEvents="box-none"
+      className={`flex flex-row items-center justify-center relative z-99 rounded-xl ${containerStyle}`}
+      pointerEvents="box-none"
     >
       <GooglePlacesAutocomplete
-          // onPlaceSelected={""}
-          // onSearchError={""}
         fetchDetails={true}
         placeholder="Search"
         debounce={200}
+        enablePoweredByContainer={false}
+        keyboardShouldPersistTaps="handled"
         styles={{
           textInputContainer: {
             alignItems: "center",
@@ -43,37 +44,37 @@ const GoogleTextInput = ({
             marginHorizontal: 4,
             width: "100%",
             borderRadius: 20,
-              color: "white"
+            color: "white",
           },
           listView: {
             backgroundColor: textInputBackgroundColor
               ? textInputBackgroundColor
               : "white",
-              color: "white",
+            color: "white",
             position: "relative",
             top: 0,
             width: "100%",
             borderRadius: 10,
             shadowColor: "#d4d4d4",
             zIndex: 99,
-              elevation: 99
+            elevation: 99,
           },
-            row: {
-                backgroundColor: textInputBackgroundColor,
-                paddingVertical: 12,
-                paddingHorizontal: 10,
-                borderBottomWidth: 1,
-                borderBottomColor: "#333", // subtle divider
-            },
-            description: {
-                color: "white",
-            },
-            poweredContainer: {
-                backgroundColor: "#1f201e",
-            },
-            powered: {
-                tintColor: "gray",
-            },
+          row: {
+            backgroundColor: textInputBackgroundColor,
+            paddingVertical: 12,
+            paddingHorizontal: 10,
+            borderBottomWidth: 1,
+            borderBottomColor: "#333", // subtle divider
+          },
+          description: {
+            color: "white",
+          },
+          poweredContainer: {
+            backgroundColor: "#1f201e",
+          },
+          powered: {
+            tintColor: "gray",
+          },
         }}
         onPress={(data, details = null) => {
           handlePress({
@@ -98,6 +99,11 @@ const GoogleTextInput = ({
         textInputProps={{
           placeholderTextColor: "gray",
           placeholder: initialLocation ?? "Where do you want to go?",
+          onFocus: () => {
+            setTimeout(() => {
+              onTextInputFocus?.();
+            }, 10); // workaround for gesture interference
+          },
         }}
       />
     </View>
