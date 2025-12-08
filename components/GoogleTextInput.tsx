@@ -1,11 +1,10 @@
 import { View } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-
 import { icons } from "@/constants";
 import { GoogleInputProps } from "@/types/type";
 import { Image } from "@/components/ui/image";
 
-const googlePlacesApiKey = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
+const googlePlacesApiKey = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
 
 const GoogleTextInput = ({
   icon,
@@ -14,11 +13,14 @@ const GoogleTextInput = ({
   textInputBackgroundColor,
   handlePress,
 }: GoogleInputProps) => {
+
   return (
     <View
-      className={`flex flex-row items-center justify-center relative z-50 rounded-xl ${containerStyle}`}
+      className={`flex flex-row items-center justify-center relative z-99 rounded-xl ${containerStyle}`} pointerEvents="box-none"
     >
       <GooglePlacesAutocomplete
+          // onPlaceSelected={""}
+          // onSearchError={""}
         fetchDetails={true}
         placeholder="Search"
         debounce={200}
@@ -26,8 +28,8 @@ const GoogleTextInput = ({
           textInputContainer: {
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 50,
-            marginHorizontal: 20,
+            borderRadius: 10,
+            marginHorizontal: 5,
             position: "relative",
             shadowColor: "#d4d4d4",
           },
@@ -36,22 +38,42 @@ const GoogleTextInput = ({
               ? textInputBackgroundColor
               : "white",
             fontSize: 16,
-            fontWeight: "600",
+            fontWeight: "400",
             marginTop: 5,
+            marginHorizontal: 4,
             width: "100%",
-            borderRadius: 200,
+            borderRadius: 20,
+              color: "white"
           },
           listView: {
             backgroundColor: textInputBackgroundColor
               ? textInputBackgroundColor
               : "white",
+              color: "white",
             position: "relative",
             top: 0,
             width: "100%",
             borderRadius: 10,
             shadowColor: "#d4d4d4",
             zIndex: 99,
+              elevation: 99
           },
+            row: {
+                backgroundColor: textInputBackgroundColor,
+                paddingVertical: 12,
+                paddingHorizontal: 10,
+                borderBottomWidth: 1,
+                borderBottomColor: "#333", // subtle divider
+            },
+            description: {
+                color: "white",
+            },
+            poweredContainer: {
+                backgroundColor: "#1f201e",
+            },
+            powered: {
+                tintColor: "gray",
+            },
         }}
         onPress={(data, details = null) => {
           handlePress({
@@ -68,7 +90,7 @@ const GoogleTextInput = ({
           <View className="justify-center items-center w-6 h-6 mr-2">
             <Image
               source={icon ? icon : icons.search}
-              className="w-6 h-6"
+              className="w-6 h-6 ml-5"
               resizeMode="contain"
             />
           </View>

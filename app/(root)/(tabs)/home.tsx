@@ -13,9 +13,8 @@ import { Trip } from "@/types/type";
 import Map from "@/components/Map";
 import { useLocationStore } from "@/store";
 import { googleReverseGeocode } from "@/lib/utils";
-import SheetContent from "@/components/BottomSheet";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { Portal } from "@gorhom/portal";
 import GoogleTextInput from "@/components/GoogleTextInput";
 import { icons } from "@/constants";
@@ -106,9 +105,9 @@ export default function Home() {
   }, []);
 
   const handleDestinationPress = (location: {
-    latitude: number;
-    longitude: number;
-    address: string;
+    // latitude: number;
+    // longitude: number;
+    // address: string;
   }) => {
     // router.push("/(root)/find-ride");
   };
@@ -134,13 +133,13 @@ export default function Home() {
           enablePanDownToClose={false}
           backgroundStyle={{ backgroundColor: "#141714" }}
         >
-          <BottomSheetView>
-            <View className="flex-1 items-center justify-center p-5">
+          <BottomSheetView className="flex-1">
+            <View className="flex-1 items-center justify-center p-5 space-y-4">
               <GoogleTextInput
                 icon={icons.search}
-                containerStyle="bg-#141714 shadow-md shadow-neutral-300"
+                containerStyle={"bg-[#1f201e] shadow-md shadow-neutral-300"}
                 handlePress={handleDestinationPress}
-                textInputBackgroundColor="#E6E6E6"
+                textInputBackgroundColor="#1f201e"
               />
             </View>
           </BottomSheetView>
