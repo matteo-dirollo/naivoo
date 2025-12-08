@@ -5,6 +5,8 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Trip;
     const {
+      name,
+      trip_id,
       user_id,
       start_address,
       start_latitude,
@@ -24,6 +26,8 @@ export async function POST(request: Request) {
     // Insert only the main trip record. Stops will be handled by a separate endpoint.
     const [createdTrip] = await sql`
       INSERT INTO trips (
+          name,
+          trip_id,
         user_id,
         start_address,
         start_latitude,
@@ -31,7 +35,9 @@ export async function POST(request: Request) {
         return_to_start,
         active_trip
       ) VALUES (
-        ${Number(user_id)},
+        ${name},
+        ${trip_id},
+        ${user_id},
         ${start_address},
         ${start_latitude},
         ${start_longitude},

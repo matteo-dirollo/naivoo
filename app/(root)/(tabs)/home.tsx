@@ -24,7 +24,7 @@ export default function Home() {
 
   return (
     <Pressable
-      style={{ flex: 1 }}
+      className="flex-1"
       onPress={() => {
         Keyboard.dismiss();
         setIsInputFocused(false);

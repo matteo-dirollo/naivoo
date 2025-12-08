@@ -75,14 +75,14 @@ export const useTripStore = create<TripStore>((set, get) => ({
     }));
   },
 
-  updateTrip: (trip_id, updated) => {
-    set((state) => ({
-      activeTrip:
-        state.activeTrip?.trip_id === trip_id
-          ? { ...state.activeTrip, ...updated }
-          : state.activeTrip,
-      userTrips: state.userTrips.map((t) =>
-        t.trip_id === trip_id ? { ...t, ...updated } : t,
+    updateTrip: (trip_id, updated: Partial<Trip>) => {
+        set((state) => ({
+            activeTrip:
+                state.activeTrip?.trip_id === trip_id
+                    ? { ...state.activeTrip, ...updated }
+                    : state.activeTrip,
+            userTrips: state.userTrips.map((t) =>
+                t.trip_id === trip_id ? { ...t, ...updated } : t,
       ),
     }));
   },

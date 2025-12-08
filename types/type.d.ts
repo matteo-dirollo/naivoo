@@ -30,6 +30,7 @@ declare interface User {
 }
 
 declare interface Trip {
+  name: string;
   trip_id: string;
   user_id: string;
   user_name: string;
