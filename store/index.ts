@@ -30,13 +30,13 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // -----------------------------
 
   fetchUserTrips: async (userId: number) => {
-    const res = await fetch(`/api/trip/${userId}`);
+    const res = await fetch(`/(api)/trip/${userId}`);
     const trips = await res.json();
     set({ userTrips: trips });
   },
 
   fetchActiveTrip: async (userId: number) => {
-    const res = await fetch(`/api/trip/${userId}/active`);
+    const res = await fetch(`/(api)/trip/${userId}/active`);
     const trip = await res.json();
     set({ activeTrip: trip });
   },
@@ -45,7 +45,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = get().activeTrip;
     if (!trip) return;
 
-    const res = await fetch(`/api/trip${trip.trip_id}`, {
+    const res = await fetch(`/(api)/trip/${trip.trip_id}`, {
       method: "PUT",
       body: JSON.stringify(trip),
     });
@@ -67,7 +67,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // -----------------------------
 
   createTrip: async (trip: Trip) => {
-    const res = await fetch("/api/trip", {
+    const res = await fetch("/(api)/trip", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(trip),
@@ -92,7 +92,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     }));
   },
   deleteTrip: async (trip_id) => {
-    await fetch(`/api/trip/${trip_id}`, {
+    await fetch(`/(api)/trip/${trip_id}`, {
       method: "DELETE",
     });
 
@@ -111,7 +111,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = get().activeTrip;
     if (!trip) return;
 
-    const res = await fetch(`/api/`, {
+    const res = await fetch(`/(api)/`, {
       method: "POST",
       body: JSON.stringify(stop),
     });
@@ -127,7 +127,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
 
   removeStop: async (stop_id) => {
-    await fetch(`/api/${stop_id}`, {
+    await fetch(`/(api)/${stop_id}`, {
       method: "DELETE",
     });
 
@@ -140,7 +140,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
 
   updateStop: async (stop_id, updated) => {
-    const res = await fetch(`/api/${stop_id}`, {
+    const res = await fetch(`/(api)/${stop_id}`, {
       method: "PUT",
       body: JSON.stringify(updated),
     });
