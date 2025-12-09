@@ -91,7 +91,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
       ),
     }));
   },
-  // TODO: add logic to fetch the trip from the db
   deleteTrip: async (trip_id) => {
     await fetch(`/api/trip/${trip_id}`, {
       method: "DELETE",
