@@ -1,5 +1,11 @@
 import { create } from "zustand";
-import { LocationStore, TripStore, Trip, TripMarker } from "@/types/type";
+import {
+  LocationStore,
+  TripStore,
+  Trip,
+  TripMarker,
+  SnapPointStore,
+} from "@/types/type";
 
 export const useLocationStore = create<LocationStore>((set) => ({
   currentUserLatitude: null,
@@ -61,15 +67,16 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // -----------------------------
 
   createTrip: async (trip: Trip) => {
-    const res = await fetch(`https://your-api.com/trips`, {
+    const res = await fetch("/api/trip", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(trip),
     });
 
     const created = await res.json();
     set((state) => ({
-      activeTrip: created,
-      userTrips: [...state.userTrips, created],
+      activeTrip: created.data,
+      userTrips: [...state.userTrips, created.data],
     }));
   },
 
@@ -186,4 +193,31 @@ export const useTripStore = create<TripStore>((set, get) => ({
   clearActiveTrip: () => set({ activeTrip: null }),
   clearUserTrips: () => set({ userTrips: [] }),
   clearAllTrips: () => set({ activeTrip: null, userTrips: [] }),
+}));
+
+export const useSheetStore = create<SnapPointStore>((set, get) => ({
+  snapIndex: 1, // default 25%
+  isInputFocused: false,
+  sheetRef: null,
+
+  setSheetRef: (ref) => set({ sheetRef: ref }),
+  setSnapIndex: (index) => set({ snapIndex: index }),
+  setIsInputFocused: (v: boolean) => set({ isInputFocused: v }),
+
+  closeSheet: () => {
+    get().sheetRef?.current?.snapToIndex(0);
+    set({ snapIndex: 0 });
+  },
+  openSmall: () => {
+    get().sheetRef?.current?.snapToIndex(1);
+    set({ snapIndex: 1 });
+  },
+  openMedium: () => {
+    get().sheetRef?.current?.snapToIndex(2);
+    set({ snapIndex: 2 });
+  },
+  openLarge: () => {
+    get().sheetRef?.current?.snapToIndex(3);
+    set({ snapIndex: 3 });
+  },
 }));

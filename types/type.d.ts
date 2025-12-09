@@ -1,4 +1,5 @@
 import { TextInputProps, TouchableOpacityProps } from "react-native";
+import React from "react";
 
 declare interface User {
   id: number;
@@ -161,4 +162,20 @@ export interface TripStore {
   clearActiveTrip: () => void;
   clearUserTrips: () => void;
   clearAllTrips: () => void;
+}
+
+export interface SnapPointStore {
+  snapIndex: number;
+  isInputFocused: boolean;
+  sheetRef: RefObject<BottomSheet> | null;
+
+  setSnapIndex: (index: number) => void;
+  setSheetRef: (ref: React.RefObject<BottomSheet>) => void;
+  setIsInputFocused: (v: boolean) => void;
+
+  // Optional helpers
+  closeSheet: () => void; // 10%
+  openSmall: () => void; // 25%
+  openMedium: () => void; // 50%
+  openLarge: () => void; // 90%
 }

@@ -5,7 +5,7 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
 import { useFetch } from "@/lib/fetch";
 import { Trip } from "@/types/type";
-import { useLocationStore, useTripStore } from "@/store";
+import { useLocationStore, useSheetStore, useTripStore } from "@/store";
 import { googleReverseGeocode } from "@/lib/utils";
 import BottomSheet from "@gorhom/bottom-sheet";
 
@@ -13,37 +13,30 @@ export const useHomeLogic = () => {
   const { user } = useUser();
   const { signOut } = useAuth();
   const [hasPermission, setHasPermission] = useState<boolean>(false);
-  const sheetRef = useRef<BottomSheet>(null);
-  const [currentIndex, setCurrentIndex] = useState(1);
-  const [isInputFocused, setIsInputFocused] = useState(false);
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { setCurrentUserLocation } = useLocationStore();
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
 
-  // Snap points for BottomSheet
-  const snapPoints = useMemo(() => ["25%", "50%", "100%"], []);
+  const sheetRef = useRef<BottomSheet>(null);
+  const snapPoints = useMemo(() => ["25%", "50%", "90%"], []);
+  const {
+    snapIndex,
+    openMedium,
+    setSnapIndex,
+    setSheetRef,
+    isInputFocused,
+    setIsInputFocused,
+  } = useSheetStore();
 
-  // Open sheet programmatically
-  const openSheet = useCallback(() => {
-    sheetRef.current?.expand();
-  }, []);
-
-  // Track sheet changes
-  const handleSheetChange = useCallback((index: number) => {
-    setCurrentIndex(index);
-  }, []);
-
-  // Input field focus handler
   const onPressInputField = useCallback(() => {
-    // Only snap to 50% if not already at 100%
-    if (currentIndex !== 3) {
-      sheetRef.current?.snapToIndex(2);
+    if (snapIndex !== 3) {
+      openMedium();
     }
     setIsInputFocused(true);
-  }, [currentIndex]);
+  }, [snapIndex]);
 
-  // Sign out user
   const handleSignOut = useCallback(() => {
     signOut();
     router.replace("/(auth)/sign-in");
@@ -64,8 +57,8 @@ export const useHomeLogic = () => {
     error,
   } = useFetch<Trip[]>(`/(api)/trip/${user?.id}`);
 
-  // Fetch current location
   useEffect(() => {
+    setSheetRef(sheetRef);
     let cancelled = false;
 
     const getLocation = async () => {
@@ -120,19 +113,16 @@ export const useHomeLogic = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [setSheetRef, setCurrentUserLocation]);
 
   return {
     hasActiveTrip,
     sheetRef,
-    currentIndex,
-    setCurrentIndex,
     isInputFocused,
     setIsInputFocused,
     onPressInputField,
-    handleSheetChange,
     snapPoints,
-    openSheet,
+    setSnapIndex,
     handleSignOut,
     handleDestinationPress,
     hasPermission,

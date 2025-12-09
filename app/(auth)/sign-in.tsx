@@ -1,4 +1,5 @@
 import { isClerkAPIResponseError, useSignIn } from "@clerk/clerk-expo";
+import type { EmailCodeFactor } from "@clerk/types";
 import { Link, useRouter } from "expo-router";
 import { Text } from "react-native";
 import { useCallback, useState } from "react";
@@ -64,14 +65,36 @@ export default function Page() {
         strategy: "password", // explicitly set first-factor strategy
       });
 
-      if (signInAttempt.status === "needs_second_factor") {
-        setNeeds2FA(true);
-        return; // wait for user to input 2FA code
+      if (signInAttempt.status === "complete") {
+        await setActive({
+          session: signInAttempt.createdSessionId,
+          navigate: async ({ session }) => {
+            if (session?.currentTask) {
+              // Check for tasks and navigate to custom UI to help users resolve them
+              console.log(session?.currentTask);
+              return;
+            }
+            router.push("/(root)/(tabs)/home");
+          },
+        });
       }
 
-      if (signInAttempt.status === "complete") {
-        await setActive({ session: signInAttempt.createdSessionId });
-        router.push("/(root)/(tabs)/home");
+      if (signInAttempt.status === "needs_second_factor") {
+        const emailCodeFactor = signInAttempt.supportedSecondFactors?.find(
+          (factor): factor is EmailCodeFactor =>
+            factor.strategy === "email_code",
+        );
+
+        if (emailCodeFactor) {
+          // Trigger sending the email with the 2AF code
+          await signIn.prepareSecondFactor({
+            strategy: "email_code",
+            emailAddressId: emailCodeFactor.emailAddressId,
+          });
+          setNeeds2FA(true);
+        }
+
+        return;
       } else {
         console.warn(
           "Sign-in incomplete:",
@@ -95,7 +118,7 @@ export default function Page() {
 
     try {
       const signInAttempt = await signIn.attemptSecondFactor({
-        strategy: "totp", // or "phone_code" depending on your setup
+        strategy: "email_code",
         code: twoFactorCode,
       });
 
@@ -121,7 +144,7 @@ export default function Page() {
         console.error("Unknown error", err);
       }
     }
-  }, [isLoaded, signIn, setActive, twoFactorCode, router]);
+  }, [isLoaded, twoFactorCode]);
 
   const [showPassword, setShowPassword] = useState(false);
   const handleState = () => {

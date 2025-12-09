@@ -19,8 +19,8 @@ export default function Home() {
     sheetRef,
     setIsInputFocused,
     onPressInputField,
-    handleSheetChange,
     snapPoints,
+    setSnapIndex,
     handleDestinationPress,
   } = useHomeLogic();
 
@@ -41,7 +41,7 @@ export default function Home() {
           <BottomSheet
             ref={sheetRef}
             index={1}
-            onChange={handleSheetChange}
+            onChange={setSnapIndex}
             snapPoints={snapPoints}
             enablePanDownToClose={false}
             backgroundStyle={{ backgroundColor: "#141714" }}
