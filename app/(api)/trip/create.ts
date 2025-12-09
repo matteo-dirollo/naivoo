@@ -26,8 +26,8 @@ export async function POST(request: Request) {
     // Insert only the main trip record. Stops will be handled by a separate endpoint.
     const [createdTrip] = await sql`
       INSERT INTO trips (
-          name,
-          trip_id,
+        name,
+        trip_id,
         user_id,
         start_address,
         start_latitude,

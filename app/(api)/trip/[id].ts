@@ -15,6 +15,7 @@ export async function GET(
     // Corrected table name from 'stops' to 'trip_stops'
     const response = await sql`
       SELECT
+        t.name,
         t.trip_id,
         t.user_id,
         t.start_address,

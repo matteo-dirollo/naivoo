@@ -30,13 +30,13 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // -----------------------------
 
   fetchUserTrips: async (userId: number) => {
-    const res = await fetch(`https://your-api.com/trips/${userId}`);
+    const res = await fetch(`/api/trip/${userId}`);
     const trips = await res.json();
     set({ userTrips: trips });
   },
 
   fetchActiveTrip: async (userId: number) => {
-    const res = await fetch(`https://your-api.com/trips/${userId}/active`);
+    const res = await fetch(`/api/trip/${userId}/active`);
     const trip = await res.json();
     set({ activeTrip: trip });
   },
@@ -45,7 +45,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = get().activeTrip;
     if (!trip) return;
 
-    const res = await fetch(`https://your-api.com/trips/${trip.trip_id}`, {
+    const res = await fetch(`/api/trip${trip.trip_id}`, {
       method: "PUT",
       body: JSON.stringify(trip),
     });
@@ -93,7 +93,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
   // TODO: add logic to fetch the trip from the db
   deleteTrip: async (trip_id) => {
-    await fetch(`https://your-api.com/trips/${trip_id}`, {
+    await fetch(`/api/trip/${trip_id}`, {
       method: "DELETE",
     });
 
@@ -112,7 +112,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = get().activeTrip;
     if (!trip) return;
 
-    const res = await fetch(`https://your-api.com/stops`, {
+    const res = await fetch(`/api/`, {
       method: "POST",
       body: JSON.stringify(stop),
     });
@@ -128,7 +128,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
 
   removeStop: async (stop_id) => {
-    await fetch(`https://your-api.com/stops/${stop_id}`, {
+    await fetch(`/api/${stop_id}`, {
       method: "DELETE",
     });
 
@@ -141,7 +141,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
 
   updateStop: async (stop_id, updated) => {
-    const res = await fetch(`https://your-api.com/stops/${stop_id}`, {
+    const res = await fetch(`/api/${stop_id}`, {
       method: "PUT",
       body: JSON.stringify(updated),
     });
