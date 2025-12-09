@@ -1,31 +1,16 @@
-// import { Ride } from "@/types/type";
-//
-//
-// export const sortRides = (rides: Ride[]): Ride[] => {
-//   const result = rides.sort((a, b) => {
-//     const dateA = new Date(`${a.created_at}T${a.ride_time}`);
-//     const dateB = new Date(`${b.created_at}T${b.ride_time}`);
-//     return dateB.getTime() - dateA.getTime();
-//   });
-//
-//   return result.reverse();
-// };
-
-
 export async function googleReverseGeocode(lat: number, lng: number) {
-    const apiKey = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_API_KEY
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+  const apiKey = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_API_KEY;
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
 
-    const res = await fetch(url);
-    const json = await res.json();
+  const res = await fetch(url);
+  const json = await res.json();
 
-    if (!json.results?.length) {
-        throw new Error("No results");
-    }
+  if (!json.results?.length) {
+    throw new Error("No results");
+  }
 
-    return json.results[0]; // returns full address object
+  return json.results[0]; // returns full address object
 }
-
 
 export function formatTime(minutes: number): string {
   const formattedMinutes = +minutes?.toFixed(0) || 0;
@@ -38,7 +23,6 @@ export function formatTime(minutes: number): string {
     return `${hours}h ${remainingMinutes}m`;
   }
 }
-
 
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);

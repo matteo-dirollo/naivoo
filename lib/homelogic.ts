@@ -5,7 +5,7 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
 import { useFetch } from "@/lib/fetch";
 import { Trip } from "@/types/type";
-import { useLocationStore } from "@/store";
+import { useLocationStore, useTripStore } from "@/store";
 import { googleReverseGeocode } from "@/lib/utils";
 import BottomSheet from "@gorhom/bottom-sheet";
 
@@ -19,6 +19,7 @@ export const useHomeLogic = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { setCurrentUserLocation } = useLocationStore();
+  const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
 
   // Snap points for BottomSheet
   const snapPoints = useMemo(() => ["25%", "50%", "100%"], []);
@@ -122,6 +123,7 @@ export const useHomeLogic = () => {
   }, []);
 
   return {
+    hasActiveTrip,
     sheetRef,
     currentIndex,
     setCurrentIndex,

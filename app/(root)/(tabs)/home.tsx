@@ -6,6 +6,7 @@ import { Portal } from "@gorhom/portal";
 import GoogleTextInput from "@/components/GoogleTextInput";
 import { icons } from "@/constants";
 import { useHomeLogic } from "@/lib/homelogic";
+import CreateTripField from "@/components/CreateTripField";
 // TODO: set camera
 // getCamera
 // animateCamera 	camera: Camera, { duration: Number }
@@ -14,6 +15,7 @@ import { useHomeLogic } from "@/lib/homelogic";
 
 export default function Home() {
   const {
+    hasActiveTrip,
     sheetRef,
     setIsInputFocused,
     onPressInputField,
@@ -46,13 +48,23 @@ export default function Home() {
           >
             <BottomSheetView className="flex-1">
               <View className="flex-1 items-center justify-center p-5 space-y-4">
-                <GoogleTextInput
-                  icon={icons.search}
-                  containerStyle={"bg-[#1f201e] shadow-md shadow-neutral-300"}
-                  handlePress={handleDestinationPress}
-                  onTextInputFocus={onPressInputField}
-                  textInputBackgroundColor="#1f201e"
-                />
+                {hasActiveTrip ? (
+                  <>
+                    <GoogleTextInput
+                      icon={icons.search}
+                      containerStyle={
+                        "bg-[#1f201e] shadow-md shadow-neutral-300"
+                      }
+                      handlePress={handleDestinationPress}
+                      onTextInputFocus={onPressInputField}
+                      textInputBackgroundColor="#1f201e"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <CreateTripField handlePress={onPressInputField} />
+                  </>
+                )}
               </View>
             </BottomSheetView>
           </BottomSheet>
