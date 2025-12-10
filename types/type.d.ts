@@ -33,8 +33,7 @@ declare interface User {
 declare interface Trip {
   name: string;
   trip_id: string;
-  user_id: string;
-  user_name: string;
+  user_id?: string;
 
   start_address: string;
   start_latitude: number;
@@ -145,7 +144,7 @@ export interface TripStore {
   setUserTrips: (trips: Trip[]) => void;
 
   // CRUD
-  createTrip: (trip: Trip) => Promise<void>; // inserts into DB
+  createTrip: (trip: Trip) => Promise<void>;
   updateTrip: (trip_id: string, updated: Partial<Trip>) => Promise<void>;
   deleteTrip: (trip_id: string) => Promise<void>;
 

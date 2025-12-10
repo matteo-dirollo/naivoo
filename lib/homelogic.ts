@@ -17,6 +17,7 @@ export const useHomeLogic = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { setCurrentUserLocation } = useLocationStore();
+  const { fetchActiveTrip } = useTripStore();
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
 
   const sheetRef = useRef<BottomSheet>(null);
@@ -116,6 +117,7 @@ export const useHomeLogic = () => {
   }, [setSheetRef, setCurrentUserLocation]);
 
   return {
+    fetchActiveTrip,
     hasActiveTrip,
     sheetRef,
     isInputFocused,
@@ -130,5 +132,6 @@ export const useHomeLogic = () => {
     recentTrips,
     loading,
     error,
+    user,
   };
 };

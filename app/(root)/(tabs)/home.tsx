@@ -6,7 +6,7 @@ import { Portal } from "@gorhom/portal";
 import GoogleTextInput from "@/components/GoogleTextInput";
 import { icons } from "@/constants";
 import { useHomeLogic } from "@/lib/homelogic";
-import CreateTripField from "@/components/CreateTripField";
+import NameTripField from "@/components/NameTripField";
 // TODO: set camera
 // getCamera
 // animateCamera 	camera: Camera, { duration: Number }
@@ -15,6 +15,7 @@ import CreateTripField from "@/components/CreateTripField";
 
 export default function Home() {
   const {
+    fetchActiveTrip,
     hasActiveTrip,
     sheetRef,
     setIsInputFocused,
@@ -22,6 +23,7 @@ export default function Home() {
     snapPoints,
     setSnapIndex,
     handleDestinationPress,
+    user,
   } = useHomeLogic();
 
   return (
@@ -62,7 +64,7 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    <CreateTripField handlePress={onPressInputField} />
+                    <NameTripField handlePress={onPressInputField} />
                   </>
                 )}
               </View>

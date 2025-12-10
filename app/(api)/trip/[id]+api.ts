@@ -46,7 +46,7 @@ export async function GET(
           LEFT JOIN
         trip_stops ts ON ts.trip_id = t.trip_id
       WHERE
-        t.user_id = ${Number(userId)}
+        t.user_id = ${userId}
       GROUP BY
         t.trip_id
       ORDER BY

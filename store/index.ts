@@ -20,7 +20,6 @@ export const useLocationStore = create<LocationStore>((set) => ({
     })),
 }));
 
-// @ts-ignore
 export const useTripStore = create<TripStore>((set, get) => ({
   activeTrip: null,
   userTrips: [],
@@ -29,13 +28,13 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // SERVER SYNC
   // -----------------------------
 
-  fetchUserTrips: async (userId: number) => {
+  fetchUserTrips: async (userId: string) => {
     const res = await fetch(`/(api)/trip/${userId}`);
     const trips = await res.json();
     set({ userTrips: trips });
   },
 
-  fetchActiveTrip: async (userId: number) => {
+  fetchActiveTrip: async (userId: string) => {
     const res = await fetch(`/(api)/trip/${userId}/active`);
     const trip = await res.json();
     set({ activeTrip: trip });
@@ -111,7 +110,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = get().activeTrip;
     if (!trip) return;
 
-    const res = await fetch(`/(api)/`, {
+    const res = await fetch(`/(api)/stop`, {
       method: "POST",
       body: JSON.stringify(stop),
     });
