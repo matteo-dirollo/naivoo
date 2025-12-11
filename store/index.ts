@@ -29,13 +29,13 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // -----------------------------
 
   fetchUserTrips: async (userId: string) => {
-    const res = await fetch(`/(api)/trip/${userId}`);
+    const res = await fetch(`${process.env.BASE_URL}/(api)/trip/${userId}`);
     const trips = await res.json();
     set({ userTrips: trips });
   },
 
   fetchActiveTrip: async (userId: string) => {
-    const res = await fetch(`/(api)/trip/${userId}/active`);
+    const res = await fetch(`${process.env.BASE_URL}/(api)/trip/${userId}/active`);
     const trip = await res.json();
     set({ activeTrip: trip });
   },
@@ -44,7 +44,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = get().activeTrip;
     if (!trip) return;
 
-    const res = await fetch(`/(api)/trip/${trip.trip_id}`, {
+    const res = await fetch(`${process.env.BASE_URL}/(api)/trip/${trip.trip_id}`, {
       method: "PUT",
       body: JSON.stringify(trip),
     });
@@ -65,19 +65,21 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // TRIP CRUD
   // -----------------------------
 
-  createTrip: async (trip: Trip) => {
-    const res = await fetch("/(api)/trip", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(trip),
-    });
+    createTrip: async (data: Partial<Trip>) => {
+        const res = await fetch(`${process.env.BASE_URL}/(api)/trip`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
 
-    const created = await res.json();
-    set((state) => ({
-      activeTrip: created.data,
-      userTrips: [...state.userTrips, created.data],
-    }));
-  },
+        const text = await res.text();
+        console.log("RAW RESPONSE:", text);
+        const created = JSON.parse(text);
+        set((state) => ({
+            activeTrip: created.data,
+            userTrips: [...state.userTrips, created.data],
+        }));
+    },
 
   updateTrip: (trip_id, updated: Partial<Trip>) => {
     set((state) => ({

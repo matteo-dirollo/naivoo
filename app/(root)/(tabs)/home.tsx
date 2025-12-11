@@ -23,7 +23,6 @@ export default function Home() {
     snapPoints,
     setSnapIndex,
     handleDestinationPress,
-    user,
   } = useHomeLogic();
 
   return (

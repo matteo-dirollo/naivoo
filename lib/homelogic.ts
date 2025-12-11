@@ -132,6 +132,5 @@ export const useHomeLogic = () => {
     recentTrips,
     loading,
     error,
-    user,
   };
 };

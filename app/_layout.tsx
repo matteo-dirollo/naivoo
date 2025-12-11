@@ -53,24 +53,16 @@ function RootLayoutNav() {
     <ThemeProvider value={colorMode === "dark" ? DarkTheme : DefaultTheme}>
       <GluestackUIProvider mode={colorMode}>
         <GestureHandlerRootView className="flex-1">
+            <ClerkProvider tokenCache={tokenCache}>
           <PortalProvider>
             <SafeAreaProvider>
-              <ClerkProvider tokenCache={tokenCache}>
+
                 <Slot />
-                {pathname === "/" && (
-                  <Fab
-                    onPress={() =>
-                      setColorMode(colorMode === "dark" ? "light" : "dark")
-                    }
-                    className="m-6"
-                    size="lg"
-                  >
-                    <FabIcon as={colorMode === "dark" ? MoonIcon : SunIcon} />
-                  </Fab>
-                )}
-              </ClerkProvider>
+
+
             </SafeAreaProvider>
           </PortalProvider>
+            </ClerkProvider>
         </GestureHandlerRootView>
       </GluestackUIProvider>
     </ThemeProvider>

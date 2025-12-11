@@ -6,25 +6,27 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { VStack } from "@/components/ui/vstack";
 import moment from "moment";
 import { useLocationStore, useTripStore } from "@/store";
-import { useUser } from "@clerk/clerk-expo";
+import {useUser} from "@clerk/clerk-expo";
+
 
 const NameTripField = ({ handlePress }: { handlePress: () => void }) => {
   const date = moment().format("dddd DD/MM/YYYY hh:mm A");
+  const { user } = useUser();
   const { currentUserAddress, currentUserLatitude, currentUserLongitude } =
     useLocationStore();
   const [prefilledInputValue, setPrefilledInputValue] = React.useState(date);
 
   const { createTrip } = useTripStore();
 
-  const handlePressNext = async () => {
-    // await createTrip({
-    //   name: prefilledInputValue,
-    //   user_id: userId,
-    //   start_address: currentUserAddress || "Unknown Address",
-    //   start_latitude: currentUserLatitude || 0,
-    //   start_longitude: currentUserLongitude || 0,
-    // });
-  };
+    const handlePressNext = async () => {
+        await createTrip({
+            name: prefilledInputValue,
+            user_id: user?.id,
+            start_address: currentUserAddress || "Unknown Address",
+            start_latitude: currentUserLatitude || 0,
+            start_longitude: currentUserLongitude || 0,
+        });
+    };
 
   return (
     <VStack className="flex-1 w-full mx-10">
@@ -53,7 +55,7 @@ const NameTripField = ({ handlePress }: { handlePress: () => void }) => {
           </Input>
           <Button
             className="ml-auto mt-6 bg-green-600 rounded-md w-full"
-            onPress={handlePress}
+            onPress={handlePressNext}
           >
             <ButtonText>Next</ButtonText>
           </Button>
