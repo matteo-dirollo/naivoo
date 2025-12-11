@@ -6,6 +6,8 @@ import {
   TripMarker,
   SnapPointStore,
 } from "@/types/type";
+import trips from "@/app/(root)/(tabs)/trips";
+import { api } from "@/lib/api";
 
 export const useLocationStore = create<LocationStore>((set) => ({
   currentUserLatitude: null,
@@ -35,7 +37,9 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
 
   fetchActiveTrip: async (userId: string) => {
-    const res = await fetch(`${process.env.BASE_URL}/(api)/trip/${userId}/active`);
+    const res = await fetch(
+      `${process.env.BASE_URL}/(api)/trip/${userId}/active`,
+    );
     const trip = await res.json();
     set({ activeTrip: trip });
   },
@@ -44,10 +48,13 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = get().activeTrip;
     if (!trip) return;
 
-    const res = await fetch(`${process.env.BASE_URL}/(api)/trip/${trip.trip_id}`, {
-      method: "PUT",
-      body: JSON.stringify(trip),
-    });
+    const res = await fetch(
+      `${process.env.BASE_URL}/(api)/trip/${trip.trip_id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(trip),
+      },
+    );
 
     const updated = await res.json();
     set({ activeTrip: updated });
@@ -65,21 +72,14 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // TRIP CRUD
   // -----------------------------
 
-    createTrip: async (data: Partial<Trip>) => {
-        const res = await fetch(`${process.env.BASE_URL}/(api)/trip`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-        });
-
-        const text = await res.text();
-        console.log("RAW RESPONSE:", text);
-        const created = JSON.parse(text);
-        set((state) => ({
-            activeTrip: created.data,
-            userTrips: [...state.userTrips, created.data],
-        }));
-    },
+  createTrip: async (data: Partial<Trip>) => {
+    const res = await api.post(`${process.env.BASE_URL}/api/trip`, trips);
+    const created = res.data;
+    set((state) => ({
+      activeTrip: created.data,
+      userTrips: [...state.userTrips, created.data],
+    }));
+  },
 
   updateTrip: (trip_id, updated: Partial<Trip>) => {
     set((state) => ({
@@ -93,9 +93,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     }));
   },
   deleteTrip: async (trip_id) => {
-    await fetch(`/(api)/trip/${trip_id}`, {
-      method: "DELETE",
-    });
+    await api.delete(`/(api)/trip/${trip_id}`);
 
     set((state) => ({
       activeTrip:
