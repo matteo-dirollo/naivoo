@@ -72,16 +72,30 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // TRIP CRUD
   // -----------------------------
 
-  createTrip: async (data: Partial<Trip>) => {
-    const res = await api.post(`${process.env.BASE_URL}/api/trip`, trips);
-    const created = res.data;
-    set((state) => ({
-      activeTrip: created.data,
-      userTrips: [...state.userTrips, created.data],
-    }));
-  },
+    createTrip: async (data: Partial<Trip>) => {
+        try {
+            console.log('Request URL:', api.defaults.baseURL + '/(api)/trip');
+            const res = await api.post(`/(api)/trip`, data);
+            const created = res.data;
 
-  updateTrip: (trip_id, updated: Partial<Trip>) => {
+            set((state) => ({
+                activeTrip: created.data,
+                userTrips: [...state.userTrips, created.data],
+            }));
+        } catch (error: any) {
+            if (error.response) {
+                console.error('API Error:', error.response.status, error.response.data);
+            } else if (error.request) {
+                console.error('Network Error: No response received', error.request);
+            } else {
+                console.error('Error:', error.message);
+            }
+        }
+    },
+
+
+
+    updateTrip: (trip_id, updated: Partial<Trip>) => {
     set((state) => ({
       activeTrip:
         state.activeTrip?.trip_id === trip_id
