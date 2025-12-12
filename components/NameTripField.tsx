@@ -7,6 +7,7 @@ import { VStack } from "@/components/ui/vstack";
 import moment from "moment";
 import { useLocationStore, useTripStore } from "@/store";
 import { useUser } from "@clerk/clerk-expo";
+import * as Crypto from "expo-crypto";
 
 const NameTripField = ({ handlePress }: { handlePress: () => void }) => {
   const date = moment().format("dddd DD/MM/YYYY hh:mm A");
@@ -14,6 +15,7 @@ const NameTripField = ({ handlePress }: { handlePress: () => void }) => {
   const { currentUserAddress, currentUserLatitude, currentUserLongitude } =
     useLocationStore();
   const [prefilledInputValue, setPrefilledInputValue] = React.useState(date);
+  const UUID = Crypto.randomUUID();
 
   const { createTrip } = useTripStore();
 
@@ -21,6 +23,9 @@ const NameTripField = ({ handlePress }: { handlePress: () => void }) => {
     // @ts-ignore
     await createTrip({
       name: prefilledInputValue,
+      trip_id: UUID,
+      active_trip: true,
+      created_at: new Date().toISOString(),
       user_id: user?.id,
       start_address: currentUserAddress || "Unknown Address",
       start_latitude: currentUserLatitude || 0,

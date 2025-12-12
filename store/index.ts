@@ -72,30 +72,47 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // TRIP CRUD
   // -----------------------------
 
-    createTrip: async (data: Partial<Trip>) => {
-        try {
-            console.log('Request URL:', api.defaults.baseURL + '/(api)/trip');
-            const res = await api.post(`/(api)/trip`, data);
-            const created = res.data;
+  createTrip: async (data: Partial<Trip>) => {
+    try {
+      const url = `${process.env.EXPO_PUBLIC_API_BASE_URL}/trip/create`; // Expo Router API route
 
-            set((state) => ({
-                activeTrip: created.data,
-                userTrips: [...state.userTrips, created.data],
-            }));
-        } catch (error: any) {
-            if (error.response) {
-                console.error('API Error:', error.response.status, error.response.data);
-            } else if (error.request) {
-                console.error('Network Error: No response received', error.request);
-            } else {
-                console.error('Error:', error.message);
-            }
-        }
-    },
+      console.log("Request URL:", url);
 
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
+      const text = await response.text(); // parse safely
 
-    updateTrip: (trip_id, updated: Partial<Trip>) => {
+      // Try parsing JSON if possible
+      let created;
+      try {
+        created = JSON.parse(text);
+      } catch {
+        created = text;
+      }
+
+      if (!response.ok) {
+        // Non-2xx errors
+        console.error("API Error:", response.status, created);
+        return;
+      }
+
+      set((state) => ({
+        activeTrip: created.data,
+        userTrips: [...state.userTrips, created.data],
+      }));
+    } catch (error: any) {
+      // Network failures / unexpected errors
+      console.error("Network or unexpected error:", error);
+    }
+  },
+
+  updateTrip: (trip_id, updated: Partial<Trip>) => {
     set((state) => ({
       activeTrip:
         state.activeTrip?.trip_id === trip_id
