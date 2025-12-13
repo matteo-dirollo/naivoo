@@ -49,7 +49,7 @@ export default {
       [
         "expo-router",
         {
-          origin: "https://9lcex5k-matteo92-8081.exp.direct",
+          origin: process.env.EXPO_PUBLIC_BASE_URL,
         },
       ],
       [

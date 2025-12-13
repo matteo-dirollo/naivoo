@@ -9,9 +9,7 @@ import { useHomeLogic } from "@/lib/homelogic";
 import NameTripField from "@/components/NameTripField";
 import { mockStops } from "@/lib/mockStops";
 import { TripMarker } from "@/types/type";
-import { VStack } from "@/components/ui/vstack";
-import { DraggableList } from "@/components/DraggableList";
-import { useLocationStore, useTripStore } from "@/store";
+import { useTripStore } from "@/store";
 import { FlashList } from "@/components/FlashList";
 // TODO: set camera
 // getCamera
