@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Map from "@/components/Map";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Keyboard, Pressable, View } from "react-native";
@@ -7,6 +7,12 @@ import GoogleTextInput from "@/components/GoogleTextInput";
 import { icons } from "@/constants";
 import { useHomeLogic } from "@/lib/homelogic";
 import NameTripField from "@/components/NameTripField";
+import { mockStops } from "@/lib/mockStops";
+import { TripMarker } from "@/types/type";
+import { VStack } from "@/components/ui/vstack";
+import { DraggableList } from "@/components/DraggableList";
+import { useLocationStore, useTripStore } from "@/store";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 // TODO: set camera
 // getCamera
 // animateCamera 	camera: Camera, { duration: Number }
@@ -14,6 +20,19 @@ import NameTripField from "@/components/NameTripField";
 // any property not given will remain unmodified. duration is not supported on iOS.
 
 export default function Home() {
+  const [stops, setStops] = useState<TripMarker[]>([]);
+  const { reorderStopsAccordingToOptimization } = useTripStore();
+
+  const mockTrip = {};
+  const getStops = async (): Promise<TripMarker[]> => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(mockStops), 300); // simulate network
+    });
+  };
+
+  useEffect(() => {
+    getStops().then(setStops);
+  }, []);
   const {
     fetchActiveTrip,
     hasActiveTrip,
@@ -39,36 +58,44 @@ export default function Home() {
         </View>
 
         <Portal>
-          <BottomSheet
-            ref={sheetRef}
-            index={1}
-            onChange={setSnapIndex}
-            snapPoints={snapPoints}
-            enablePanDownToClose={false}
-            backgroundStyle={{ backgroundColor: "#141714" }}
-          >
-            <BottomSheetView className="flex-1">
-              <View className="flex-1 items-center justify-center p-5 space-y-4">
-                {hasActiveTrip ? (
-                  <>
-                    <GoogleTextInput
-                      icon={icons.search}
-                      containerStyle={
-                        "bg-[#1f201e] shadow-md shadow-neutral-300"
-                      }
-                      handlePress={handleDestinationPress}
-                      onTextInputFocus={onPressInputField}
-                      textInputBackgroundColor="#1f201e"
-                    />
-                  </>
-                ) : (
-                  <>
-                    <NameTripField handlePress={onPressInputField} />
-                  </>
-                )}
-              </View>
-            </BottomSheetView>
-          </BottomSheet>
+          <GestureHandlerRootView>
+            <BottomSheet
+              ref={sheetRef}
+              index={1}
+              onChange={setSnapIndex}
+              snapPoints={snapPoints}
+              enablePanDownToClose={false}
+              backgroundStyle={{ backgroundColor: "#141714" }}
+            >
+              <BottomSheetView className="flex-1">
+                <View className="flex-1 items-center justify-center p-5 space-y-4">
+                  {hasActiveTrip ? (
+                    <VStack>
+                      <GoogleTextInput
+                        icon={icons.search}
+                        containerStyle={
+                          "bg-[#1f201e] shadow-md shadow-neutral-300"
+                        }
+                        handlePress={handleDestinationPress}
+                        onTextInputFocus={onPressInputField}
+                        textInputBackgroundColor="#1f201e"
+                      />
+                      <VStack>
+                        <DraggableList
+                          stops={stops}
+                          onReorder={reorderStopsAccordingToOptimization}
+                        />
+                      </VStack>
+                    </VStack>
+                  ) : (
+                    <>
+                      <NameTripField handlePress={onPressInputField} />
+                    </>
+                  )}
+                </View>
+              </BottomSheetView>
+            </BottomSheet>
+          </GestureHandlerRootView>
         </Portal>
       </View>
     </Pressable>

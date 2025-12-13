@@ -52,18 +52,13 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorMode === "dark" ? DarkTheme : DefaultTheme}>
       <GluestackUIProvider mode={colorMode}>
-        <GestureHandlerRootView className="flex-1">
-            <ClerkProvider tokenCache={tokenCache}>
+        <ClerkProvider tokenCache={tokenCache}>
           <PortalProvider>
             <SafeAreaProvider>
-
-                <Slot />
-
-
+              <Slot />
             </SafeAreaProvider>
           </PortalProvider>
-            </ClerkProvider>
-        </GestureHandlerRootView>
+        </ClerkProvider>
       </GluestackUIProvider>
     </ThemeProvider>
   );
