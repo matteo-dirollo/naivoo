@@ -12,7 +12,6 @@ import { TripMarker } from "@/types/type";
 import { VStack } from "@/components/ui/vstack";
 import { DraggableList } from "@/components/DraggableList";
 import { useLocationStore, useTripStore } from "@/store";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 // TODO: set camera
 // getCamera
 // animateCamera 	camera: Camera, { duration: Number }
@@ -58,44 +57,42 @@ export default function Home() {
         </View>
 
         <Portal>
-          <GestureHandlerRootView>
-            <BottomSheet
-              ref={sheetRef}
-              index={1}
-              onChange={setSnapIndex}
-              snapPoints={snapPoints}
-              enablePanDownToClose={false}
-              backgroundStyle={{ backgroundColor: "#141714" }}
-            >
-              <BottomSheetView className="flex-1">
-                <View className="flex-1 items-center justify-center p-5 space-y-4">
-                  {hasActiveTrip ? (
+          <BottomSheet
+            ref={sheetRef}
+            index={1}
+            onChange={setSnapIndex}
+            snapPoints={snapPoints}
+            enablePanDownToClose={false}
+            backgroundStyle={{ backgroundColor: "#141714" }}
+          >
+            <BottomSheetView className="flex-1">
+              <View className="flex-1 items-center justify-center p-5 space-y-4">
+                {hasActiveTrip ? (
+                  <VStack>
+                    <GoogleTextInput
+                      icon={icons.search}
+                      containerStyle={
+                        "bg-[#1f201e] shadow-md shadow-neutral-300"
+                      }
+                      handlePress={handleDestinationPress}
+                      onTextInputFocus={onPressInputField}
+                      textInputBackgroundColor="#1f201e"
+                    />
                     <VStack>
-                      <GoogleTextInput
-                        icon={icons.search}
-                        containerStyle={
-                          "bg-[#1f201e] shadow-md shadow-neutral-300"
-                        }
-                        handlePress={handleDestinationPress}
-                        onTextInputFocus={onPressInputField}
-                        textInputBackgroundColor="#1f201e"
+                      <DraggableList
+                        stops={stops}
+                        onReorder={reorderStopsAccordingToOptimization}
                       />
-                      <VStack>
-                        <DraggableList
-                          stops={stops}
-                          onReorder={reorderStopsAccordingToOptimization}
-                        />
-                      </VStack>
                     </VStack>
-                  ) : (
-                    <>
-                      <NameTripField handlePress={onPressInputField} />
-                    </>
-                  )}
-                </View>
-              </BottomSheetView>
-            </BottomSheet>
-          </GestureHandlerRootView>
+                  </VStack>
+                ) : (
+                  <>
+                    <NameTripField handlePress={onPressInputField} />
+                  </>
+                )}
+              </View>
+            </BottomSheetView>
+          </BottomSheet>
         </Portal>
       </View>
     </Pressable>
