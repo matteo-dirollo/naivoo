@@ -1,4 +1,4 @@
-import { Text } from "react-native";
+import { Text, View} from "react-native";
 import {
   NestableScrollContainer,
   NestableDraggableFlatList,
@@ -11,33 +11,49 @@ interface DraggableListProps {
   onReorder: (newStops: TripMarker[]) => void;
 }
 
-export const DraggableList = ({ stops, onReorder }: DraggableListProps) => {
-  return (
-    <NestableScrollContainer className="flex-1">
-      <NestableDraggableFlatList
-        data={stops}
-        keyExtractor={(item) => item.stop_id}
-        renderItem={({ item, isActive }) => {
-          const isUser = item.isUserLocation;
+interface DraggableListProps {
+    stops: TripMarker[];
+    onReorder: (data: TripMarker[]) => void;  // callback to update order
+}
 
-          return (
-            <Text
-              className={`p-3 border-b border-gray-700 text-white ${
-                isUser
-                  ? "bg-blue-900 font-bold"
-                  : isActive
-                    ? "bg-gray-800"
-                    : "bg-[#141714]"
-              }`}
+export const DraggableList = ({ stops, onReorder }: DraggableListProps) => {
+    const renderItem = ({ item, isActive }) => {
+        const isUser = item.isUserLocation;
+
+        return (
+            <View
+                className={`flex-row items-center p-3 border-b border-b-[#444] ${
+                    isActive ? "opacity-50" : ""
+                }`}
+                style={{
+                    backgroundColor: isUser ? "#0d3b66" : "#141714",
+                }}
             >
-              {isUser ? "📍 " : ""}
-              {item.address}
-            </Text>
-          );
-        }}
-        onDragEnd={({ data }) => onReorder(data)}
-      />
-      <Icon as={GripVerticalIcon} className="text-typography-500 m-2 w-4 h-4" />
-    </NestableScrollContainer>
+                {!isUser && (
+                    <Icon
+                        as={GripVerticalIcon}
+                        className="mr-4 text-[#ccc] w-4 h-4"
+                    />
+                )}
+                <Text
+                    className={`text-white ${
+                        isUser ? "font-bold" : "font-normal"
+                    }`}
+                >
+                    {isUser ? "📍 " : ""}
+                    {item.address}
+                </Text>
+            </View>
+        );
+    };
+  return (
+      <NestableScrollContainer className="flex-1 mx-4">
+          <NestableDraggableFlatList
+              data={stops}
+              keyExtractor={(item) => item.stop_id}
+              renderItem={renderItem}
+              onDragEnd={({ data }) => onReorder(data)}
+          />
+      </NestableScrollContainer>
   );
 };
