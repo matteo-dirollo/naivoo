@@ -15,10 +15,7 @@ const GoogleTextInput = ({
   onTextInputFocus,
 }: GoogleInputProps) => {
   return (
-    <View
-      className={`flex flex-row items-center justify-center relative z-99 rounded-xl ${containerStyle}`}
-      pointerEvents="box-none"
-    >
+    <View className={containerStyle} pointerEvents="box-none">
       <GooglePlacesAutocomplete
         fetchDetails={true}
         placeholder="Search"
@@ -32,7 +29,6 @@ const GoogleTextInput = ({
             borderRadius: 10,
             marginHorizontal: 5,
             position: "relative",
-            shadowColor: "#d4d4d4",
           },
           textInput: {
             backgroundColor: textInputBackgroundColor
@@ -52,19 +48,18 @@ const GoogleTextInput = ({
               : "white",
             color: "white",
             position: "relative",
-            top: 0,
+            top: 4,
             width: "100%",
             borderRadius: 10,
-            shadowColor: "#d4d4d4",
-            zIndex: 99,
-            elevation: 99,
+            zIndex: 999,
+            elevation: 999,
           },
           row: {
             backgroundColor: textInputBackgroundColor,
             paddingVertical: 12,
             paddingHorizontal: 10,
-            borderBottomWidth: 1,
-            borderBottomColor: "#333", // subtle divider
+            borderBottomWidth: 0.5,
+            borderBottomColor: "#464D44",
           },
           description: {
             color: "white",

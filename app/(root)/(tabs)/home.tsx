@@ -12,6 +12,7 @@ import { TripMarker } from "@/types/type";
 import { VStack } from "@/components/ui/vstack";
 import { DraggableList } from "@/components/DraggableList";
 import { useLocationStore, useTripStore } from "@/store";
+import { FlashList } from "@/components/FlashList";
 // TODO: set camera
 // getCamera
 // animateCamera 	camera: Camera, { duration: Number }
@@ -64,27 +65,24 @@ export default function Home() {
             snapPoints={snapPoints}
             enablePanDownToClose={false}
             backgroundStyle={{ backgroundColor: "#141714" }}
+            handleIndicatorStyle={{ backgroundColor: "#849081" }}
           >
             <BottomSheetView className="flex-1">
               <View className="flex-1 items-center justify-center p-5 space-y-4">
                 {hasActiveTrip ? (
-                  <VStack>
+                  <>
                     <GoogleTextInput
                       icon={icons.search}
                       containerStyle={
-                        "bg-[#1f201e] shadow-md shadow-neutral-300"
+                        "bg-[#2D322C] flex flex-row items-center justify-center relative z-99 rounded-xl"
                       }
                       handlePress={handleDestinationPress}
                       onTextInputFocus={onPressInputField}
-                      textInputBackgroundColor="#1f201e"
+                      textInputBackgroundColor="#2D322C"
                     />
-                    <VStack>
-                      {/*<DraggableList*/}
-                      {/*  stops={stops}*/}
-                      {/*  onReorder={reorderStopsAccordingToOptimization}*/}
-                      {/*/>*/}
-                    </VStack>
-                  </VStack>
+
+                    <FlashList stops={stops} />
+                  </>
                 ) : (
                   <>
                     <NameTripField handlePress={onPressInputField} />
