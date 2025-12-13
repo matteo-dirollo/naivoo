@@ -74,41 +74,31 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   createTrip: async (data: Partial<Trip>) => {
     try {
-      const url = `${process.env.EXPO_PUBLIC_API_BASE_URL}/trip/create`; // Expo Router API route
+      const url = `/trip/create`; // this will be appended to api.defaults.baseURL
 
-      console.log("Request URL:", url);
+      console.log("Request URL:", api.defaults.baseURL + url);
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      // Send the POST request
+      const res = await api.post(url, data);
 
-      const text = await response.text(); // parse safely
-
-      // Try parsing JSON if possible
-      let created;
-      try {
-        created = JSON.parse(text);
-      } catch {
-        created = text;
-      }
-
-      if (!response.ok) {
-        // Non-2xx errors
-        console.error("API Error:", response.status, created);
-        return;
-      }
-
+      // Pull data from axios response
+      const created = res.data;
       set((state) => ({
         activeTrip: created.data,
         userTrips: [...state.userTrips, created.data],
       }));
     } catch (error: any) {
-      // Network failures / unexpected errors
-      console.error("Network or unexpected error:", error);
+      // axios error handling
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        console.error("API Error:", error.response.status, error.response.data);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("Network Error: No response received", error.request);
+      } else {
+        // Something happened setting up the request
+        console.error("Error:", error.message);
+      }
     }
   },
 

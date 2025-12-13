@@ -78,8 +78,9 @@ export default function Home() {
                       onTextInputFocus={onPressInputField}
                       textInputBackgroundColor="#2D322C"
                     />
-
-                    <FlashList stops={stops} />
+                    <View className="flex-1 w-full">
+                      {/*<FlashList stops={stops} />*/}
+                    </View>
                   </>
                 ) : (
                   <>
