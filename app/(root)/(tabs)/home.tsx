@@ -79,10 +79,10 @@ export default function Home() {
                       textInputBackgroundColor="#1f201e"
                     />
                     <VStack>
-                      <DraggableList
-                        stops={stops}
-                        onReorder={reorderStopsAccordingToOptimization}
-                      />
+                      {/*<DraggableList*/}
+                      {/*  stops={stops}*/}
+                      {/*  onReorder={reorderStopsAccordingToOptimization}*/}
+                      {/*/>*/}
                     </VStack>
                   </VStack>
                 ) : (
