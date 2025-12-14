@@ -1,65 +1,110 @@
-import React, { useState, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Text, View } from "react-native";
-import { Sortable, SortableItem, SortableRenderItemProps } from "react-native-reanimated-dnd";
-import { BottomSheetView } from "@gorhom/bottom-sheet";
+import {
+  Sortable,
+  SortableItem,
+  SortableRenderItemProps,
+} from "react-native-reanimated-dnd";
 import { TripMarker } from "@/types/type";
 import { GripVerticalIcon, Icon } from "@/components/ui/icon";
 
 interface FlashListProps {
-    stops: TripMarker[];
-    onReorder: (newOrder: TripMarker[]) => void;
+  stops: TripMarker[];
+  onReorder: (newOrder: TripMarker[]) => void;
 }
 
 export const FlashList = ({ stops, onReorder }: FlashListProps) => {
-    const [data, setData] = useState(stops);
+  const [data, setData] = useState<TripMarker[]>(stops);
+  const [isReordering, setIsReordering] = useState(false);
 
-    // update order in external state when drop completes
-    const handleMove = useCallback((itemId: string, from: number, to: number) => {
-        const newData = [...data];
-        const [moved] = newData.splice(from, 1);
-        newData.splice(to, 0, moved);
-        setData(newData);
-        onReorder(newData);
-    }, [data, onReorder]);
+  /**
+   * Keep local state in sync if stops change externally
+   */
+  useEffect(() => {
+    setData(stops);
+  }, [stops]);
 
-    const renderSortableItem = ({ item, id, positions, ...props }: SortableRenderItemProps<TripMarker>) => {
-        const isUser = item.isUserLocation;
+  /**
+   * CORE REORDER LOGIC
+   * (drop-in ready for Zustand later)
+   */
+  const handleMove = useCallback(
+    (itemId: string, from: number, to: number) => {
+      if (from === to) return;
 
-        return (
-            <SortableItem key={id} id={id} positions={positions} onMove={handleMove} {...props}>
-                <View
-                    style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: 12,
-                        backgroundColor: isUser ? "#0d3b66" : "#141714",
-                        borderBottomWidth: 1,
-                        borderBottomColor: "#444",
-                    }}
-                >
-                    {!isUser && (
-                        <Icon
-                            as={GripVerticalIcon}
-                            style={{ marginRight: 12, width: 18, height: 18, color: "#ccc" }}
-                        />
-                    )}
-                    <Text style={{ color: "#fff", fontWeight: isUser ? "bold" : "normal" }}>
-                        {isUser ? "📍 " : ""}
-                        {item.address}
-                    </Text>
-                </View>
-            </SortableItem>
-        );
-    };
+      setData((prev) => {
+        const next = [...prev];
+        const [moved] = next.splice(from, 1);
+        next.splice(to, 0, moved);
 
-    return (
+        onReorder(next);
+        return next;
+      });
+    },
+    [onReorder],
+  );
 
-            <Sortable
-                data={data}
-                renderItem={renderSortableItem}
-                itemHeight={80}           // height you expect each item to take
-                contentContainerStyle={{ paddingBottom: 20 }}
-            />
+  const renderSortableItem = useCallback(
+    ({
+      item,
+      id,
+      positions,
+      ...props
+    }: SortableRenderItemProps<TripMarker>) => {
+      const isUser = item.isUserLocation;
 
-    );
+      return (
+        <SortableItem
+          key={id}
+          id={id}
+          positions={positions}
+          {...props}
+          onMove={handleMove}
+          onDragStart={() => setIsReordering(true)}
+          onDrop={() => setIsReordering(false)}
+        >
+          <View
+            className={[
+              "flex-row items-center px-3 py-3",
+              "border-b border-neutral-700",
+              isUser ? "bg-blue-900" : "bg-neutral-900",
+              isReordering ? "opacity-80" : "opacity-100",
+            ].join(" ")}
+          >
+            {/* DRAG HANDLE (only if not user location) */}
+            {!isUser && (
+              <SortableItem.Handle className="mr-3 p-1">
+                <Icon
+                  as={GripVerticalIcon}
+                  className="w-[18px] h-[18px] text-neutral-300"
+                />
+              </SortableItem.Handle>
+            )}
+
+            {/* TEXT */}
+            <Text
+              className={[
+                "text-white",
+                isUser ? "font-bold" : "font-normal",
+              ].join(" ")}
+              numberOfLines={2}
+            >
+              {isUser ? "📍 " : ""}
+              {item.address}
+            </Text>
+          </View>
+        </SortableItem>
+      );
+    },
+    [handleMove, isReordering],
+  );
+
+  return (
+    <Sortable
+      data={data}
+      renderItem={renderSortableItem}
+      itemHeight={80}
+      contentContainerStyle={{ paddingBottom: 20 }}
+    />
+  );
 };
