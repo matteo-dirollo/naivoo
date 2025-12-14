@@ -47,4 +47,5 @@ app-example
 .idea/*
 
 
-lib/mockStops.ts
+lib/mockStops.js
+.aider*
