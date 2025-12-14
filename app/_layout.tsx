@@ -14,6 +14,9 @@ import { Fab, FabIcon } from "@/components/ui/fab";
 import { MoonIcon, SunIcon } from "@/components/ui/icon";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { ClerkProvider } from "@clerk/clerk-expo";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { PortalProvider } from "@gorhom/portal";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -47,23 +50,18 @@ function RootLayoutNav() {
   const [colorMode, setColorMode] = useState<"light" | "dark">("light");
 
   return (
-    <GluestackUIProvider mode={colorMode}>
-      <ThemeProvider value={colorMode === "dark" ? DarkTheme : DefaultTheme}>
-        <ClerkProvider tokenCache={tokenCache}>
-          <Slot />
-          {pathname === "/" && (
-            <Fab
-              onPress={() =>
-                setColorMode(colorMode === "dark" ? "light" : "dark")
-              }
-              className="m-6"
-              size="lg"
-            >
-              <FabIcon as={colorMode === "dark" ? MoonIcon : SunIcon} />
-            </Fab>
-          )}
-        </ClerkProvider>
-      </ThemeProvider>
-    </GluestackUIProvider>
+    <ThemeProvider value={colorMode === "dark" ? DarkTheme : DefaultTheme}>
+      <GluestackUIProvider mode={colorMode}>
+        <GestureHandlerRootView className="flex-1">
+          <ClerkProvider tokenCache={tokenCache}>
+            <PortalProvider>
+              <SafeAreaProvider>
+                <Slot />
+              </SafeAreaProvider>
+            </PortalProvider>
+          </ClerkProvider>
+        </GestureHandlerRootView>
+      </GluestackUIProvider>
+    </ThemeProvider>
   );
 }

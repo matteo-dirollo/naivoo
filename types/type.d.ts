@@ -1,4 +1,5 @@
 import { TextInputProps, TouchableOpacityProps } from "react-native";
+import React from "react";
 
 declare interface User {
   id: number;
@@ -30,9 +31,9 @@ declare interface User {
 }
 
 declare interface Trip {
+  name: string;
   trip_id: string;
-  user_id: string;
-  user_name: string;
+  user_id?: string;
 
   start_address: string;
   start_latitude: number;
@@ -96,6 +97,7 @@ declare interface GoogleInputProps {
     longitude: number;
     address: string;
   }) => void;
+  onTextInputFocus?: () => void;
 }
 
 declare interface InputFieldProps extends TextInputProps {
@@ -142,7 +144,7 @@ export interface TripStore {
   setUserTrips: (trips: Trip[]) => void;
 
   // CRUD
-  createTrip: (trip: Trip) => Promise<void>; // inserts into DB
+  createTrip: (trip: Trip) => Promise<void>;
   updateTrip: (trip_id: string, updated: Partial<Trip>) => Promise<void>;
   deleteTrip: (trip_id: string) => Promise<void>;
 
@@ -159,4 +161,20 @@ export interface TripStore {
   clearActiveTrip: () => void;
   clearUserTrips: () => void;
   clearAllTrips: () => void;
+}
+
+export interface SnapPointStore {
+  snapIndex: number;
+  isInputFocused: boolean;
+  sheetRef: RefObject<BottomSheet> | null;
+
+  setSnapIndex: (index: number) => void;
+  setSheetRef: (ref: React.RefObject<BottomSheet>) => void;
+  setIsInputFocused: (v: boolean) => void;
+
+  // Optional helpers
+  closeSheet: () => void; // 10%
+  openSmall: () => void; // 25%
+  openMedium: () => void; // 50%
+  openLarge: () => void; // 90%
 }

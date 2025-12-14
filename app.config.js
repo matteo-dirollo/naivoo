@@ -49,7 +49,7 @@ export default {
       [
         "expo-router",
         {
-          origin: "https://dummy-host-theta.vercel.app/",
+          origin: process.env.EXPO_PUBLIC_BASE_URL,
         },
       ],
       [

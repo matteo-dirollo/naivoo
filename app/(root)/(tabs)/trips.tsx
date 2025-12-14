@@ -9,10 +9,10 @@ import {SafeAreaView} from "react-native-safe-area-context";
 import React from "react";
 import {useFetch} from "@/lib/fetch";
 import {Trip} from "@/types/type";
-
-
+import {useAuth, useUser} from "@clerk/clerk-expo";
 
 function Trips(props) {
+    const { user } = useUser();
     const {
         data: recentTrips,
         loading,

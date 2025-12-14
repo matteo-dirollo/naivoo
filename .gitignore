@@ -45,3 +45,7 @@ app-example
 /android
 
 .idea/*
+
+
+lib/mockStops.js
+.aider*

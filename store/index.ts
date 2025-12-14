@@ -1,7 +1,13 @@
-// ---------------------- LOCATION STORE --------------------------------
-
 import { create } from "zustand";
-import { LocationStore, TripStore, Trip, TripMarker } from "@/types/type";
+import {
+  LocationStore,
+  TripStore,
+  Trip,
+  TripMarker,
+  SnapPointStore,
+} from "@/types/type";
+import trips from "@/app/(root)/(tabs)/trips";
+import { api } from "@/lib/api";
 
 export const useLocationStore = create<LocationStore>((set) => ({
   currentUserLatitude: null,
@@ -16,7 +22,6 @@ export const useLocationStore = create<LocationStore>((set) => ({
     })),
 }));
 
-// @ts-ignore
 export const useTripStore = create<TripStore>((set, get) => ({
   activeTrip: null,
   userTrips: [],
@@ -25,14 +30,16 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // SERVER SYNC
   // -----------------------------
 
-  fetchUserTrips: async (userId: number) => {
-    const res = await fetch(`https://your-api.com/trips/${userId}`);
+  fetchUserTrips: async (userId: string) => {
+    const res = await fetch(`${process.env.BASE_URL}/(api)/trip/${userId}`);
     const trips = await res.json();
     set({ userTrips: trips });
   },
 
-  fetchActiveTrip: async (userId: number) => {
-    const res = await fetch(`https://your-api.com/trips/${userId}/active`);
+  fetchActiveTrip: async (userId: string) => {
+    const res = await fetch(
+      `${process.env.BASE_URL}/(api)/trip/${userId}/active`,
+    );
     const trip = await res.json();
     set({ activeTrip: trip });
   },
@@ -41,10 +48,13 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = get().activeTrip;
     if (!trip) return;
 
-    const res = await fetch(`https://your-api.com/trips/${trip.trip_id}`, {
-      method: "PUT",
-      body: JSON.stringify(trip),
-    });
+    const res = await fetch(
+      `${process.env.BASE_URL}/(api)/trip/${trip.trip_id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(trip),
+      },
+    );
 
     const updated = await res.json();
     set({ activeTrip: updated });
@@ -62,20 +72,37 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // TRIP CRUD
   // -----------------------------
 
-  createTrip: async (trip: Trip) => {
-    const res = await fetch(`https://your-api.com/trips`, {
-      method: "POST",
-      body: JSON.stringify(trip),
-    });
+  createTrip: async (data: Partial<Trip>) => {
+    try {
+      const url = `/trip/create`; // this will be appended to api.defaults.baseURL
 
-    const created = await res.json();
-    set((state) => ({
-      activeTrip: created,
-      userTrips: [...state.userTrips, created],
-    }));
+      console.log("Request URL:", api.defaults.baseURL + url);
+
+      // Send the POST request
+      const res = await api.post(url, data);
+
+      // Pull data from axios response
+      const created = res.data;
+      set((state) => ({
+        activeTrip: created.data,
+        userTrips: [...state.userTrips, created.data],
+      }));
+    } catch (error: any) {
+      // axios error handling
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        console.error("API Error:", error.response.status, error.response.data);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("Network Error: No response received", error.request);
+      } else {
+        // Something happened setting up the request
+        console.error("Error:", error.message);
+      }
+    }
   },
 
-  updateTrip: (trip_id, updated) => {
+  updateTrip: (trip_id, updated: Partial<Trip>) => {
     set((state) => ({
       activeTrip:
         state.activeTrip?.trip_id === trip_id
@@ -86,11 +113,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
       ),
     }));
   },
-  // TODO: add logic to fetch the trip from the db
   deleteTrip: async (trip_id) => {
-    await fetch(`https://your-api.com/trips/${trip_id}`, {
-      method: "DELETE",
-    });
+    await api.delete(`/(api)/trip/${trip_id}`);
 
     set((state) => ({
       activeTrip:
@@ -107,7 +131,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = get().activeTrip;
     if (!trip) return;
 
-    const res = await fetch(`https://your-api.com/stops`, {
+    const res = await fetch(`/(api)/stop`, {
       method: "POST",
       body: JSON.stringify(stop),
     });
@@ -123,7 +147,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
 
   removeStop: async (stop_id) => {
-    await fetch(`https://your-api.com/stops/${stop_id}`, {
+    await fetch(`/(api)/${stop_id}`, {
       method: "DELETE",
     });
 
@@ -136,7 +160,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
 
   updateStop: async (stop_id, updated) => {
-    const res = await fetch(`https://your-api.com/stops/${stop_id}`, {
+    const res = await fetch(`/(api)/${stop_id}`, {
       method: "PUT",
       body: JSON.stringify(updated),
     });
@@ -188,4 +212,31 @@ export const useTripStore = create<TripStore>((set, get) => ({
   clearActiveTrip: () => set({ activeTrip: null }),
   clearUserTrips: () => set({ userTrips: [] }),
   clearAllTrips: () => set({ activeTrip: null, userTrips: [] }),
+}));
+
+export const useSheetStore = create<SnapPointStore>((set, get) => ({
+  snapIndex: 1, // default 25%
+  isInputFocused: false,
+  sheetRef: null,
+
+  setSheetRef: (ref) => set({ sheetRef: ref }),
+  setSnapIndex: (index) => set({ snapIndex: index }),
+  setIsInputFocused: (v: boolean) => set({ isInputFocused: v }),
+
+  closeSheet: () => {
+    get().sheetRef?.current?.snapToIndex(0);
+    set({ snapIndex: 0 });
+  },
+  openSmall: () => {
+    get().sheetRef?.current?.snapToIndex(1);
+    set({ snapIndex: 1 });
+  },
+  openMedium: () => {
+    get().sheetRef?.current?.snapToIndex(2);
+    set({ snapIndex: 2 });
+  },
+  openLarge: () => {
+    get().sheetRef?.current?.snapToIndex(3);
+    set({ snapIndex: 3 });
+  },
 }));
