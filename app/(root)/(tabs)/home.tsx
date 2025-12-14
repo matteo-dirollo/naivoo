@@ -10,7 +10,6 @@ import NameTripField from "@/components/NameTripField";
 import { mockStops } from "@/lib/mockStops";
 import { TripMarker } from "@/types/type";
 import { useTripStore } from "@/store";
-import { FlashList } from "@/components/FlashList";
 import { DraggableList } from "@/components/DraggableList";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 // TODO: set camera
@@ -96,9 +95,9 @@ export default function Home() {
                       />
                     </>
                   ) : (
-                    <>
+                    <View className="flex-1 justify-center items-center">
                       <NameTripField handlePress={onPressInputField} />
-                    </>
+                    </View>
                   )}
                 </View>
               </BottomSheetView>
