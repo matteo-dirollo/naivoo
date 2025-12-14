@@ -7,7 +7,7 @@ import {
 } from "react-native-reanimated-dnd";
 import { TripMarker } from "@/types/type";
 import { GripVerticalIcon, Icon } from "@/components/ui/icon";
-import { useAnimatedScrollHandler } from "react-native-reanimated";
+import { useAnimatedGestureHandler } from "react-native-reanimated";
 
 interface FlashListProps {
   stops: TripMarker[];
