@@ -58,6 +58,7 @@ export const FlashList = ({ stops, onReorder }: FlashListProps) => {
           key={id}
           id={id}
           positions={positions}
+          data={data}
           {...props}
           onMove={handleMove}
           onDragStart={() => setIsReordering(true)}
@@ -96,7 +97,7 @@ export const FlashList = ({ stops, onReorder }: FlashListProps) => {
         </SortableItem>
       );
     },
-    [handleMove, isReordering],
+    [handleMove, isReordering, data],
   );
 
   return (
