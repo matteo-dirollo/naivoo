@@ -73,7 +73,7 @@ export default function Home() {
             onChange={setSnapIndex}
             snapPoints={snapPoints}
             enablePanDownToClose={false}
-            enableContentPanningGesture={true}
+            enableContentPanningGesture={false}
             activeOffsetY={[-10, 10]}
             backgroundStyle={{ backgroundColor: "#141714" }}
             handleIndicatorStyle={{ backgroundColor: "#849081" }}
@@ -82,7 +82,7 @@ export default function Home() {
               <BottomSheetScrollView style={{ flex: 1 }}>
                 <View className="flex-1 p-5 space-y-4">
                   {hasActiveTrip ? (
-                    <>
+                    <View className="flex-1 w-full mx-auto space-x-5">
                       <View
                         className="w-full"
                         onLayout={(event) => {
@@ -109,7 +109,7 @@ export default function Home() {
                         snapPoints={snapPoints}
                         searchInputHeight={searchInputHeight}
                       />
-                    </>
+                    </View>
                   ) : (
                     <View className="flex-1 justify-center items-center">
                       <NameTripField handlePress={onPressInputField} />

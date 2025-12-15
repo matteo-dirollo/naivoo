@@ -8,6 +8,7 @@ import { TripMarker } from "@/types/type";
 import { GripVerticalIcon, Icon } from "@/components/ui/icon";
 import { MapPinHouse } from "lucide-react-native";
 import { useMemo } from "react";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
 interface DraggableListProps {
   stops: TripMarker[];
@@ -108,7 +109,11 @@ export const DraggableList = ({
     return (
       <View className="flex-row items-center border-b border-b-[#444] bg-[#0d3b66] p-3">
         <View className="mr-4 p-5 justify-center items-center min-w-[14] min-h-[14]">
-          <MapPinHouse color="#fff" strokeWidth={1}  className="text-[#ccc] w-6 h-6" />
+          <MapPinHouse
+            color="#fff"
+            strokeWidth={1}
+            className="text-[#ccc] w-6 h-6"
+          />
         </View>
         <View className="mr-4" />
         <Text className="text-white flex-1 font-bold" numberOfLines={2}>
@@ -125,19 +130,24 @@ export const DraggableList = ({
   };
 
   return (
-    <NestableScrollContainer
-      className="flex-1 my-2"
-      style={{ maxHeight: maxScrollHeight }}
-    >
-      {renderHeader()}
-      <NestableDraggableFlatList
-        data={draggableStops}
-        keyExtractor={(item) => item.stop_id}
-        renderItem={renderItem}
-        onDragEnd={handleDragEnd}
-        containerStyle={{ flex: 1 }}
-        activationDistance={5}
-      />
-    </NestableScrollContainer>
+    <BottomSheetScrollView>
+      <NestableScrollContainer
+        className="flex-1 my-2"
+        style={{ maxHeight: maxScrollHeight }}
+      >
+        {renderHeader()}
+
+        <NestableDraggableFlatList
+          data={draggableStops}
+          keyExtractor={(item) => item.stop_id}
+          renderItem={renderItem}
+          onDragEnd={handleDragEnd}
+          containerStyle={{ flex: 1 }}
+          activationDistance={20}
+          dragHitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+          showsVerticalScrollIndicator={true}
+        />
+      </NestableScrollContainer>
+    </BottomSheetScrollView>
   );
 };
