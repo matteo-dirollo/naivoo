@@ -13,7 +13,7 @@ export const useHomeLogic = () => {
   const { user } = useUser();
   const { signOut } = useAuth();
   const [hasPermission, setHasPermission] = useState<boolean>(false);
-
+  const [searchInputHeight, setSearchInputHeight] = useState();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { setCurrentUserLocation } = useLocationStore();
@@ -123,6 +123,8 @@ export const useHomeLogic = () => {
     isInputFocused,
     setIsInputFocused,
     onPressInputField,
+    searchInputHeight,
+    setSearchInputHeight,
     snapPoints,
     snapIndex,
     setSnapIndex,

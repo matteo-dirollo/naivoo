@@ -45,6 +45,8 @@ export default function Home() {
     sheetRef,
     setIsInputFocused,
     onPressInputField,
+    searchInputHeight,
+    setSearchInputHeight,
     snapPoints,
     snapIndex,
     setSnapIndex,
@@ -81,7 +83,14 @@ export default function Home() {
                 <View className="flex-1 p-5 space-y-4">
                   {hasActiveTrip ? (
                     <>
-                      <View className="w-full">
+                      <View
+                        className="w-full"
+                        onLayout={(event) => {
+                          const { height } = event.nativeEvent.layout;
+                          setSearchInputHeight(height);
+                          console.log("GoogleTextInput actual height:", height);
+                        }}
+                      >
                         <GoogleTextInput
                           icon={icons.search}
                           containerStyle={
@@ -98,6 +107,7 @@ export default function Home() {
                         onReorder={reorderStopsAccordingToOptimization}
                         snapIndex={snapIndex}
                         snapPoints={snapPoints}
+                        searchInputHeight={searchInputHeight}
                       />
                     </>
                   ) : (
