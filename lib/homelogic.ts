@@ -124,6 +124,7 @@ export const useHomeLogic = () => {
     setIsInputFocused,
     onPressInputField,
     snapPoints,
+    snapIndex,
     setSnapIndex,
     handleSignOut,
     handleDestinationPress,

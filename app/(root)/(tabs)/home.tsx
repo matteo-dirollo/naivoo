@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Map from "@/components/Map";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetScrollView,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { Keyboard, Pressable, View } from "react-native";
 import { Portal } from "@gorhom/portal";
 import GoogleTextInput from "@/components/GoogleTextInput";
@@ -43,6 +46,7 @@ export default function Home() {
     setIsInputFocused,
     onPressInputField,
     snapPoints,
+    snapIndex,
     setSnapIndex,
     handleDestinationPress,
   } = useHomeLogic();
@@ -73,7 +77,7 @@ export default function Home() {
             handleIndicatorStyle={{ backgroundColor: "#849081" }}
           >
             <GestureDetector gesture={contentGesture}>
-              <BottomSheetView style={{ flex: 1 }}>
+              <BottomSheetScrollView style={{ flex: 1 }}>
                 <View className="flex-1 p-5 space-y-4">
                   {hasActiveTrip ? (
                     <>
@@ -92,6 +96,8 @@ export default function Home() {
                       <DraggableList
                         stops={stops}
                         onReorder={reorderStopsAccordingToOptimization}
+                        snapIndex={snapIndex}
+                        snapPoints={snapPoints}
                       />
                     </>
                   ) : (
@@ -100,7 +106,7 @@ export default function Home() {
                     </View>
                   )}
                 </View>
-              </BottomSheetView>
+              </BottomSheetScrollView>
             </GestureDetector>
           </BottomSheet>
         </Portal>

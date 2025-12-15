@@ -1,4 +1,4 @@
-import { Text, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import {
   NestableScrollContainer,
   NestableDraggableFlatList,
@@ -6,13 +6,40 @@ import {
 } from "react-native-draggable-flatlist";
 import { TripMarker } from "@/types/type";
 import { GripVerticalIcon, Icon } from "@/components/ui/icon";
+import { useMemo } from "react";
 
 interface DraggableListProps {
   stops: TripMarker[];
   onReorder: (newStops: TripMarker[]) => void;
+  snapIndex: number; // Current snap point index
+  snapPoints: (string | number)[]; // Array of snap points
 }
 
-export const DraggableList = ({ stops, onReorder }: DraggableListProps) => {
+export const DraggableList = ({
+  stops,
+  onReorder,
+  snapPoints,
+  snapIndex,
+}: DraggableListProps) => {
+  const { height: windowHeight } = useWindowDimensions();
+  const maxScrollHeight = useMemo(() => {
+    const currentSnapPoint = snapPoints[snapIndex];
+
+    let sheetHeight: number;
+    if (
+      typeof currentSnapPoint === "string" &&
+      currentSnapPoint.endsWith("%")
+    ) {
+      const percentage = parseFloat(currentSnapPoint) / 100;
+      sheetHeight = windowHeight * percentage;
+    } else {
+      sheetHeight = Number(currentSnapPoint);
+    }
+    const reservedSpace = 120;
+
+    return sheetHeight - reservedSpace;
+  }, [snapIndex, snapPoints, windowHeight]);
+
   const renderItem = ({
     item,
     drag,
@@ -45,7 +72,10 @@ export const DraggableList = ({ stops, onReorder }: DraggableListProps) => {
   };
 
   return (
-    <NestableScrollContainer style={{ flex: 1 }}>
+    <NestableScrollContainer
+      className="flex-1"
+      style={{ maxHeight: maxScrollHeight }}
+    >
       <NestableDraggableFlatList
         data={stops}
         keyExtractor={(item) => item.stop_id}

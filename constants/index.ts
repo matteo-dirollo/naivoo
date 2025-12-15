@@ -33,69 +33,68 @@ import onboarding3 from "@/assets/images/onboarding3.png";
 import signUpCar from "@/assets/images/signup-car.png";
 
 export const images = {
-    onboarding1,
-    onboarding2,
-    onboarding3,
-    getStarted,
-    signUpCar,
-    check,
-    noResult,
-    message,
+  onboarding1,
+  onboarding2,
+  onboarding3,
+  getStarted,
+  signUpCar,
+  check,
+  noResult,
+  message,
 };
 
 export const icons = {
-    arrowDown,
-    arrowUp,
-    backArrow,
-    chat,
-    checkmark,
-    close,
-    dollar,
-    email,
-    eyecross,
-    google,
-    home,
-    list,
-    lock,
-    map,
-    marker,
-    out,
-    person,
-    pin,
-    point,
-    profile,
-    search,
-    selectedMarker,
-    star,
-    target,
-    to,
+  arrowDown,
+  arrowUp,
+  backArrow,
+  chat,
+  checkmark,
+  close,
+  dollar,
+  email,
+  eyecross,
+  google,
+  home,
+  list,
+  lock,
+  map,
+  marker,
+  out,
+  person,
+  pin,
+  point,
+  profile,
+  search,
+  selectedMarker,
+  star,
+  target,
+  to,
 };
 
 export const onboarding = [
-    {
-        id: 1,
-        title: "Plan smarter routes in seconds",
-        description:
-            "Add your stops and let the app calculate the most efficient path for you.",
-        image: images.onboarding1,
-    },
-    {
-        id: 2,
-        title: "Organize all your destinations easily",
-        description:
-            "Save multiple addresses, reorder them, and keep everything in one place.",
-        image: images.onboarding2,
-    },
-    {
-        id: 3,
-        title: "Navigate with confidence",
-        description:
-            "Get the optimal trip and start your journey without wasting time.",
-        image: images.onboarding3,
-    },
+  {
+    id: 1,
+    title: "Plan smarter routes in seconds",
+    description:
+      "Add your stops and let the app calculate the most efficient path for you.",
+    image: images.onboarding1,
+  },
+  {
+    id: 2,
+    title: "Organize all your destinations easily",
+    description:
+      "Save multiple addresses, reorder them, and keep everything in one place.",
+    image: images.onboarding2,
+  },
+  {
+    id: 3,
+    title: "Navigate with confidence",
+    description:
+      "Get the optimal trip and start your journey without wasting time.",
+    image: images.onboarding3,
+  },
 ];
 
-
 export const data = {
-    onboarding,
+  onboarding,
 };

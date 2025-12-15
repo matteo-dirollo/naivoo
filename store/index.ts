@@ -192,7 +192,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   reorderStopsAccordingToOptimization: () => {
     const trip = get().activeTrip;
-    if (!trip || trip.optimized_order.length === 0) return;
+    if (!trip || !trip.optimized_order || trip.optimized_order.length === 0)
+      return;
 
     const idMap = new Map(trip.stops.map((stop) => [stop.stop_id, stop]));
 

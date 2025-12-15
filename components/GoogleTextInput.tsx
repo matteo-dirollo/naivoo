@@ -23,15 +23,14 @@ const GoogleTextInput = ({
         enablePoweredByContainer={false}
         keyboardShouldPersistTaps="handled"
         styles={{
-            container: {flex: 1,
-                zIndex: 1000, },
+          container: { flex: 1, zIndex: 1000 },
           textInputContainer: {
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 10,
             marginHorizontal: 5,
             position: "relative",
-              zIndex: 1000,
+            zIndex: 1000,
           },
           textInput: {
             backgroundColor: textInputBackgroundColor
@@ -52,8 +51,8 @@ const GoogleTextInput = ({
             color: "white",
             position: "absolute",
             top: 10,
-              left: 0,
-              right: 0,
+            left: 0,
+            right: 0,
             width: "100%",
             borderRadius: 0,
             zIndex: 1000,
