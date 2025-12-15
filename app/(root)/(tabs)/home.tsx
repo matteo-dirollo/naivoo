@@ -50,6 +50,8 @@ export default function Home() {
     snapPoints,
     snapIndex,
     setSnapIndex,
+    isDragging,
+    setIsDragging,
     handleDestinationPress,
   } = useHomeLogic();
 
@@ -73,7 +75,7 @@ export default function Home() {
             onChange={setSnapIndex}
             snapPoints={snapPoints}
             enablePanDownToClose={false}
-            enableContentPanningGesture={true}
+            enableContentPanningGesture={!isDragging}
             activeOffsetY={[-10, 10]}
             backgroundStyle={{ backgroundColor: "#141714" }}
             handleIndicatorStyle={{ backgroundColor: "#849081" }}
@@ -108,6 +110,8 @@ export default function Home() {
                         snapIndex={snapIndex}
                         snapPoints={snapPoints}
                         searchInputHeight={searchInputHeight}
+                        onDragStart={() => setIsDragging(true)}
+                        onDragEndGlobal={() => setIsDragging(false)}
                       />
                     </View>
                   ) : (

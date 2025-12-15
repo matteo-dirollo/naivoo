@@ -111,6 +111,16 @@ declare interface InputFieldProps extends TextInputProps {
   className?: string;
 }
 
+declare interface DraggableListProps {
+  stops: TripMarker[];
+  onReorder: (newStops: TripMarker[]) => void;
+  snapIndex: number;
+  snapPoints: (string | number)[];
+  searchInputHeight?: number;
+  onDragStart?: () => void;
+  onDragEndGlobal?: () => void;
+}
+
 // ----------------------- ZUSTAND: LOCATION STORE -----------------------
 
 declare interface LocationStore {

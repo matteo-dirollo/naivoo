@@ -3,19 +3,10 @@ import {
   NestableScrollContainer,
   NestableDraggableFlatList,
   RenderItemParams,
-  ScaleDecorator,
 } from "react-native-draggable-flatlist";
-import { TripMarker } from "@/types/type";
+import { DraggableListProps, TripMarker } from "@/types/type";
 import { Grip, MapPinHouse } from "lucide-react-native";
 import { useMemo, useRef } from "react";
-
-interface DraggableListProps {
-  stops: TripMarker[];
-  onReorder: (newStops: TripMarker[]) => void;
-  snapIndex: number;
-  snapPoints: (string | number)[];
-  searchInputHeight?: any;
-}
 
 export const DraggableList = ({
   stops,
@@ -23,8 +14,9 @@ export const DraggableList = ({
   snapPoints,
   snapIndex,
   searchInputHeight,
+  onDragStart,
+  onDragEndGlobal,
 }: DraggableListProps) => {
-  const scrollRef = useRef<NestableDraggableFlatList>(null);
   const { height: windowHeight } = useWindowDimensions();
   const { userLocation, draggableStops } = useMemo(() => {
     const user = stops.find((stop) => stop.isUserLocation);
@@ -88,7 +80,6 @@ export const DraggableList = ({
         }`}
       >
         <Pressable
-          onTouchStart={drag}
           onLongPress={drag}
           delayLongPress={200}
           disabled={isActive}
@@ -141,7 +132,13 @@ export const DraggableList = ({
         data={draggableStops}
         keyExtractor={(item) => item.stop_id}
         renderItem={renderItem}
-        onDragEnd={handleDragEnd}
+        onDragBegin={() => {
+          onDragStart?.();
+        }}
+        onDragEnd={({ data }) => {
+          handleDragEnd({ data });
+          onDragEndGlobal?.();
+        }}
         containerStyle={{ flex: 1 }}
         activationDistance={20}
         dragHitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}

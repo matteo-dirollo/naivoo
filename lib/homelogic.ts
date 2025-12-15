@@ -16,6 +16,7 @@ export const useHomeLogic = () => {
   const [hasPermission, setHasPermission] = useState<boolean>(false);
   const [searchInputHeight, setSearchInputHeight] = useState<number>(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const { setCurrentUserLocation } = useLocationStore();
   const { fetchActiveTrip } = useTripStore();
@@ -134,6 +135,8 @@ export const useHomeLogic = () => {
     snapPoints,
     snapIndex,
     setSnapIndex,
+    isDragging,
+    setIsDragging,
     handleSignOut,
     handleDestinationPress,
     hasPermission,
