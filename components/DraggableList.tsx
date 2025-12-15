@@ -6,14 +6,15 @@ import {
 } from "react-native-draggable-flatlist";
 import { TripMarker } from "@/types/type";
 import { GripVerticalIcon, Icon } from "@/components/ui/icon";
+import { MapPinHouse } from "lucide-react-native";
 import { useMemo } from "react";
 
 interface DraggableListProps {
   stops: TripMarker[];
   onReorder: (newStops: TripMarker[]) => void;
-  snapIndex: number; // Current snap point index
-  snapPoints: (string | number)[]; // Array of snap points
-  searchInputHeight?: any; // Height of the search input to reserve space
+  snapIndex: number;
+  snapPoints: (string | number)[];
+  searchInputHeight?: any;
 }
 
 export const DraggableList = ({
@@ -60,16 +61,16 @@ export const DraggableList = ({
     const reservedSpace = searchInputHeight || 120;
     const calculatedHeight = sheetHeight - reservedSpace;
 
-    console.log("Sheet calculation:", {
-      snapIndex,
-      arrayIndex,
-      currentSnapPoint,
-      windowHeight,
-      sheetHeight,
-      searchInputHeight,
-      reservedSpace,
-      calculatedHeight,
-    });
+    // console.log("Sheet calculation:", {
+    //   snapIndex,
+    //   arrayIndex,
+    //   currentSnapPoint,
+    //   windowHeight,
+    //   sheetHeight,
+    //   searchInputHeight,
+    //   reservedSpace,
+    //   calculatedHeight,
+    // });
 
     return Math.max(calculatedHeight, 100);
   }, [snapIndex, snapPoints, windowHeight, searchInputHeight]);
@@ -107,13 +108,12 @@ export const DraggableList = ({
     return (
       <View className="flex-row items-center border-b border-b-[#444] bg-[#0d3b66] p-3">
         <View className="mr-4 p-5 justify-center items-center min-w-[14] min-h-[14]">
-          <Icon as={GripVerticalIcon} className="text-[#ccc] w-6 h-6" />
+          <MapPinHouse color="#fff" strokeWidth={1}  className="text-[#ccc] w-6 h-6" />
         </View>
         <View className="mr-4" />
-          <Text className="text-white flex-1 font-bold" numberOfLines={2}>
-            {userLocation.address}
-          </Text>
-
+        <Text className="text-white flex-1 font-bold" numberOfLines={2}>
+          {userLocation.address}
+        </Text>
       </View>
     );
   };
@@ -129,9 +129,9 @@ export const DraggableList = ({
       className="flex-1 my-2"
       style={{ maxHeight: maxScrollHeight }}
     >
-      <View style={{ flex: 1 }}>{renderHeader()}</View>
+      {renderHeader()}
       <NestableDraggableFlatList
-        data={stops}
+        data={draggableStops}
         keyExtractor={(item) => item.stop_id}
         renderItem={renderItem}
         onDragEnd={handleDragEnd}
