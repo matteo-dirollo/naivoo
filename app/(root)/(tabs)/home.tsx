@@ -73,7 +73,7 @@ export default function Home() {
             onChange={setSnapIndex}
             snapPoints={snapPoints}
             enablePanDownToClose={false}
-            enableContentPanningGesture={false}
+            enableContentPanningGesture={true}
             activeOffsetY={[-10, 10]}
             backgroundStyle={{ backgroundColor: "#141714" }}
             handleIndicatorStyle={{ backgroundColor: "#849081" }}

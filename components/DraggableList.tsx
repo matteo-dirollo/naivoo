@@ -3,12 +3,11 @@ import {
   NestableScrollContainer,
   NestableDraggableFlatList,
   RenderItemParams,
+  ScaleDecorator,
 } from "react-native-draggable-flatlist";
 import { TripMarker } from "@/types/type";
-import { GripVerticalIcon, Icon } from "@/components/ui/icon";
-import { MapPinHouse } from "lucide-react-native";
-import { useMemo } from "react";
-import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { Grip, MapPinHouse } from "lucide-react-native";
+import { useMemo, useRef } from "react";
 
 interface DraggableListProps {
   stops: TripMarker[];
@@ -25,6 +24,7 @@ export const DraggableList = ({
   snapIndex,
   searchInputHeight,
 }: DraggableListProps) => {
+  const scrollRef = useRef<NestableDraggableFlatList>(null);
   const { height: windowHeight } = useWindowDimensions();
   const { userLocation, draggableStops } = useMemo(() => {
     const user = stops.find((stop) => stop.isUserLocation);
@@ -90,10 +90,11 @@ export const DraggableList = ({
         <Pressable
           onTouchStart={drag}
           onLongPress={drag}
-          delayLongPress={0}
-          className="mr-4 p-5 justify-center items-center min-w-[14] min-h-[14]"
+          delayLongPress={200}
+          disabled={isActive}
+          className="mr-4 p-5 justify-center items-center min-w-[16] min-h-[16]"
         >
-          <Icon as={GripVerticalIcon} className="text-[#ccc] w-6 h-6" />
+          <Grip strokeWidth={1} size={16} color={"#fff"} />
         </Pressable>
         <View className="mr-4" />
         <Text className={`text-white flex-1 font-normal`} numberOfLines={2}>
@@ -130,24 +131,22 @@ export const DraggableList = ({
   };
 
   return (
-    <BottomSheetScrollView>
-      <NestableScrollContainer
-        className="flex-1 my-2"
-        style={{ maxHeight: maxScrollHeight }}
-      >
-        {renderHeader()}
+    <NestableScrollContainer
+      className="flex-1 my-2"
+      style={{ maxHeight: maxScrollHeight }}
+    >
+      {renderHeader()}
 
-        <NestableDraggableFlatList
-          data={draggableStops}
-          keyExtractor={(item) => item.stop_id}
-          renderItem={renderItem}
-          onDragEnd={handleDragEnd}
-          containerStyle={{ flex: 1 }}
-          activationDistance={20}
-          dragHitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-          showsVerticalScrollIndicator={true}
-        />
-      </NestableScrollContainer>
-    </BottomSheetScrollView>
+      <NestableDraggableFlatList
+        data={draggableStops}
+        keyExtractor={(item) => item.stop_id}
+        renderItem={renderItem}
+        onDragEnd={handleDragEnd}
+        containerStyle={{ flex: 1 }}
+        activationDistance={20}
+        dragHitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+        showsVerticalScrollIndicator={true}
+      />
+    </NestableScrollContainer>
   );
 };
