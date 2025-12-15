@@ -73,7 +73,7 @@ export const DraggableList = ({
 
   return (
     <NestableScrollContainer
-      className="flex-1"
+      className="flex-1 my-2"
       style={{ maxHeight: maxScrollHeight }}
     >
       <NestableDraggableFlatList

@@ -2,23 +2,14 @@ import { TripMarker } from "@/types/type";
 
 export const mockStops: TripMarker[] = [
   {
-    stop_id: "stop_000",
-    trip_id: "trip_123",
-    address: "Lungomare Giovanni Caboto, Gaeta, Italy",
-    latitude: 41.214216,
-    longitude: 13.571877,
-    expected_duration: 0,
-    expected_distance: 0,
-    isUserLocation: true,
-  },
-  {
     stop_id: "stop_001",
     trip_id: "trip_123",
     address: "Via del Corso 12, Rome, Italy",
     latitude: 41.902782,
     longitude: 12.496366,
-    expected_duration: 420,
-    expected_distance: 1200,
+    expected_duration: 0,
+    expected_distance: 0,
+    isUserLocation: true,
   },
   {
     stop_id: "stop_002",
