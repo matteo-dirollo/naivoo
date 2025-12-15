@@ -93,7 +93,7 @@ export const DraggableList = ({
         >
           <Icon as={GripVerticalIcon} className="text-[#ccc] w-6 h-6" />
         </Pressable>
-        <View className="w-14 mr-4" />
+        <View className="mr-4" />
         <Text className={`text-white flex-1 font-normal`} numberOfLines={2}>
           {item.address}
         </Text>
@@ -105,19 +105,15 @@ export const DraggableList = ({
     if (!userLocation) return null;
 
     return (
-      <View
-        className="flex-row items-center border-b border-b-[#444]"
-        style={{
-          backgroundColor: "#0d3b66",
-          minHeight: 56,
-          paddingVertical: 8,
-          paddingHorizontal: 12,
-        }}
-      >
-        <View style={{ width: 44, marginRight: 8 }} />
-        <Text className="text-white flex-1 font-bold" numberOfLines={2}>
-          📍 {userLocation.address}
-        </Text>
+      <View className="flex-row items-center border-b border-b-[#444] bg-[#0d3b66] p-3">
+        <View className="mr-4 p-5 justify-center items-center min-w-[14] min-h-[14]">
+          <Icon as={GripVerticalIcon} className="text-[#ccc] w-6 h-6" />
+        </View>
+        <View className="mr-4" />
+          <Text className="text-white flex-1 font-bold" numberOfLines={2}>
+            {userLocation.address}
+          </Text>
+
       </View>
     );
   };
