@@ -8,17 +8,22 @@ import { Trip } from "@/types/type";
 import { useLocationStore, useSheetStore, useTripStore } from "@/store";
 import { googleReverseGeocode } from "@/lib/utils";
 import BottomSheet from "@gorhom/bottom-sheet";
+import { Gesture } from "react-native-gesture-handler";
 
 export const useHomeLogic = () => {
   const { user } = useUser();
   const { signOut } = useAuth();
   const [hasPermission, setHasPermission] = useState<boolean>(false);
-  const [searchInputHeight, setSearchInputHeight] = useState();
+  const [searchInputHeight, setSearchInputHeight] = useState<number>(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { setCurrentUserLocation } = useLocationStore();
   const { fetchActiveTrip } = useTripStore();
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
+
+  const contentGesture = Gesture.Native().simultaneousWithExternalGesture(
+    Gesture.Pan().runOnJS(true),
+  );
 
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["25%", "50%", "90%"], []);
@@ -125,6 +130,7 @@ export const useHomeLogic = () => {
     onPressInputField,
     searchInputHeight,
     setSearchInputHeight,
+    contentGesture,
     snapPoints,
     snapIndex,
     setSnapIndex,

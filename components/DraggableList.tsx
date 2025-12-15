@@ -1,4 +1,4 @@
-import { Text, useWindowDimensions, View } from "react-native";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import {
   NestableScrollContainer,
   NestableDraggableFlatList,
@@ -13,6 +13,7 @@ interface DraggableListProps {
   onReorder: (newStops: TripMarker[]) => void;
   snapIndex: number; // Current snap point index
   snapPoints: (string | number)[]; // Array of snap points
+  searchInputHeight?: any; // Height of the search input to reserve space
 }
 
 export const DraggableList = ({
@@ -20,10 +21,31 @@ export const DraggableList = ({
   onReorder,
   snapPoints,
   snapIndex,
+  searchInputHeight,
 }: DraggableListProps) => {
   const { height: windowHeight } = useWindowDimensions();
+  const { userLocation, draggableStops } = useMemo(() => {
+    const user = stops.find((stop) => stop.isUserLocation);
+    const draggable = stops.filter((stop) => !stop.isUserLocation);
+    return { userLocation: user, draggableStops: draggable };
+  }, [stops]);
+
   const maxScrollHeight = useMemo(() => {
-    const currentSnapPoint = snapPoints[snapIndex];
+    const arrayIndex = snapIndex - 1;
+    if (
+      !snapPoints ||
+      snapPoints.length === 0 ||
+      arrayIndex < 0 ||
+      arrayIndex >= snapPoints.length
+    ) {
+      console.warn("Invalid snapIndex or snapPoints:", {
+        snapIndex,
+        arrayIndex,
+        snapPoints,
+      });
+      return 300;
+    }
+    const currentSnapPoint = snapPoints[arrayIndex];
 
     let sheetHeight: number;
     if (
@@ -35,40 +57,75 @@ export const DraggableList = ({
     } else {
       sheetHeight = Number(currentSnapPoint);
     }
-    const reservedSpace = 120;
+    const reservedSpace = searchInputHeight || 120;
+    const calculatedHeight = sheetHeight - reservedSpace;
 
-    return sheetHeight - reservedSpace;
-  }, [snapIndex, snapPoints, windowHeight]);
+    console.log("Sheet calculation:", {
+      snapIndex,
+      arrayIndex,
+      currentSnapPoint,
+      windowHeight,
+      sheetHeight,
+      searchInputHeight,
+      reservedSpace,
+      calculatedHeight,
+    });
+
+    return Math.max(calculatedHeight, 100);
+  }, [snapIndex, snapPoints, windowHeight, searchInputHeight]);
 
   const renderItem = ({
     item,
     drag,
     isActive,
   }: RenderItemParams<TripMarker>) => {
-    const isUser = item.isUserLocation;
-
     return (
       <View
-        className={`flex-row items-center p-3 border-b border-b-[#444] ${
+        className={`flex-row items-center p-3 border-b border-b-[#444] bg-[#141714] ${
           isActive ? "opacity-50" : ""
         }`}
-        style={{
-          backgroundColor: isUser ? "#0d3b66" : "#141714",
-        }}
       >
-        {!isUser && (
-          <View onTouchStart={drag} className="mr-4 p-1">
-            <Icon as={GripVerticalIcon} className="text-[#ccc] w-4 h-4" />
-          </View>
-        )}
-        <Text
-          className={`text-white flex-1 ${isUser ? "font-bold" : "font-normal"}`}
+        <Pressable
+          onTouchStart={drag}
+          onLongPress={drag}
+          delayLongPress={0}
+          className="mr-4 p-5 justify-center items-center min-w-[14] min-h-[14]"
         >
-          {isUser ? "📍 " : ""}
+          <Icon as={GripVerticalIcon} className="text-[#ccc] w-6 h-6" />
+        </Pressable>
+        <View className="w-14 mr-4" />
+        <Text className={`text-white flex-1 font-normal`} numberOfLines={2}>
           {item.address}
         </Text>
       </View>
     );
+  };
+
+  const renderHeader = () => {
+    if (!userLocation) return null;
+
+    return (
+      <View
+        className="flex-row items-center border-b border-b-[#444]"
+        style={{
+          backgroundColor: "#0d3b66",
+          minHeight: 56,
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+        }}
+      >
+        <View style={{ width: 44, marginRight: 8 }} />
+        <Text className="text-white flex-1 font-bold" numberOfLines={2}>
+          📍 {userLocation.address}
+        </Text>
+      </View>
+    );
+  };
+
+  const handleDragEnd = ({ data }: { data: TripMarker[] }) => {
+    // Reconstruct the full list with user location at the top
+    const fullList = userLocation ? [userLocation, ...data] : data;
+    onReorder(fullList);
   };
 
   return (
@@ -76,12 +133,14 @@ export const DraggableList = ({
       className="flex-1 my-2"
       style={{ maxHeight: maxScrollHeight }}
     >
+      <View style={{ flex: 1 }}>{renderHeader()}</View>
       <NestableDraggableFlatList
         data={stops}
         keyExtractor={(item) => item.stop_id}
         renderItem={renderItem}
-        onDragEnd={({ data }) => onReorder(data)}
+        onDragEnd={handleDragEnd}
         containerStyle={{ flex: 1 }}
+        activationDistance={5}
       />
     </NestableScrollContainer>
   );
