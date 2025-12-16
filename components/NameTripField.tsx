@@ -5,7 +5,7 @@ import { FormControl } from "@/components/ui/form-control";
 import { Button, ButtonText } from "@/components/ui/button";
 import { VStack } from "@/components/ui/vstack";
 import moment from "moment";
-import { useLocationStore, useTripStore } from "@/store";
+import { useUserLocationStore, useTripStore } from "@/store";
 import { useUser } from "@clerk/clerk-expo";
 import * as Crypto from "expo-crypto";
 
@@ -13,7 +13,7 @@ const NameTripField = ({ handlePress }: { handlePress: () => void }) => {
   const date = moment().format("dddd DD/MM/YYYY hh:mm A");
   const { user } = useUser();
   const { currentUserAddress, currentUserLatitude, currentUserLongitude } =
-    useLocationStore();
+    useUserLocationStore();
   const [prefilledInputValue, setPrefilledInputValue] = React.useState(date);
   const UUID = Crypto.randomUUID();
 

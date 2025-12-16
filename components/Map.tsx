@@ -1,46 +1,22 @@
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { View } from "react-native";
-import { useLocationStore, useTripStore } from "@/store";
+import { useUserLocationStore, useTripStore } from "@/store";
 import { calculateRegion } from "@/lib/map";
 import { useEffect, useRef } from "react";
 import LocationCluster from "@/components/LocationCluster";
 import StopMarker from "@/components/StopMarker";
+import {darkMapStyle} from "@/constants";
 
 const Map = () => {
   const mapRef = useRef<MapView>(null);
-  const { currentUserLatitude, currentUserLongitude } = useLocationStore();
+  const { currentUserLatitude, currentUserLongitude } = useUserLocationStore();
   const { activeTrip } = useTripStore();
   const region = calculateRegion({
     markers: activeTrip?.stops || [],
     userLatitude: currentUserLatitude,
     userLongitude: currentUserLongitude,
   });
-  const darkMapStyle = [
-    { elementType: "geometry", stylers: [{ color: "#212121" }] },
-    { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-    { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
-    { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
-    {
-      featureType: "administrative",
-      elementType: "geometry",
-      stylers: [{ color: "#757575" }],
-    },
-    {
-      featureType: "poi",
-      elementType: "geometry",
-      stylers: [{ color: "#303030" }],
-    },
-    {
-      featureType: "road",
-      elementType: "geometry",
-      stylers: [{ color: "#383838" }],
-    },
-    {
-      featureType: "water",
-      elementType: "geometry",
-      stylers: [{ color: "#0D0F0C" }],
-    },
-  ];
+
 
   useEffect(() => {
     if (mapRef.current && region) {
