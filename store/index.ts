@@ -6,7 +6,6 @@ import {
   TripMarker,
   SnapPointStore,
 } from "@/types/type";
-import trips from "@/app/(root)/(tabs)/trips";
 import { api } from "@/lib/api";
 
 export const useLocationStore = create<LocationStore>((set) => ({
@@ -31,33 +30,55 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // -----------------------------
 
   fetchUserTrips: async (userId: string) => {
-    const res = await fetch(`${process.env.BASE_URL}/(api)/trip/${userId}`);
-    const trips = await res.json();
-    set({ userTrips: trips });
+    try {
+      const res = await api.get(`/trip/${userId}`);
+      set({ userTrips: res.data.data });
+    } catch (error: any) {
+      if (error.response) {
+        console.error("API Error:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("Network Error: No response received", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+      // Optionally set empty array on error
+      set({ userTrips: [] });
+    }
   },
 
   fetchActiveTrip: async (userId: string) => {
-    const res = await fetch(
-      `${process.env.BASE_URL}/(api)/trip/${userId}/active`,
-    );
-    const trip = await res.json();
-    set({ activeTrip: trip });
+    try {
+      const res = await api.get(`/trip/${userId}/active`);
+      set({ activeTrip: res.data.data });
+    } catch (error: any) {
+      if (error.response) {
+        console.error("API Error:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("Network Error: No response received", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+      // Optionally set null on error
+      set({ activeTrip: null });
+    }
   },
 
   saveActiveTrip: async () => {
     const trip = get().activeTrip;
     if (!trip) return;
 
-    const res = await fetch(
-      `${process.env.BASE_URL}/(api)/trip/${trip.trip_id}`,
-      {
-        method: "PUT",
-        body: JSON.stringify(trip),
-      },
-    );
-
-    const updated = await res.json();
-    set({ activeTrip: updated });
+    try {
+      const res = await api.put(`/trip/${trip.trip_id}`, trip);
+      set({ activeTrip: res.data.data });
+    } catch (error: any) {
+      if (error.response) {
+        console.error("API Error:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("Network Error: No response received", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+    }
   },
 
   // -----------------------------
@@ -74,108 +95,154 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   createTrip: async (data: Partial<Trip>) => {
     try {
-      const url = `/trip/create`; // this will be appended to api.defaults.baseURL
-
-      const res = await api.post(url, data);
-
-      // Pull data from axios response
+      const res = await api.post(`/trip/create`, data);
       const created = res.data;
+
       set((state) => ({
         activeTrip: created.data,
         userTrips: [...state.userTrips, created.data],
       }));
     } catch (error: any) {
-      // axios error handling
       if (error.response) {
-        // The request was made and the server responded with a status code
         console.error("API Error:", error.response.status, error.response.data);
       } else if (error.request) {
-        // The request was made but no response was received
         console.error("Network Error: No response received", error.request);
       } else {
-        // Something happened setting up the request
         console.error("Error:", error.message);
       }
+      throw error; // Re-throw so caller can handle
     }
   },
 
-  updateTrip: (trip_id, updated: Partial<Trip>) => {
-    set((state) => ({
-      activeTrip:
-        state.activeTrip?.trip_id === trip_id
-          ? { ...state.activeTrip, ...updated }
-          : state.activeTrip,
-      userTrips: state.userTrips.map((t) =>
-        t.trip_id === trip_id ? { ...t, ...updated } : t,
-      ),
-    }));
-  },
-  deleteTrip: async (trip_id) => {
-    const url = `/trip/`;
-    await api.delete(`${url}${trip_id}`);
+  updateTrip: async (trip_id: string, updated: Partial<Trip>) => {
+    try {
+      const res = await api.put(`/trip/${trip_id}`, updated);
+      const updatedTrip = res.data.data;
 
-    set((state) => ({
-      activeTrip:
-        state.activeTrip?.trip_id === trip_id ? null : state.activeTrip,
-      userTrips: state.userTrips.filter((t) => t.trip_id !== trip_id),
-    }));
+      set((state) => ({
+        activeTrip:
+          state.activeTrip?.trip_id === trip_id
+            ? { ...state.activeTrip, ...updatedTrip }
+            : state.activeTrip,
+        userTrips: state.userTrips.map((t) =>
+          t.trip_id === trip_id ? { ...t, ...updatedTrip } : t,
+        ),
+      }));
+    } catch (error: any) {
+      if (error.response) {
+        console.error("API Error:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("Network Error: No response received", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+      throw error;
+    }
   },
 
-  addStop: async (stop) => {
+  deleteTrip: async (trip_id: string) => {
+    try {
+      await api.delete(`/trip/${trip_id}`);
+
+      set((state) => ({
+        activeTrip:
+          state.activeTrip?.trip_id === trip_id ? null : state.activeTrip,
+        userTrips: state.userTrips.filter((t) => t.trip_id !== trip_id),
+      }));
+    } catch (error: any) {
+      if (error.response) {
+        console.error("API Error:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("Network Error: No response received", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+      throw error;
+    }
+  },
+
+  // -----------------------------
+  // STOP MANAGEMENT
+  // -----------------------------
+
+  addStop: async (stop: TripMarker) => {
     const trip = get().activeTrip;
     if (!trip) return;
 
-    const res = await fetch(`/(api)/stop`, {
-      method: "POST",
-      body: JSON.stringify(stop),
-    });
+    try {
+      const res = await api.post(`/stop`, stop);
+      const createdStop = res.data.data;
 
-    const createdStop = await res.json();
-
-    set((state) => ({
-      activeTrip: {
-        ...state.activeTrip!,
-        stops: [...state.activeTrip!.stops, createdStop],
-      },
-    }));
+      set((state) => ({
+        activeTrip: {
+          ...state.activeTrip!,
+          stops: [...state.activeTrip!.stops, createdStop],
+        },
+      }));
+    } catch (error: any) {
+      if (error.response) {
+        console.error("API Error:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("Network Error: No response received", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+      throw error;
+    }
   },
 
-  removeStop: async (stop_id) => {
-    await fetch(`/(api)/${stop_id}`, {
-      method: "DELETE",
-    });
+  removeStop: async (stop_id: string) => {
+    try {
+      await api.delete(`/stop`, { data: { stop_id } });
 
-    set((state) => ({
-      activeTrip: {
-        ...state.activeTrip!,
-        stops: state.activeTrip!.stops.filter((s) => s.stop_id !== stop_id),
-      },
-    }));
+      set((state) => ({
+        activeTrip: {
+          ...state.activeTrip!,
+          stops: state.activeTrip!.stops.filter((s) => s.stop_id !== stop_id),
+        },
+      }));
+    } catch (error: any) {
+      if (error.response) {
+        console.error("API Error:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("Network Error: No response received", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+      throw error;
+    }
   },
 
-  updateStop: async (stop_id, updated) => {
-    const res = await fetch(`/(api)/${stop_id}`, {
-      method: "PUT",
-      body: JSON.stringify(updated),
-    });
+  updateStop: async (stop_id: string, updated: Partial<TripMarker>) => {
+    try {
+      const res = await api.put(`/stop`, { stop_id, ...updated });
+      const newStop = res.data.data;
 
-    const newStop = await res.json();
-
-    set((state) => ({
-      activeTrip: {
-        ...state.activeTrip!,
-        stops: state.activeTrip!.stops.map((s) =>
-          s.stop_id === stop_id ? newStop : s,
-        ),
-      },
-    }));
+      set((state) => ({
+        activeTrip: {
+          ...state.activeTrip!,
+          stops: state.activeTrip!.stops.map((s) =>
+            s.stop_id === stop_id ? newStop : s,
+          ),
+        },
+      }));
+    } catch (error: any) {
+      if (error.response) {
+        console.error("API Error:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("Network Error: No response received", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+      throw error;
+    }
   },
 
   // -----------------------------
   // OPTIMIZATION
   // -----------------------------
 
-  setOptimizedOrder: (optimizedIds) => {
+  setOptimizedOrder: (optimizedIds: string[]) => {
     const trip = get().activeTrip;
     if (!trip) return;
 

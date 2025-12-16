@@ -145,8 +145,8 @@ export interface TripStore {
   userTrips: Trip[];
 
   // SERVER SYNC
-  fetchUserTrips: (userId: number) => Promise<void>;
-  fetchActiveTrip: (userId: number) => Promise<void>;
+  fetchUserTrips: (userId: string) => Promise<void>;
+  fetchActiveTrip: (userId: string) => Promise<void>;
   saveActiveTrip: () => Promise<void>; // inserts or updates DB
 
   // LOCAL STATE
