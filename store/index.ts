@@ -112,7 +112,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
       if (userLocation && created.data.trip_id) {
         try {
           const userLocationStop = {
-            stop_id: getShortBase36Id(),
             trip_id: created.data.trip_id,
             address: userLocation.address,
             latitude: userLocation.latitude,
