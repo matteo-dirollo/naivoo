@@ -112,7 +112,7 @@ const GoogleTextInput = forwardRef(
             onFocus: () => {
               setTimeout(() => {
                 onTextInputFocus?.();
-              }, 10); // workaround for gesture interference
+              }, 10);
             },
           }}
         />

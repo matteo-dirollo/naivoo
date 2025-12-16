@@ -30,14 +30,18 @@ declare interface User {
   subscription_renewal_reminder_sent: boolean;
 }
 
+export interface Location {
+  latitude: number;
+  longitude: number;
+  address: string;
+}
+
 declare interface Trip {
   name: string;
   trip_id: string;
   user_id?: string;
 
-  start_address: string;
-  start_latitude: number;
-  start_longitude: number;
+  start_location: Location;
 
   stops: TripMarker[];
 
@@ -56,9 +60,7 @@ declare interface Trip {
 declare interface TripMarker {
   stop_id: string;
   trip_id: string;
-  address: string;
-  latitude: number;
-  longitude: number;
+  location: Location;
   expected_duration: number; // Google Directions duration (seconds)
   expected_distance: number;
   // TODO: add fields below in the db
@@ -127,19 +129,10 @@ declare interface DraggableListProps {
 
 // ----------------------- ZUSTAND: LOCATION STORE -----------------------
 
-declare interface LocationStore {
-  currentUserLatitude: number | null;
-  currentUserLongitude: number | null;
-  currentUserAddress: string | null;
-  setCurrentUserLocation: ({
-    latitude,
-    longitude,
-    address,
-  }: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  }) => void;
+export interface UserLocationStore {
+  currentUserLocation: Location | null;
+
+  setCurrentUserLocation: (location: Location) => void;
 }
 
 // ----------------------- ZUSTAND: TRIP STORE -----------------------

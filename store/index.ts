@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import {
-  LocationStore,
+  UserLocationStore,
   TripStore,
   Trip,
   TripMarker,
@@ -9,17 +9,10 @@ import {
 import { api } from "@/lib/api";
 import { getShortBase36Id } from "@/lib/utils";
 
-export const useLocationStore = create<LocationStore>((set) => ({
-  currentUserLatitude: null,
-  currentUserLongitude: null,
-  currentUserAddress: null,
+export const useUserLocationStore = create<UserLocationStore>((set) => ({
+  currentUserLocation: null,
 
-  setCurrentUserLocation: ({ latitude, longitude, address }) =>
-    set(() => ({
-      currentUserLatitude: latitude,
-      currentUserLongitude: longitude,
-      currentUserAddress: address,
-    })),
+  setCurrentUserLocation: (location) => set({ currentUserLocation: location }),
 }));
 
 export const useTripStore = create<TripStore>((set, get) => ({

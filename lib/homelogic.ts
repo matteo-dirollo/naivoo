@@ -5,7 +5,7 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
 import { useFetch } from "@/lib/fetch";
 import { Trip, TripMarker } from "@/types/type";
-import { useLocationStore, useSheetStore, useTripStore } from "@/store";
+import { useUserLocationStore, useSheetStore, useTripStore } from "@/store";
 import { getShortBase36Id, googleReverseGeocode } from "@/lib/utils";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { Gesture } from "react-native-gesture-handler";
@@ -19,7 +19,7 @@ export const useHomeLogic = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const { setCurrentUserLocation } = useLocationStore();
+  const { setCurrentUserLocation } = useUserLocationStore();
   const { fetchActiveTrip, reorderStopsManually } = useTripStore();
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
   const { activeTrip, addStop } = useTripStore();
@@ -93,34 +93,31 @@ export const useHomeLogic = () => {
 
         if (cancelled) return;
 
-        let address;
+        let resolvedAddress = "";
+
         try {
-          address = await Location.reverseGeocodeAsync({
+          const [geo] = await Location.reverseGeocodeAsync({
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
           });
-          address = [
-            {
-              name: address[0]?.name ?? "",
-              region: address[0]?.region ?? "",
-            },
-          ];
+
+          resolvedAddress = [geo?.name, geo?.region].filter(Boolean).join(", ");
         } catch {
-          address = [
-            await googleReverseGeocode(
-              pos.coords.latitude,
-              pos.coords.longitude,
-            ),
-          ];
+          const fallback = await googleReverseGeocode(
+            pos.coords.latitude,
+            pos.coords.longitude,
+          );
+
+          resolvedAddress = fallback?.address ?? "";
         }
 
-        if (!cancelled) {
-          setCurrentUserLocation({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            address: `${address[0].name}, ${address[0].region}`,
-          });
-        }
+        if (cancelled) return;
+
+        setCurrentUserLocation({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          address: resolvedAddress,
+        });
       } catch (e) {
         console.log("Location error:", e);
       }
@@ -151,9 +148,9 @@ export const useHomeLogic = () => {
       await addStop({
         stop_id: shortId,
         trip_id: activeTrip.trip_id,
-        address,
-        latitude,
-        longitude,
+        location: { latitude, longitude, address },
+        expected_duration: 0,
+        expected_distance: 0,
         isUserLocation: false,
       });
 

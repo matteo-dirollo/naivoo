@@ -4,43 +4,36 @@ import { Trip } from "@/types/type";
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Trip;
-    const {
-      name,
-      trip_id,
-      user_id,
-      start_address,
-      start_latitude,
-      start_longitude,
-      return_to_start,
-    } = body;
+    const { name, trip_id, user_id, start_location, return_to_start } = body;
 
-    if (!user_id || !start_address) {
+    if (
+      !user_id ||
+      !start_location ||
+      !start_location.address ||
+      start_location.latitude == null ||
+      start_location.longitude == null
+    ) {
       return Response.json(
-        { error: "Missing required fields" },
+        { error: "Missing or invalid start_location" },
         { status: 400 },
       );
     }
 
     const sql = neon(process.env.DATABASE_URL!);
 
-    // Insert only the main trip record. Stops will be handled by a separate endpoint.
     const [createdTrip] = await sql`
       INSERT INTO trips (
         name,
         trip_id,
         user_id,
-        start_address,
-        start_latitude,
-        start_longitude,
+        start_location,
         return_to_start,
         active_trip
       ) VALUES (
         ${name},
         ${trip_id},
         ${user_id},
-        ${start_address},
-        ${start_latitude},
-        ${start_longitude},
+        ${JSON.stringify(start_location)},
         ${return_to_start},
         true
       )

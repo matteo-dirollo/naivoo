@@ -1,26 +1,27 @@
 import { neon } from "@neondatabase/serverless";
 
-// GET all trips for a specific user_id
+/**
+ * GET all trips for a specific user_id
+ */
 export async function GET(
   request: Request,
   { params }: { params: { id: string } },
 ) {
   const userId = params.id;
+
   if (!userId) {
     return Response.json({ error: "User ID is required" }, { status: 400 });
   }
 
   try {
     const sql = neon(process.env.DATABASE_URL!);
-    // Corrected table name from 'stops' to 'trip_stops'
-    const response = await sql`
+
+    const trips = await sql`
       SELECT
-        t.name,
         t.trip_id,
         t.user_id,
-        t.start_address,
-        t.start_latitude,
-        t.start_longitude,
+        t.name,
+        t.start_location,
         t.return_to_start,
         t.optimized_order,
         t.total_distance_km,
@@ -32,40 +33,37 @@ export async function GET(
             json_build_object(
               'stop_id', ts.stop_id,
               'trip_id', ts.trip_id,
-              'address', ts.address,
-              'latitude', ts.latitude,
-              'longitude', ts.longitude,
+              'location', ts.location,
               'expected_duration', ts.expected_duration,
               'expected_distance', ts.expected_distance
             )
+              ORDER BY ts.created_at
           ) FILTER (WHERE ts.stop_id IS NOT NULL),
           '[]'::json
         ) AS stops
-      FROM
-        trips t
-          LEFT JOIN
-        trip_stops ts ON ts.trip_id = t.trip_id
-      WHERE
-        t.user_id = ${userId}
-      GROUP BY
-        t.trip_id
-      ORDER BY
-        t.created_at DESC;
+      FROM trips t
+             LEFT JOIN trip_stops ts ON ts.trip_id = t.trip_id
+      WHERE t.user_id = ${userId}
+      GROUP BY t.trip_id
+      ORDER BY t.created_at DESC;
     `;
 
-    return Response.json({ data: response });
+    return Response.json({ data: trips }, { status: 200 });
   } catch (error) {
     console.error("Error fetching trips:", error);
     return Response.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
-// UPDATE a specific trip by trip_id
+/**
+ * UPDATE a specific trip by trip_id
+ */
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } },
 ) {
   const tripId = params.id;
+
   if (!tripId) {
     return Response.json({ error: "Trip ID is required" }, { status: 400 });
   }
@@ -73,6 +71,7 @@ export async function PUT(
   try {
     const sql = neon(process.env.DATABASE_URL!);
     const body = await request.json();
+
     const {
       total_distance_km,
       total_duration_min,
@@ -88,7 +87,7 @@ export async function PUT(
         optimized_order = COALESCE(${optimized_order}, optimized_order),
         active_trip = COALESCE(${active_trip}, active_trip)
       WHERE trip_id = ${tripId}
-      RETURNING *;
+        RETURNING *;
     `;
 
     if (!updatedTrip) {
@@ -102,20 +101,26 @@ export async function PUT(
   }
 }
 
-// DELETE a specific trip by trip_id
+/**
+ * DELETE a specific trip by trip_id
+ */
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } },
 ) {
   const tripId = params.id;
+
   if (!tripId) {
     return Response.json({ error: "Trip ID is required" }, { status: 400 });
   }
 
   try {
     const sql = neon(process.env.DATABASE_URL!);
+
     const result = await sql`
-      DELETE FROM trips WHERE trip_id = ${tripId}
+      DELETE FROM trips
+      WHERE trip_id = ${tripId}
+        RETURNING trip_id;
     `;
 
     if (result.length === 0) {
