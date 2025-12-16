@@ -6,10 +6,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as Trip;
     const { name, trip_id, user_id, start_location, return_to_start } = body;
 
-    if (
-      !user_id ||
-      !start_location
-    ) {
+    if (!user_id || !start_location) {
       return Response.json(
         { error: "Missing or invalid start_location" },
         { status: 400 },

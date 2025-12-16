@@ -5,7 +5,7 @@ import { calculateRegion } from "@/lib/map";
 import { useEffect, useRef } from "react";
 import LocationCluster from "@/components/LocationCluster";
 import StopMarker from "@/components/StopMarker";
-import {darkMapStyle} from "@/constants";
+import { darkMapStyle } from "@/constants";
 
 const Map = () => {
   const mapRef = useRef<MapView>(null);
@@ -16,7 +16,6 @@ const Map = () => {
     userLatitude: currentUserLatitude,
     userLongitude: currentUserLongitude,
   });
-
 
   useEffect(() => {
     if (mapRef.current && region) {

@@ -87,10 +87,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // TRIP CRUD
   // -----------------------------
 
-  createTrip: async (
-    data: Partial<Trip>,
-    userLocation?: { latitude: number; longitude: number; address: string },
-  ) => {
+  createTrip: async (data: Partial<Trip>) => {
     try {
       // Create the trip first
       const res = await api.post(`/trip/create`, data);
@@ -102,20 +99,20 @@ export const useTripStore = create<TripStore>((set, get) => ({
       }));
 
       // If user location is provided, add it as the first stop
-      if (userLocation && created.data.trip_id) {
+      if (created.data.trip_id) {
         try {
           const userLocationStop = {
             trip_id: created.data.trip_id,
-            address: userLocation.address,
-            latitude: userLocation.latitude,
-            longitude: userLocation.longitude,
+            stop_id: getShortBase36Id(),
+            start_location: data.start_location,
+            expected_duration: 0,
+            expected_distance: 0,
             isUserLocation: true,
           };
 
           const stopRes = await api.post(`/stop`, userLocationStop);
           const createdStop = stopRes.data.data;
 
-          // Update the active trip with the new stop
           set((state) => ({
             activeTrip: state.activeTrip
               ? {
