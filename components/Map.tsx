@@ -9,12 +9,14 @@ import { darkMapStyle } from "@/constants";
 
 const Map = () => {
   const mapRef = useRef<MapView>(null);
-  const { currentUserLatitude, currentUserLongitude } = useUserLocationStore();
+  const { currentUserLocation } = useUserLocationStore();
+  const userLatitude = currentUserLocation?.latitude;
+  const userLongitude = currentUserLocation?.longitude;
   const { activeTrip } = useTripStore();
   const region = calculateRegion({
     markers: activeTrip?.stops || [],
-    userLatitude: currentUserLatitude,
-    userLongitude: currentUserLongitude,
+    userLatitude: userLatitude,
+    userLongitude: userLongitude,
   });
 
   useEffect(() => {
@@ -33,11 +35,11 @@ const Map = () => {
         showsPointsOfInterest={false}
         region={region}
       >
-        {currentUserLatitude != null && currentUserLongitude != null && (
+        {userLatitude != null && userLongitude != null && (
           <Marker
             coordinate={{
-              latitude: currentUserLatitude,
-              longitude: currentUserLongitude,
+              latitude: userLatitude,
+              longitude: userLongitude,
             }}
           >
             <LocationCluster size="20" fill="#0075b2" />
@@ -48,10 +50,10 @@ const Map = () => {
           <Marker
             key={stop.stop_id}
             coordinate={{
-              latitude: stop.latitude,
-              longitude: stop.longitude,
+              latitude: stop.location.latitude,
+              longitude: stop.location.longitude,
             }}
-            title={stop.address}
+            title={stop.location.address}
           >
             <StopMarker width="40" height="40" text={stop.stop_id} />
           </Marker>
