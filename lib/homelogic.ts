@@ -19,7 +19,7 @@ export const useHomeLogic = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const { setCurrentUserLocation } = useUserLocationStore();
+  const { currentUserLocation, setCurrentUserLocation } = useUserLocationStore();
   const { fetchActiveTrip, reorderStopsManually } = useTripStore();
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
   const { activeTrip, addStop } = useTripStore();
@@ -76,15 +76,11 @@ export const useHomeLogic = () => {
   } = useFetch<Trip[]>(`/(api)/trip/${user?.id}`);
 
   useEffect(() => {
-    setSheetRef(sheetRef);
     let cancelled = false;
 
     const getLocation = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setHasPermission(false);
-        return;
-      }
+      if (status !== "granted") return;
 
       try {
         const pos = await Location.getCurrentPositionAsync({
@@ -93,31 +89,28 @@ export const useHomeLogic = () => {
 
         if (cancelled) return;
 
-        let resolvedAddress = "";
-
+        let addressStr = "";
         try {
-          const [geo] = await Location.reverseGeocodeAsync({
+          const address = await Location.reverseGeocodeAsync({
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
           });
-
-          resolvedAddress = [geo?.name, geo?.region].filter(Boolean).join(", ");
+          addressStr = `${address[0]?.name ?? ""}, ${address[0]?.region ?? ""}`;
         } catch {
-          const fallback = await googleReverseGeocode(
+          const googleAddress = await googleReverseGeocode(
             pos.coords.latitude,
             pos.coords.longitude,
           );
-
-          resolvedAddress = fallback?.address ?? "";
+          addressStr = `${googleAddress.name}, ${googleAddress.region}`;
         }
 
-        if (cancelled) return;
-
-        setCurrentUserLocation({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          address: resolvedAddress,
-        });
+        if (!cancelled) {
+          setCurrentUserLocation({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            address: addressStr,
+          });
+        }
       } catch (e) {
         console.log("Location error:", e);
       }
@@ -128,7 +121,7 @@ export const useHomeLogic = () => {
     return () => {
       cancelled = true;
     };
-  }, [setSheetRef, setCurrentUserLocation]);
+  }, [setCurrentUserLocation, sheetRef]);
 
   const handleAddStop = async ({
     latitude,
