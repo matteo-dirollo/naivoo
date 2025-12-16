@@ -8,10 +8,7 @@ export async function POST(request: Request) {
 
     if (
       !user_id ||
-      !start_location ||
-      !start_location.address ||
-      start_location.latitude == null ||
-      start_location.longitude == null
+      !start_location
     ) {
       return Response.json(
         { error: "Missing or invalid start_location" },
