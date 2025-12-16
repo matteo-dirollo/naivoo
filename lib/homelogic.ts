@@ -19,7 +19,8 @@ export const useHomeLogic = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const { currentUserLocation, setCurrentUserLocation } = useUserLocationStore();
+  const { currentUserLocation, setCurrentUserLocation } =
+    useUserLocationStore();
   const { fetchActiveTrip, reorderStopsManually } = useTripStore();
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
   const { activeTrip, addStop } = useTripStore();

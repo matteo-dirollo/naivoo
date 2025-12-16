@@ -1,25 +1,53 @@
 import { neon } from "@neondatabase/serverless";
-import { TripMarker } from "@/types/type";
 
 // POST: Create a new stop for a trip
 export async function POST(request: Request) {
   try {
     const sql = neon(process.env.DATABASE_URL!);
-    const { trip_id, address, latitude, longitude } =
-      (await request.json()) as TripMarker;
+    const {
+      stop_id,
+      trip_id,
+      location,
+      expected_duration,
+      expected_distance,
+      isUserLocation,
+    } = await request.json();
 
-    if (!trip_id || !address) {
+    if (!stop_id || !trip_id || !location) {
       return Response.json(
-        { error: "Missing required fields: trip_id and address" },
+        {
+          error:
+            "Missing required fields: stop_id, trip_id, and location with address",
+        },
         { status: 400 },
       );
     }
 
     const [newStop] = await sql`
-      INSERT INTO trip_stops (trip_id, address, latitude, longitude)
-      VALUES (${trip_id}, ${address}, ${latitude}, ${longitude})
-        RETURNING *;
-    `;
+            INSERT INTO trip_stops (
+                stop_id,
+                trip_id,
+                location,
+                expected_duration,
+                expected_distance,
+                isuserlocation
+            )
+            VALUES (
+                       ${stop_id},
+                       ${trip_id},
+                       ${JSON.stringify(location)},
+                       ${expected_duration || 0},
+                       ${expected_distance || 0},
+                       ${isUserLocation ?? false}
+                   )
+                RETURNING 
+        stop_id,
+        trip_id,
+        location,
+        expected_duration,
+        expected_distance,
+        isuserlocation::boolean as "isUserLocation";
+        `;
 
     return Response.json({ data: newStop }, { status: 201 });
   } catch (error) {
@@ -32,8 +60,8 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const sql = neon(process.env.DATABASE_URL!);
-    const { stop_id, address, latitude, longitude } =
-      (await request.json()) as Partial<TripMarker>;
+    const { stop_id, location, expected_duration, expected_distance } =
+      await request.json();
 
     if (!stop_id) {
       return Response.json(
@@ -43,14 +71,20 @@ export async function PUT(request: Request) {
     }
 
     const [updatedStop] = await sql`
-      UPDATE trip_stops
-      SET
-        address = COALESCE(${address}, address),
-        latitude = COALESCE(${latitude}, latitude),
-        longitude = COALESCE(${longitude}, longitude)
-      WHERE stop_id = ${stop_id}
-        RETURNING *;
-    `;
+            UPDATE trip_stops
+            SET
+                location = COALESCE(${location ? JSON.stringify(location) : null}, location),
+                expected_duration = COALESCE(${expected_duration}, expected_duration),
+                expected_distance = COALESCE(${expected_distance}, expected_distance)
+            WHERE stop_id = ${stop_id}
+                RETURNING 
+        stop_id,
+        trip_id,
+        location,
+        expected_duration,
+        expected_distance,
+        isuserlocation::boolean as "isUserLocation";
+        `;
 
     if (!updatedStop) {
       return Response.json({ error: "Stop not found" }, { status: 404 });
@@ -77,8 +111,8 @@ export async function DELETE(request: Request) {
     }
 
     const result = await sql`
-      DELETE FROM trip_stops WHERE stop_id = ${stop_id} RETURNING stop_id;
-    `;
+            DELETE FROM trip_stops WHERE stop_id = ${stop_id} RETURNING stop_id;
+        `;
 
     if (result.length === 0) {
       return Response.json({ error: "Stop not found" }, { status: 404 });
