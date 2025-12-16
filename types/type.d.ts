@@ -100,6 +100,10 @@ declare interface GoogleInputProps {
   onTextInputFocus?: () => void;
 }
 
+declare interface GoogleInputRef {
+  clear: () => void;
+}
+
 declare interface InputFieldProps extends TextInputProps {
   label: string;
   icon?: any;
@@ -165,7 +169,8 @@ export interface TripStore {
 
   // OPTIMIZATION
   setOptimizedOrder: (optimizedIds: string[]) => void;
-  reorderStopsAccordingToOptimization: () => void;
+  reorderStopsManually: (newStops: TripMarker[]) => void;
+  reorderStopsAccordingToOptimization: (newStops: TripMarker[]) => void;
 
   // CLEAR
   clearActiveTrip: () => void;

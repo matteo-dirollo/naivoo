@@ -4,11 +4,12 @@ import * as Location from "expo-location";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
 import { useFetch } from "@/lib/fetch";
-import { Trip } from "@/types/type";
+import { Trip, TripMarker } from "@/types/type";
 import { useLocationStore, useSheetStore, useTripStore } from "@/store";
-import { googleReverseGeocode } from "@/lib/utils";
+import { getShortBase36Id, googleReverseGeocode } from "@/lib/utils";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { Gesture } from "react-native-gesture-handler";
+import { Keyboard } from "react-native";
 
 export const useHomeLogic = () => {
   const { user } = useUser();
@@ -19,8 +20,11 @@ export const useHomeLogic = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   const { setCurrentUserLocation } = useLocationStore();
-  const { fetchActiveTrip } = useTripStore();
+  const { fetchActiveTrip, reorderStopsManually } = useTripStore();
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
+  const { activeTrip, addStop } = useTripStore();
+  const googleInputRef = useRef<any>(null);
+  const shortId = getShortBase36Id(5);
 
   const contentGesture = Gesture.Native().simultaneousWithExternalGesture(
     Gesture.Pan().runOnJS(true),
@@ -55,6 +59,13 @@ export const useHomeLogic = () => {
       // router.push("/(root)/find-ride");
     },
     [],
+  );
+
+  const handleManualReorder = useCallback(
+    (newStops: TripMarker[]) => {
+      reorderStopsManually(newStops);
+    },
+    [reorderStopsManually],
   );
 
   // Fetch recent trips
@@ -122,6 +133,49 @@ export const useHomeLogic = () => {
     };
   }, [setSheetRef, setCurrentUserLocation]);
 
+  const handleAddStop = async ({
+    latitude,
+    longitude,
+    address,
+  }: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  }) => {
+    if (!activeTrip) {
+      console.warn("No active trip to add stop to");
+      return;
+    }
+
+    try {
+      const newStop = {
+        stop_id: shortId, // Generate unique ID
+        trip_id: activeTrip.trip_id,
+        address,
+        latitude,
+        longitude,
+        expected_duration: 0,
+        expected_distance: 0,
+      };
+
+      // Add stop to database and update state
+      await addStop(newStop);
+
+      // Clear the Google input field
+      googleInputRef.current?.clear();
+
+      // Dismiss keyboard and close suggestions
+      Keyboard.dismiss();
+      setIsInputFocused(false);
+
+      // Optionally call the original handler if needed
+      handleDestinationPress({ latitude, longitude, address });
+    } catch (error) {
+      console.error("Failed to add stop:", error);
+      // TODO: Show error message to user
+    }
+  };
+
   return {
     fetchActiveTrip,
     hasActiveTrip,
@@ -142,6 +196,11 @@ export const useHomeLogic = () => {
     hasPermission,
     errorMsg,
     recentTrips,
+    activeTrip,
+    addStop,
+    googleInputRef,
+    handleAddStop,
+    handleManualReorder,
     loading,
     error,
   };

@@ -6,7 +6,7 @@ import {
 } from "react-native-draggable-flatlist";
 import { DraggableListProps, TripMarker } from "@/types/type";
 import { Grip, MapPinHouse } from "lucide-react-native";
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 
 export const DraggableList = ({
   stops,

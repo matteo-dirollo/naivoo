@@ -15,6 +15,8 @@ import { TripMarker } from "@/types/type";
 import { useTripStore } from "@/store";
 import { DraggableList } from "@/components/DraggableList";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import * as Crypto from "expo-crypto";
+import { getShortBase36Id } from "@/lib/utils";
 // TODO: set camera
 // getCamera
 // animateCamera 	camera: Camera, { duration: Number }
@@ -22,23 +24,6 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 // any property not given will remain unmodified. duration is not supported on iOS.
 
 export default function Home() {
-  const [stops, setStops] = useState<TripMarker[]>([]);
-  const { reorderStopsAccordingToOptimization } = useTripStore();
-
-  const mockTrip = {};
-  const getStops = async (): Promise<TripMarker[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(mockStops), 300); // simulate network
-    });
-  };
-
-  const contentGesture = Gesture.Native().simultaneousWithExternalGesture(
-    Gesture.Pan().runOnJS(true),
-  );
-
-  useEffect(() => {
-    getStops().then(setStops);
-  }, []);
   const {
     fetchActiveTrip,
     hasActiveTrip,
@@ -47,9 +32,15 @@ export default function Home() {
     onPressInputField,
     searchInputHeight,
     setSearchInputHeight,
+    contentGesture,
     snapPoints,
     snapIndex,
     setSnapIndex,
+    activeTrip,
+    addStop,
+    googleInputRef,
+    handleAddStop,
+    handleManualReorder,
     isDragging,
     setIsDragging,
     handleDestinationPress,
@@ -94,19 +85,20 @@ export default function Home() {
                         }}
                       >
                         <GoogleTextInput
+                          ref={googleInputRef}
                           icon={icons.search}
                           containerStyle={
                             "bg-[#2D322C] flex flex-row items-center justify-center relative rounded-xl"
                           }
-                          handlePress={handleDestinationPress}
+                          handlePress={handleAddStop}
                           onTextInputFocus={onPressInputField}
                           textInputBackgroundColor="#2D322C"
                         />
                       </View>
 
                       <DraggableList
-                        stops={stops}
-                        onReorder={reorderStopsAccordingToOptimization}
+                        stops={activeTrip?.stops || []}
+                        onReorder={handleManualReorder}
                         snapIndex={snapIndex}
                         snapPoints={snapPoints}
                         searchInputHeight={searchInputHeight}

@@ -7,6 +7,7 @@ import {
   SnapPointStore,
 } from "@/types/type";
 import { api } from "@/lib/api";
+import { getShortBase36Id } from "@/lib/utils";
 
 export const useLocationStore = create<LocationStore>((set) => ({
   currentUserLatitude: null,
@@ -93,8 +94,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // TRIP CRUD
   // -----------------------------
 
-  createTrip: async (data: Partial<Trip>) => {
+  createTrip: async (
+    data: Partial<Trip>,
+    userLocation?: { latitude: number; longitude: number; address: string },
+  ) => {
     try {
+      // Create the trip first
       const res = await api.post(`/trip/create`, data);
       const created = res.data;
 
@@ -102,6 +107,36 @@ export const useTripStore = create<TripStore>((set, get) => ({
         activeTrip: created.data,
         userTrips: [...state.userTrips, created.data],
       }));
+
+      // If user location is provided, add it as the first stop
+      if (userLocation && created.data.trip_id) {
+        try {
+          const userLocationStop = {
+            stop_id: getShortBase36Id(),
+            trip_id: created.data.trip_id,
+            address: userLocation.address,
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+            isUserLocation: true,
+          };
+
+          const stopRes = await api.post(`/stop`, userLocationStop);
+          const createdStop = stopRes.data.data;
+
+          // Update the active trip with the new stop
+          set((state) => ({
+            activeTrip: state.activeTrip
+              ? {
+                  ...state.activeTrip,
+                  stops: [createdStop, ...state.activeTrip.stops],
+                }
+              : null,
+          }));
+        } catch (stopError) {
+          console.error("Failed to add user location stop:", stopError);
+          // Trip is still created, just log the error
+        }
+      }
     } catch (error: any) {
       if (error.response) {
         console.error("API Error:", error.response.status, error.response.data);
@@ -110,7 +145,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       } else {
         console.error("Error:", error.message);
       }
-      throw error; // Re-throw so caller can handle
+      throw error;
     }
   },
 
@@ -242,12 +277,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // OPTIMIZATION
   // -----------------------------
 
-  setOptimizedOrder: (optimizedIds: string[]) => {
+  reorderStopsManually: (newStops: TripMarker[]) => {
     const trip = get().activeTrip;
     if (!trip) return;
 
     set({
-      activeTrip: { ...trip, optimized_order: optimizedIds },
+      activeTrip: { ...trip, stops: newStops },
     });
   },
 
@@ -264,6 +299,15 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
     set({
       activeTrip: { ...trip, stops: reordered },
+    });
+  },
+
+  setOptimizedOrder: (optimizedIds: string[]) => {
+    const trip = get().activeTrip;
+    if (!trip) return;
+
+    set({
+      activeTrip: { ...trip, optimized_order: optimizedIds },
     });
   },
 
