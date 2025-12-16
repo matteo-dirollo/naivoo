@@ -61,9 +61,8 @@ declare interface TripMarker {
   stop_id: string;
   trip_id: string;
   location: Location;
-  expected_duration: number; // Google Directions duration (seconds)
+  expected_duration: number;
   expected_distance: number;
-  // TODO: add fields below in the db
   isUserLocation?: boolean;
 }
 
