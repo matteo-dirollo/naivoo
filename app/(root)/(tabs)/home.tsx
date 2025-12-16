@@ -1,22 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Map from "@/components/Map";
-import BottomSheet, {
-  BottomSheetScrollView,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Keyboard, Pressable, View } from "react-native";
 import { Portal } from "@gorhom/portal";
 import GoogleTextInput from "@/components/GoogleTextInput";
 import { icons } from "@/constants";
 import { useHomeLogic } from "@/lib/homelogic";
 import NameTripField from "@/components/NameTripField";
-import { mockStops } from "@/lib/mockStops";
-import { TripMarker } from "@/types/type";
-import { useTripStore } from "@/store";
 import { DraggableList } from "@/components/DraggableList";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import * as Crypto from "expo-crypto";
-import { getShortBase36Id } from "@/lib/utils";
+import { GestureDetector } from "react-native-gesture-handler";
 // TODO: set camera
 // getCamera
 // animateCamera 	camera: Camera, { duration: Number }

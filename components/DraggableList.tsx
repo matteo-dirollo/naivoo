@@ -81,8 +81,9 @@ export const DraggableList = ({
       >
         <Pressable
           onLongPress={drag}
-          delayLongPress={200}
+          delayLongPress={150}
           disabled={isActive}
+          hitSlop={20}
           className="mr-4 p-5 justify-center items-center min-w-[16] min-h-[16]"
         >
           <Grip strokeWidth={1} size={16} color={"#fff"} />

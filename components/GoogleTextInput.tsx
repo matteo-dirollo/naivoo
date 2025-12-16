@@ -1,11 +1,9 @@
 import { View } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import { icons } from "@/constants";
+import { googlePlacesApiKey, icons } from "@/constants";
 import { GoogleInputProps } from "@/types/type";
 import { Image } from "@/components/ui/image";
 import { forwardRef, useImperativeHandle, useRef } from "react";
-
-const googlePlacesApiKey = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
 
 const GoogleTextInput = forwardRef(
   (

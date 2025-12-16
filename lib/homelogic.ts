@@ -148,18 +148,14 @@ export const useHomeLogic = () => {
     }
 
     try {
-      const newStop = {
-        stop_id: shortId, // Generate unique ID
+      await addStop({
+        stop_id: shortId,
         trip_id: activeTrip.trip_id,
         address,
         latitude,
         longitude,
-        expected_duration: 0,
-        expected_distance: 0,
-      };
-
-      // Add stop to database and update state
-      await addStop(newStop);
+        isUserLocation: false,
+      });
 
       // Clear the Google input field
       googleInputRef.current?.clear();
@@ -167,12 +163,8 @@ export const useHomeLogic = () => {
       // Dismiss keyboard and close suggestions
       Keyboard.dismiss();
       setIsInputFocused(false);
-
-      // Optionally call the original handler if needed
-      handleDestinationPress({ latitude, longitude, address });
     } catch (error) {
       console.error("Failed to add stop:", error);
-      // TODO: Show error message to user
     }
   };
 
