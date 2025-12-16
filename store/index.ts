@@ -76,9 +76,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
     try {
       const url = `/trip/create`; // this will be appended to api.defaults.baseURL
 
-      console.log("Request URL:", api.defaults.baseURL + url);
-
-      // Send the POST request
       const res = await api.post(url, data);
 
       // Pull data from axios response
@@ -114,7 +111,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
     }));
   },
   deleteTrip: async (trip_id) => {
-    await api.delete(`/(api)/trip/${trip_id}`);
+    const url = `/trip/`;
+    await api.delete(`${url}${trip_id}`);
 
     set((state) => ({
       activeTrip:
@@ -122,10 +120,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
       userTrips: state.userTrips.filter((t) => t.trip_id !== trip_id),
     }));
   },
-
-  // -----------------------------
-  // STOP MANAGEMENT
-  // -----------------------------
 
   addStop: async (stop) => {
     const trip = get().activeTrip;
