@@ -38,17 +38,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   fetchActiveTrip: async (userId: string) => {
     try {
-      const res = await api.get(`/trip/${userId}/active`);
-      set({ activeTrip: res.data.data });
+      const res = await api.get(`/trip/${userId}`);
+      const trips = res.data.data;
+      const active = trips.find((t: Trip) => t.active_trip);
+      set({ activeTrip: active || null });
     } catch (error: any) {
-      if (error.response) {
-        console.error("API Error:", error.response.status, error.response.data);
-      } else if (error.request) {
-        console.error("Network Error: No response received", error.request);
-      } else {
-        console.error("Error:", error.message);
-      }
-      // Optionally set null on error
+      console.error("Error:", error.message);
       set({ activeTrip: null });
     }
   },

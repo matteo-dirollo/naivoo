@@ -20,32 +20,40 @@ const NameTripField = ({ handlePress }: { handlePress: () => void }) => {
 
   const handlePressNext = async () => {
     if (!currentUserLocation) {
-      // Handle missing location - maybe show an alert
       console.error("Location not available");
+      alert("Please enable location services to continue");
       return;
     }
-
     if (!user?.id) {
-      // Handle missing user - maybe show an alert
       console.error("User not authenticated");
+      alert("Please sign in to create a trip");
       return;
     }
+    try {
+      await createTrip({
+        name: prefilledInputValue,
+        trip_id: UUID,
+        user_id: user.id,
+        start_location: currentUserLocation,
+        active_trip: true,
+        created_at: new Date().toISOString(),
+        stops: [],
+        return_to_start: false,
+        optimized_order: [],
+        total_distance_km: 0,
+        total_duration_min: 0,
+      });
 
-    await createTrip({
-      name: prefilledInputValue,
-      trip_id: UUID,
-      user_id: user.id,
-      start_location: currentUserLocation,
-      // These will be handled by the API with defaults,
-      // or you can be explicit:
-      active_trip: true,
-      created_at: new Date().toISOString(),
-      stops: [],
-      return_to_start: false,
-      optimized_order: [],
-      total_distance_km: 0,
-      total_duration_min: 0,
-    });
+      console.log("Trip created successfully");
+    } catch (error) {
+      console.error("Failed to create trip:", error);
+
+      alert(
+        error instanceof Error
+          ? `Failed to create trip: ${error.message}`
+          : "Failed to create trip. Please try again.",
+      );
+    }
   };
 
   return (

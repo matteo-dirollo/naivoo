@@ -1,8 +1,5 @@
 import { neon } from "@neondatabase/serverless";
 
-/**
- * GET all trips for a specific user_id
- */
 export async function GET(
   request: Request,
   { params }: { params: { id: string } },
@@ -35,7 +32,8 @@ export async function GET(
               'trip_id', ts.trip_id,
               'location', ts.location,
               'expected_duration', ts.expected_duration,
-              'expected_distance', ts.expected_distance
+              'expected_distance', ts.expected_distance,
+              'isUserLocation', ts.isuserlocation
             )
               ORDER BY ts.created_at
           ) FILTER (WHERE ts.stop_id IS NOT NULL),
@@ -55,9 +53,6 @@ export async function GET(
   }
 }
 
-/**
- * UPDATE a specific trip by trip_id
- */
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } },

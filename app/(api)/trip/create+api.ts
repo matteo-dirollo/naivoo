@@ -88,19 +88,22 @@ export async function POST(request: Request) {
       createdStops = await sql.query(stopsQuery, params);
     }
 
-    return new Response(
-      JSON.stringify({
+    return Response.json(
+      {
         data: {
           ...createdTrip,
           stops: createdStops,
         },
-      }),
+      },
       { status: 201 },
     );
   } catch (error) {
     console.error("Error creating trip:", error);
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-      status: 500,
-    });
+    return Response.json(
+      { error: "Internal Server Error" },
+      {
+        status: 500,
+      },
+    );
   }
 }

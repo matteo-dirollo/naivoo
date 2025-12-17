@@ -1,23 +1,19 @@
-import { Trip, TripMarker, MarkerData } from "@/types/type";
+import { TripMarker } from "@/types/type";
 
 const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
 
 export const generateMarkersFromData = (
   stops: TripMarker[],
   optimizedOrder?: string[],
-): MarkerData[] => {
-  // Create lookup for optimized order
+) => {
   const orderMap = optimizedOrder
     ? Object.fromEntries(optimizedOrder.map((id, index) => [id, index]))
     : {};
 
+  // Just return the stops with their order index attached
   return stops.map((stop) => ({
-    id: orderMap[stop.stop_id] ?? 9999, // Non-optimized go last
-    latitude: stop.latitude,
-    longitude: stop.longitude,
-    title: stop.address,
-    address: stop.address,
-    time: stop.expected_duration,
+    ...stop,
+    orderIndex: orderMap[stop.stop_id] ?? 9999,
   }));
 };
 
@@ -42,15 +38,15 @@ export const getDirectionsForTrip = async (
     ? markers.slice(1) // All except first
     : markers.slice(1, -1); // All between origin and destination
 
-  const originStr = `${origin.latitude},${origin.longitude}`;
-  const destinationStr = `${destination.latitude},${destination.longitude}`;
+  const originStr = `${origin.location.latitude},${origin.location.longitude}`;
+  const destinationStr = `${destination.location.latitude},${destination.location.longitude}`;
 
   // --- Build URL ---
   let url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originStr}&destination=${destinationStr}&key=${directionsAPI}`;
 
   if (waypointMarkers.length > 0) {
     const waypointsStr = waypointMarkers
-      .map((m) => `${m.latitude},${m.longitude}`)
+      .map((m) => `${m.location.latitude},${m.location.longitude}`)
       .join("|");
 
     // Add optimization
@@ -106,8 +102,8 @@ export const calculateRegion = ({
 
   const allPoints = [
     ...markers.map((m) => ({
-      latitude: m.latitude,
-      longitude: m.longitude,
+      latitude: m.location.latitude,
+      longitude: m.location.longitude,
     })),
     ...(hasUserLocation
       ? [

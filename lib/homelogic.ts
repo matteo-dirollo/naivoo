@@ -122,7 +122,7 @@ export const useHomeLogic = () => {
     return () => {
       cancelled = true;
     };
-  }, [setCurrentUserLocation, sheetRef]);
+  }, [setCurrentUserLocation, sheetRef, user?.id, fetchActiveTrip]);
 
   const handleAddStop = async ({
     latitude,
