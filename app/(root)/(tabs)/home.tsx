@@ -31,6 +31,7 @@ export default function Home() {
     activeTrip,
     addStop,
     googleInputRef,
+    nameTripInputRef,
     handleAddStop,
     handleManualReorder,
     isDragging,
@@ -88,19 +89,22 @@ export default function Home() {
                         />
                       </View>
 
-                      <DraggableList
-                        stops={activeTrip?.stops || []}
-                        onReorder={handleManualReorder}
-                        snapIndex={snapIndex}
-                        snapPoints={snapPoints}
-                        searchInputHeight={searchInputHeight}
-                        onDragStart={() => setIsDragging(true)}
-                        onDragEndGlobal={() => setIsDragging(false)}
-                      />
+                      {/*<DraggableList*/}
+                      {/*  stops={activeTrip?.stops || []}*/}
+                      {/*  onReorder={handleManualReorder}*/}
+                      {/*  snapIndex={snapIndex}*/}
+                      {/*  snapPoints={snapPoints}*/}
+                      {/*  searchInputHeight={searchInputHeight}*/}
+                      {/*  onDragStart={() => setIsDragging(true)}*/}
+                      {/*  onDragEndGlobal={() => setIsDragging(false)}*/}
+                      {/*/>*/}
                     </View>
                   ) : (
                     <View className="flex-1 justify-center items-center">
-                      <NameTripField handlePress={onPressInputField} />
+                      <NameTripField
+                        ref={nameTripInputRef}
+                        handlePress={onPressInputField}
+                      />
                     </View>
                   )}
                 </View>

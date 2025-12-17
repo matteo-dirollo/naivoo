@@ -25,6 +25,7 @@ export const useHomeLogic = () => {
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
   const { activeTrip, addStop } = useTripStore();
   const googleInputRef = useRef<any>(null);
+  const nameTripInputRef = useRef<any>(null);
   const shortId = getShortBase36Id(5);
 
   const contentGesture = Gesture.Native().simultaneousWithExternalGesture(
@@ -168,6 +169,7 @@ export const useHomeLogic = () => {
     onPressInputField,
     searchInputHeight,
     setSearchInputHeight,
+    nameTripInputRef,
     contentGesture,
     snapPoints,
     snapIndex,
