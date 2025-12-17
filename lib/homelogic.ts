@@ -96,20 +96,32 @@ export const useHomeLogic = () => {
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
           });
-          addressStr = `${address[0]?.name ?? ""}, ${address[0]?.region ?? ""}`;
+          // Better address construction
+          if (address && address[0]) {
+            const parts = [
+              address[0].name,
+              address[0].street,
+              address[0].city,
+              address[0].region,
+            ].filter(Boolean);
+            addressStr = `${address[0]?.name ?? ""}, ${address[0]?.region ?? ""}`;
+          }
         } catch {
           const googleAddress = await googleReverseGeocode(
             pos.coords.latitude,
             pos.coords.longitude,
           );
-          addressStr = `${googleAddress.name}, ${googleAddress.region}`;
+          addressStr =
+            googleAddress.name && googleAddress.region
+              ? `${googleAddress.name}, ${googleAddress.region}`
+              : "Current Location";
         }
 
         if (!cancelled) {
           setCurrentUserLocation({
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
-            address: addressStr,
+            address: addressStr || "Current Location",
           });
         }
       } catch (e) {

@@ -47,7 +47,6 @@ export default function Home() {
         <View className="absolute inset-0">
           <Map />
         </View>
-
         <Portal>
           <BottomSheet
             ref={sheetRef}
