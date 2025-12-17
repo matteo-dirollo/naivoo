@@ -191,6 +191,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   addStop: async (stop: TripMarker) => {
     const trip = get().activeTrip;
+    console.log("active trip:",trip)
     if (!trip) return;
 
     try {
