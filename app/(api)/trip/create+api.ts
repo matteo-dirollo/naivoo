@@ -10,15 +10,23 @@ export async function POST(request: Request) {
       body;
 
     if (!user_id || !start_location) {
-      return Response.json(
-        { error: "Missing or invalid start_location" },
+      return new Response(
+        JSON.stringify({ error: "Missing or invalid start_location" }),
         { status: 400 },
       );
     }
 
-    const sql = neon(process.env.DATABASE_URL!);
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) {
+      return new Response(
+        JSON.stringify({ error: "Database URL not configured" }),
+        { status: 500 },
+      );
+    }
 
-    // Create trip
+    const sql = neon(dbUrl);
+
+    // Insert the trip
     const [createdTrip] = await sql`
       INSERT INTO trips (
         name,
@@ -38,21 +46,28 @@ export async function POST(request: Request) {
         RETURNING *;
     `;
 
-    // Create stops if provided
-    let createdStops: any = [];
-    if (stops && stops.length > 0) {
-      const stopValues = stops.map(
-        (stop) => sql`(
-        ${stop.stop_id},
-        ${trip_id},
-        ${JSON.stringify(stop.location)},
-        ${stop.expected_duration || 0},
-        ${stop.expected_distance || 0},
-        ${stop.isUserLocation ?? false}
-      )`,
-      );
+    let createdStops: any[] = [];
 
-      createdStops = await sql`
+    if (stops && stops.length > 0) {
+      // flatten params & generate placeholders
+      const params: any[] = [];
+      const placeholders = stops
+        .map((stop, i) => {
+          const idx = i * 6;
+          params.push(
+            stop.stop_id,
+            trip_id,
+            JSON.stringify(stop.location),
+            stop.expected_duration ?? 0,
+            stop.expected_distance ?? 0,
+            stop.isUserLocation ?? false,
+          );
+          return `($${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5}, $${idx + 6})`;
+        })
+        .join(", ");
+
+      // perform multi-row insert via sql.query()
+      const stopsQuery = `
         INSERT INTO trip_stops (
           stop_id,
           trip_id,
@@ -60,30 +75,32 @@ export async function POST(request: Request) {
           expected_duration,
           expected_distance,
           isuserlocation
-        )
-        VALUES ${sql(stopValues)}
-        RETURNING 
+        ) VALUES ${placeholders}
+        RETURNING
           stop_id,
           trip_id,
           location,
           expected_duration,
           expected_distance,
-          isuserlocation::boolean as "isUserLocation";
+          isuserlocation::boolean AS "isUserLocation";
       `;
+
+      createdStops = await sql.query(stopsQuery, params);
     }
 
-    // Return trip with stops
-    return Response.json(
-      {
+    return new Response(
+      JSON.stringify({
         data: {
           ...createdTrip,
           stops: createdStops,
         },
-      },
+      }),
       { status: 201 },
     );
   } catch (error) {
     console.error("Error creating trip:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
+    });
   }
 }
