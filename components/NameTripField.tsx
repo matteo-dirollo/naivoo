@@ -19,13 +19,31 @@ const NameTripField = ({ handlePress }: { handlePress: () => void }) => {
   const { createTrip } = useTripStore();
 
   const handlePressNext = async () => {
+    if (!currentUserLocation) {
+      // Handle missing location - maybe show an alert
+      console.error("Location not available");
+      return;
+    }
+
+    if (!user?.id) {
+      // Handle missing user - maybe show an alert
+      console.error("User not authenticated");
+      return;
+    }
     await createTrip({
       name: prefilledInputValue,
       trip_id: UUID,
+      user_id: user.id,
+      start_location: currentUserLocation,
+      // These will be handled by the API with defaults,
+      // or you can be explicit:
       active_trip: true,
       created_at: new Date().toISOString(),
-      user_id: user?.id,
-      start_location: currentUserLocation,
+      stops: [],
+      return_to_start: false,
+      optimized_order: [],
+      total_distance_km: 0,
+      total_duration_min: 0,
     });
   };
 

@@ -85,41 +85,25 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   createTrip: async (data: Partial<Trip>) => {
     try {
-      const res = await api.post(`/trip/create`, data);
-      const created = res.data;
+      // Create the initial stop for user location
+      const userLocationStop = {
+        stop_id: getShortBase36Id(),
+        location: data.start_location!,
+        isUserLocation: true,
+      };
+
+      // Send trip data with initial stop
+      const res = await api.post(`/trip/create`, {
+        ...data,
+        stops: [userLocationStop],
+      });
+
+      const created = res.data.data;
 
       set((state) => ({
-        activeTrip: created.data,
-        userTrips: [...state.userTrips, created.data],
+        activeTrip: created,
+        userTrips: [...state.userTrips, created],
       }));
-
-      if (created.data.trip_id) {
-        try {
-          const userLocationStop = {
-            trip_id: created.data.trip_id,
-            location: created.data.start_location,
-            expected_duration: 0,
-            expected_distance: 0,
-            isUserLocation: true,
-          };
-
-          const stopRes = await api.post(`/stop`, userLocationStop);
-          const createdStop = stopRes.data.data;
-
-          // Update the active trip with the new stop
-          set((state) => ({
-            activeTrip: state.activeTrip
-              ? {
-                  ...state.activeTrip,
-                  stops: [createdStop, ...state.activeTrip.stops],
-                }
-              : null,
-          }));
-        } catch (stopError) {
-          console.error("Failed to add user location stop:", stopError);
-          // Trip is still created, just log the error
-        }
-      }
     } catch (error: any) {
       if (error.response) {
         console.error("API Error:", error.response.status, error.response.data);

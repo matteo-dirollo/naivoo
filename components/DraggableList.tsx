@@ -54,17 +54,6 @@ export const DraggableList = ({
     const reservedSpace = searchInputHeight || 120;
     const calculatedHeight = sheetHeight - reservedSpace;
 
-    // console.log("Sheet calculation:", {
-    //   snapIndex,
-    //   arrayIndex,
-    //   currentSnapPoint,
-    //   windowHeight,
-    //   sheetHeight,
-    //   searchInputHeight,
-    //   reservedSpace,
-    //   calculatedHeight,
-    // });
-
     return Math.max(calculatedHeight, 100);
   }, [snapIndex, snapPoints, windowHeight, searchInputHeight]);
 
@@ -90,7 +79,7 @@ export const DraggableList = ({
         </Pressable>
         <View className="mr-4" />
         <Text className={`text-white flex-1 font-normal`} numberOfLines={2}>
-          {item.address}
+          {item.location.address}
         </Text>
       </View>
     );
@@ -110,7 +99,7 @@ export const DraggableList = ({
         </View>
         <View className="mr-4" />
         <Text className="text-white flex-1 font-bold" numberOfLines={2}>
-          {userLocation.address}
+          {userLocation.location.address}
         </Text>
       </View>
     );
