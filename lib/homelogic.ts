@@ -148,10 +148,8 @@ export const useHomeLogic = () => {
         isUserLocation: false,
       });
 
-      // Clear the Google input field
       googleInputRef.current?.clear();
 
-      // Dismiss keyboard and close suggestions
       Keyboard.dismiss();
       setIsInputFocused(false);
     } catch (error) {
@@ -160,7 +158,6 @@ export const useHomeLogic = () => {
   };
 
   return {
-    fetchActiveTrip,
     hasActiveTrip,
     sheetRef,
     isInputFocused,

@@ -17,7 +17,6 @@ import { GestureDetector } from "react-native-gesture-handler";
 
 export default function Home() {
   const {
-    fetchActiveTrip,
     hasActiveTrip,
     sheetRef,
     setIsInputFocused,
@@ -34,7 +33,6 @@ export default function Home() {
     handleManualReorder,
     isDragging,
     setIsDragging,
-    handleDestinationPress,
   } = useHomeLogic();
 
   return (
