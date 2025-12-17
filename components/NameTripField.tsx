@@ -30,6 +30,7 @@ const NameTripField = ({ handlePress }: { handlePress: () => void }) => {
       console.error("User not authenticated");
       return;
     }
+
     await createTrip({
       name: prefilledInputValue,
       trip_id: UUID,

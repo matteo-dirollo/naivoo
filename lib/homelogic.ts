@@ -19,13 +19,11 @@ export const useHomeLogic = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const { currentUserLocation, setCurrentUserLocation } =
-    useUserLocationStore();
+  const { setCurrentUserLocation } = useUserLocationStore();
   const { fetchActiveTrip, reorderStopsManually } = useTripStore();
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
   const { activeTrip, addStop } = useTripStore();
   const googleInputRef = useRef<any>(null);
-  const nameTripInputRef = useRef<any>(null);
   const shortId = getShortBase36Id(5);
 
   const contentGesture = Gesture.Native().simultaneousWithExternalGesture(
@@ -44,6 +42,7 @@ export const useHomeLogic = () => {
   } = useSheetStore();
 
   const onPressInputField = useCallback(() => {
+    setSheetRef(sheetRef);
     if (snapIndex !== 3) {
       openMedium();
     }
@@ -169,7 +168,6 @@ export const useHomeLogic = () => {
     onPressInputField,
     searchInputHeight,
     setSearchInputHeight,
-    nameTripInputRef,
     contentGesture,
     snapPoints,
     snapIndex,

@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { googlePlacesApiKey, icons } from "@/constants";
 import { GoogleInputProps } from "@/types/type";
@@ -100,6 +100,7 @@ const GoogleTextInput = forwardRef(
           renderLeftButton={() => (
             <View className="justify-center items-center w-6 h-6 mr-2">
               <Image
+                alt="search icon"
                 source={icon ? icon : icons.search}
                 className="w-6 h-6 ml-5"
                 resizeMode="contain"
