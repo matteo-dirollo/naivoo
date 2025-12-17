@@ -45,19 +45,22 @@ const Map = () => {
             <LocationCluster size="20" fill="#0075b2" />
           </Marker>
         )}
-        {/* Trip Markers */}
-        {activeTrip?.stops?.map((stop) => (
-          <Marker
-            key={stop.stop_id}
-            coordinate={{
-              latitude: stop.location.latitude,
-              longitude: stop.location.longitude,
-            }}
-            title={stop.location.address}
-          >
-            <StopMarker width="40" height="40" text={stop.stop_id} />
-          </Marker>
-        ))}
+
+        {/* Trip Markers - Filter out user location stop */}
+        {activeTrip?.stops
+          ?.filter((stop) => !stop.isUserLocation)
+          .map((stop, index) => (
+            <Marker
+              key={index}
+              coordinate={{
+                latitude: stop.location.latitude,
+                longitude: stop.location.longitude,
+              }}
+              title={stop.location.address}
+            >
+              <StopMarker width="40" height="40" text={stop.stop_id} />
+            </Marker>
+          ))}
       </MapView>
     </View>
   );
