@@ -19,10 +19,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
   activeTrip: null,
   userTrips: [],
 
-  // -----------------------------
-  // SERVER SYNC
-  // -----------------------------
-
   fetchUserTrips: async (userId: string) => {
     try {
       const res = await api.get(`/trip/${userId}`);
@@ -89,7 +85,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   createTrip: async (data: Partial<Trip>) => {
     try {
-      // Create the trip first
       const res = await api.post(`/trip/create`, data);
       const created = res.data;
 
@@ -98,13 +93,11 @@ export const useTripStore = create<TripStore>((set, get) => ({
         userTrips: [...state.userTrips, created.data],
       }));
 
-      // If user location is provided, add it as the first stop
       if (created.data.trip_id) {
         try {
           const userLocationStop = {
             trip_id: created.data.trip_id,
-            stop_id: getShortBase36Id(),
-            start_location: data.start_location,
+            location: created.data.start_location,
             expected_duration: 0,
             expected_distance: 0,
             isUserLocation: true,
@@ -113,6 +106,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
           const stopRes = await api.post(`/stop`, userLocationStop);
           const createdStop = stopRes.data.data;
 
+          // Update the active trip with the new stop
           set((state) => ({
             activeTrip: state.activeTrip
               ? {
@@ -189,11 +183,9 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // STOP MANAGEMENT
   // -----------------------------
 
-  addStop: async (stop: TripMarker) => {
+  addStop: async (stop: Omit<TripMarker, "stop_id">) => {
     const trip = get().activeTrip;
-    console.log("active trip:",trip)
     if (!trip) return;
-
     try {
       const res = await api.post(`/stop`, stop);
       const createdStop = res.data.data;
@@ -204,6 +196,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
           stops: [...state.activeTrip!.stops, createdStop],
         },
       }));
+      return createdStop;
     } catch (error: any) {
       if (error.response) {
         console.error("API Error:", error.response.status, error.response.data);
@@ -221,10 +214,14 @@ export const useTripStore = create<TripStore>((set, get) => ({
       await api.delete(`/stop`, { data: { stop_id } });
 
       set((state) => ({
-        activeTrip: {
-          ...state.activeTrip!,
-          stops: state.activeTrip!.stops.filter((s) => s.stop_id !== stop_id),
-        },
+        activeTrip: state.activeTrip
+          ? {
+              ...state.activeTrip,
+              stops: (state.activeTrip.stops || []).filter(
+                (s) => s.stop_id !== stop_id,
+              ),
+            }
+          : null,
       }));
     } catch (error: any) {
       if (error.response) {
@@ -244,12 +241,14 @@ export const useTripStore = create<TripStore>((set, get) => ({
       const newStop = res.data.data;
 
       set((state) => ({
-        activeTrip: {
-          ...state.activeTrip!,
-          stops: state.activeTrip!.stops.map((s) =>
-            s.stop_id === stop_id ? newStop : s,
-          ),
-        },
+        activeTrip: state.activeTrip
+          ? {
+              ...state.activeTrip,
+              stops: (state.activeTrip.stops || []).map((s) =>
+                s.stop_id === stop_id ? newStop : s,
+              ),
+            }
+          : null,
       }));
     } catch (error: any) {
       if (error.response) {

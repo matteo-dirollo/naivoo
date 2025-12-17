@@ -61,7 +61,7 @@ const GoogleTextInput = forwardRef(
                 : "white",
               color: "white",
               position: "absolute",
-              top: 10,
+              top: 54,
               left: 0,
               right: 0,
               width: "100%",
