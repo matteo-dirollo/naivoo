@@ -1,11 +1,66 @@
 /**
- * Formats a Google Places address into a shorter, more readable format
- * Format: Street name + Street number, ZIP code + City + City Department Acronym. Country
- *
- * Example:
- * Input: "Via di San Calepodio, 14, Rome, Metropolitan City of Rome Capital, Italy"
- * Output: "Via di San Calepodio 14, 00152 Rome RM, Italy"
+ * Formats a Google Places address into a shorter, more readable format * : Street name + Street number, ZIP code + City + City Department Acronym. Country
  */
+export const extractAddressString = (googleAddress: any) => {
+  if (!googleAddress) return null;
+
+  // Priority 1: Use formatted_address if available
+  if (googleAddress.formatted_address) {
+    return googleAddress.formatted_address;
+  }
+
+  // Priority 2: Use name and region if available
+  if (googleAddress.name && googleAddress.region) {
+    return `${googleAddress.name}, ${googleAddress.region}`;
+  }
+
+  // Priority 3: Build from address components
+  if (googleAddress.address_components) {
+    const streetNumber = googleAddress.address_components.find((c: any) =>
+      c.types.includes("street_number"),
+    )?.long_name;
+
+    const route = googleAddress.address_components.find((c: any) =>
+      c.types.includes("route"),
+    )?.long_name;
+
+    const city = googleAddress.address_components.find((c: any) =>
+      c.types.includes("locality"),
+    )?.long_name;
+
+    const region = googleAddress.address_components.find((c: any) =>
+      c.types.includes("administrative_area_level_1"),
+    )?.long_name;
+
+    const parts = [streetNumber, route, city, region].filter(Boolean);
+    if (parts.length > 0) {
+      return parts.join(", ");
+    }
+  }
+
+  return null;
+};
+
+export const getConciseAddress = (data: any) => {
+  if (!data) return null;
+
+  const mainText = data.structured_formatting?.main_text;
+
+  if (!mainText) return data.description;
+
+  // Extract city and country from terms
+  const terms = data.terms || [];
+  const cityIndex = Math.min(2, terms.length - 2); // Usually index 2 for city
+  const city = terms[cityIndex]?.value;
+  const country = terms[terms.length - 1]?.value;
+
+  if (city && country) {
+    return `${mainText}, ${city}, ${country}`;
+  }
+
+  return mainText;
+};
+
 export function formatAddress(fullAddress: string): string {
   // If address is already short or doesn't need formatting
   if (!fullAddress || fullAddress.length < 20) {

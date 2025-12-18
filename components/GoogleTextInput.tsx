@@ -4,6 +4,7 @@ import { googlePlacesApiKey, icons } from "@/constants";
 import { GoogleInputProps } from "@/types/type";
 import { Image } from "@/components/ui/image";
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { getConciseAddress } from "@/lib/addressFormatter";
 
 const GoogleTextInput = forwardRef(
   (
@@ -94,10 +95,13 @@ const GoogleTextInput = forwardRef(
             },
           }}
           onPress={(data, details = null) => {
+            const addressStr = getConciseAddress(data);
+            console.log("Selected address:", addressStr);
+            console.log("Data:", data);
             handlePress({
               latitude: details?.geometry.location.lat!,
               longitude: details?.geometry.location.lng!,
-              address: data.description,
+              address: addressStr,
             });
             googlePlacesRef.current?.clear();
           }}

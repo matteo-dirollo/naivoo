@@ -10,7 +10,7 @@ import { getShortBase36Id, googleReverseGeocode } from "@/lib/utils";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { Gesture } from "react-native-gesture-handler";
 import { Alert, Keyboard } from "react-native";
-import { formatAddress } from "@/lib/addressFormatter";
+import { extractAddressString, formatAddress } from "@/lib/addressFormatter";
 
 export const useHomeLogic = () => {
   const { user } = useUser();
@@ -92,45 +92,59 @@ export const useHomeLogic = () => {
         if (cancelled) return;
 
         let addressStr = "";
+
+        // Try Expo's reverse geocoding first
         try {
           const address = await Location.reverseGeocodeAsync({
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
           });
-          // Better address construction
-          if (address && address[0]) {
+
+          if (address?.[0]) {
+            // Cleaner way to build address from Expo
             const parts = [
               address[0].name,
               address[0].street,
               address[0].city,
               address[0].region,
+              address[0].country,
             ].filter(Boolean);
-            const fullAddress = `${address[0]?.name ?? ""}, ${address[0]?.region ?? ""}`;
-            // Format the address to be shorter
-            addressStr = formatAddress(fullAddress);
+
+            addressStr = extractAddressString(address);
           }
-        } catch {
-          const googleAddress = await googleReverseGeocode(
-            pos.coords.latitude,
-            pos.coords.longitude,
-          );
-          const fullAddress =
-            googleAddress.name && googleAddress.region
-              ? `${googleAddress.name}, ${googleAddress.region}`
-              : "Current Location";
-          // Format the address to be shorter
-          addressStr = formatAddress(fullAddress);
+        } catch (expoError) {
+          console.log("Expo reverse geocode failed, trying Google:", expoError);
+
+          // Fallback to Google Geocoding
+          try {
+            const googleAddress = await googleReverseGeocode(
+              pos.coords.latitude,
+              pos.coords.longitude,
+            );
+
+            // Use formatted_address directly from Google response
+            if (googleAddress?.formatted_address) {
+              addressStr = googleAddress.formatted_address;
+            } else if (googleAddress?.name && googleAddress?.region) {
+              // Fallback to manual construction if formatted_address isn't available
+              addressStr = `${googleAddress.name}, ${googleAddress.region}`;
+            }
+          } catch (googleError) {
+            console.log("Google reverse geocode also failed:", googleError);
+          }
         }
 
         if (!cancelled) {
           setCurrentUserLocation({
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
-            address: addressStr || "Current Location",
+            // Use the address string if we got it, otherwise use coordinates as fallback
+            address: addressStr || "Current User Location",
           });
         }
-      } catch (e) {
-        console.log("Location error:", e);
+      } catch (error) {
+        console.log("Location error:", error);
+        // Consider setting a default location or showing an error to user
       }
     };
 

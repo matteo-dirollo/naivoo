@@ -72,6 +72,8 @@ export default {
           },
         },
       ],
+      "expo-secure-store",
+      "expo-web-browser",
     ],
     experiments: {
       typedRoutes: true,
