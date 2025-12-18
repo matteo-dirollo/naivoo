@@ -96,8 +96,6 @@ const GoogleTextInput = forwardRef(
           }}
           onPress={(data, details = null) => {
             const addressStr = getConciseAddress(data);
-            console.log("Selected address:", addressStr);
-            console.log("Data:", data);
             handlePress({
               latitude: details?.geometry.location.lat!,
               longitude: details?.geometry.location.lng!,

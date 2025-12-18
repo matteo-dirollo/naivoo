@@ -39,11 +39,28 @@ export const useTripStore = create<TripStore>((set, get) => ({
   fetchActiveTrip: async (userId: string) => {
     try {
       const res = await api.get(`/trip/${userId}`);
+
       const trips = res.data.data;
       const active = trips.find((t: Trip) => t.active_trip);
+
       set({ activeTrip: active || null });
     } catch (error: any) {
-      console.error("Error:", error.message);
+      console.error("fetchActiveTrip Error Details:");
+
+      if (error.response) {
+        // Server responded with error status
+        console.error("Status:", error.response.status);
+        console.error("Data:", error.response.data);
+        console.error("Headers:", error.response.headers);
+      } else if (error.request) {
+        // Request was made but no response
+        console.error("No response received");
+        console.error("Request:", error.request);
+      } else {
+        // Error in setting up request
+        console.error("Error:", error.message);
+      }
+
       set({ activeTrip: null });
     }
   },

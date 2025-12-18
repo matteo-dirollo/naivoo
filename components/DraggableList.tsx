@@ -5,7 +5,7 @@ import {
   RenderItemParams,
 } from "react-native-draggable-flatlist";
 import { DraggableListProps, TripMarker } from "@/types/type";
-import { Grip, MapPinHouse } from "lucide-react-native";
+import { Grip, MapPinHouse, X } from "lucide-react-native";
 import { useMemo } from "react";
 
 export const DraggableList = ({
@@ -73,14 +73,17 @@ export const DraggableList = ({
           delayLongPress={150}
           disabled={isActive}
           hitSlop={20}
-          className="mr-4 p-5 justify-center items-center min-w-[16] min-h-[16]"
+          className="p-5 justify-center items-center min-w-[16] min-h-[16]"
         >
           <Grip strokeWidth={1} size={16} color={"#fff"} />
         </Pressable>
         <View className="mr-4" />
-        <Text className={`text-white flex-1 font-normal`} numberOfLines={2}>
+        <Text className="text-white flex-1 font-normal" numberOfLines={2}>
           {item.location.address}
         </Text>
+        <Pressable>
+          <X strokeWidth={1} size={16} color={"#fff"} />
+        </Pressable>
       </View>
     );
   };
@@ -90,7 +93,7 @@ export const DraggableList = ({
 
     return (
       <View className="flex-row items-center border-b border-b-[#444] bg-[#0d3b66] p-3">
-        <View className="mr-4 p-5 justify-center items-center min-w-[14] min-h-[14]">
+        <View className="p-5 justify-center items-center min-w-[14] min-h-[14]">
           <MapPinHouse
             color="#fff"
             strokeWidth={1}
@@ -116,7 +119,7 @@ export const DraggableList = ({
       className="flex-1 my-2"
       style={{ maxHeight: maxScrollHeight }}
     >
-      {renderHeader()}
+      <>{renderHeader()}</>
 
       <NestableDraggableFlatList
         data={draggableStops}

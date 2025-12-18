@@ -1,10 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
-  const userId = params.id;
+export async function GET(request: Request, { id }: { id: string }) {
+  const userId = id;
 
   if (!userId) {
     return Response.json({ error: "User ID is required" }, { status: 400 });
@@ -35,7 +32,7 @@ export async function GET(
               'expected_distance', ts.expected_distance,
               'isUserLocation', ts.isuserlocation
             )
-              ORDER BY ts.created_at
+              ORDER BY ts.stop_id
           ) FILTER (WHERE ts.stop_id IS NOT NULL),
           '[]'::json
         ) AS stops
@@ -46,18 +43,27 @@ export async function GET(
       ORDER BY t.created_at DESC;
     `;
 
+    console.log("Trips fetched successfully:", trips.length);
     return Response.json({ data: trips }, { status: 200 });
-  } catch (error) {
-    console.error("Error fetching trips:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Error fetching trips - Full error:", error);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+
+    // Return more detailed error in development
+    return Response.json(
+      {
+        error: "Internal Server Error",
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
+      { status: 500 },
+    );
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
-  const tripId = params.id;
+export async function PUT(request: Request, { id }: { id: string }) {
+  const tripId = id;
 
   if (!tripId) {
     return Response.json({ error: "Trip ID is required" }, { status: 400 });
@@ -99,11 +105,8 @@ export async function PUT(
 /**
  * DELETE a specific trip by trip_id
  */
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
-  const tripId = params.id;
+export async function DELETE(request: Request, { id }: { id: string }) {
+  const tripId = id;
 
   if (!tripId) {
     return Response.json({ error: "Trip ID is required" }, { status: 400 });

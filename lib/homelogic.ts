@@ -148,7 +148,15 @@ export const useHomeLogic = () => {
       }
     };
 
-    getLocation();
+    // ADD THIS: Fetch active trip when component mounts or user changes
+    const initializeData = async () => {
+      if (user?.id) {
+        await fetchActiveTrip(user.id);
+      }
+      await getLocation();
+    };
+
+    initializeData();
 
     return () => {
       cancelled = true;
