@@ -51,14 +51,14 @@ const Map = () => {
           ?.filter((stop) => !stop.isUserLocation)
           .map((stop, index) => (
             <Marker
-              key={index}
+              key={stop.stop_id}
               coordinate={{
                 latitude: stop.location.latitude,
                 longitude: stop.location.longitude,
               }}
               title={stop.location.address}
             >
-              <StopMarker width="40" height="40" text={stop.stop_id} />
+              <StopMarker width="40" height="40" text={index + 1} />
             </Marker>
           ))}
       </MapView>

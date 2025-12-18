@@ -1,9 +1,9 @@
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { googlePlacesApiKey, icons } from "@/constants";
 import { GoogleInputProps } from "@/types/type";
 import { Image } from "@/components/ui/image";
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 
 const GoogleTextInput = forwardRef(
   (
@@ -19,19 +19,26 @@ const GoogleTextInput = forwardRef(
   ) => {
     const googlePlacesRef = useRef<any>(null);
 
+    const [listViewDisplayed, setListViewDisplayed] = useState<
+      boolean | "auto"
+    >("auto");
+
     useImperativeHandle(ref, () => ({
       clear: () => {
         googlePlacesRef.current?.clear();
         googlePlacesRef.current?.setAddressText("");
+        setListViewDisplayed(false);
       },
     }));
     return (
       <View className={containerStyle} pointerEvents="box-none">
         <GooglePlacesAutocomplete
+          ref={googlePlacesRef}
           fetchDetails={true}
           placeholder="Search"
           debounce={200}
           enablePoweredByContainer={false}
+          listViewDisplayed={listViewDisplayed}
           keyboardShouldPersistTaps="handled"
           styles={{
             container: { flex: 1, zIndex: 1000 },
@@ -92,6 +99,7 @@ const GoogleTextInput = forwardRef(
               longitude: details?.geometry.location.lng!,
               address: data.description,
             });
+            googlePlacesRef.current?.clear();
           }}
           query={{
             key: googlePlacesApiKey,
@@ -111,9 +119,19 @@ const GoogleTextInput = forwardRef(
             placeholderTextColor: "gray",
             placeholder: initialLocation ?? "Where do you want to go?",
             onFocus: () => {
+              // Clear the text when user focuses on the input
+              googlePlacesRef.current?.setAddressText("");
+              setListViewDisplayed("auto");
+
               setTimeout(() => {
                 onTextInputFocus?.();
               }, 10);
+            },
+            onBlur: () => {
+              // Close list on blur
+              setTimeout(() => {
+                setListViewDisplayed(false);
+              }, 150);
             },
           }}
         />
