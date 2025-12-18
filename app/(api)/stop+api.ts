@@ -22,6 +22,24 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+    // Check if a stop with the same address already exists for this trip
+    const existingStops = await sql`
+      SELECT stop_id, location
+      FROM trip_stops
+      WHERE trip_id = ${trip_id}
+        AND location->>'address' = ${location.address};
+    `;
+
+    if (existingStops.length > 0) {
+      // Duplicate found - return null data to indicate no creation
+      return Response.json(
+        {
+          data: null,
+          message: "Stop with this address already exists in the trip",
+        },
+        { status: 200 },
+      );
+    }
 
     const [newStop] = await sql`
             INSERT INTO trip_stops (

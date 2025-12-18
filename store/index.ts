@@ -164,9 +164,17 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   addStop: async (stop: Omit<TripMarker, "stop_id">) => {
     const trip = get().activeTrip;
-    if (!trip) return;
+    if (!trip) return null;
+
     try {
       const res = await api.post(`/stop`, stop);
+
+      // Check if API returned null (duplicate found)
+      if (res.data.data === null) {
+        console.log("Duplicate stop detected, skipping add");
+        return null;
+      }
+
       const createdStop = res.data.data;
 
       set((state) => ({
@@ -175,6 +183,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
           stops: [...state.activeTrip!.stops, createdStop],
         },
       }));
+
       return createdStop;
     } catch (error: any) {
       if (error.response) {

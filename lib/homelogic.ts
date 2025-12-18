@@ -9,7 +9,8 @@ import { useUserLocationStore, useSheetStore, useTripStore } from "@/store";
 import { getShortBase36Id, googleReverseGeocode } from "@/lib/utils";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { Gesture } from "react-native-gesture-handler";
-import { Keyboard } from "react-native";
+import { Alert, Keyboard } from "react-native";
+import { formatAddress } from "@/lib/addressFormatter";
 
 export const useHomeLogic = () => {
   const { user } = useUser();
@@ -104,17 +105,21 @@ export const useHomeLogic = () => {
               address[0].city,
               address[0].region,
             ].filter(Boolean);
-            addressStr = `${address[0]?.name ?? ""}, ${address[0]?.region ?? ""}`;
+            const fullAddress = `${address[0]?.name ?? ""}, ${address[0]?.region ?? ""}`;
+            // Format the address to be shorter
+            addressStr = formatAddress(fullAddress);
           }
         } catch {
           const googleAddress = await googleReverseGeocode(
             pos.coords.latitude,
             pos.coords.longitude,
           );
-          addressStr =
+          const fullAddress =
             googleAddress.name && googleAddress.region
               ? `${googleAddress.name}, ${googleAddress.region}`
               : "Current Location";
+          // Format the address to be shorter
+          addressStr = formatAddress(fullAddress);
         }
 
         if (!cancelled) {
@@ -151,7 +156,8 @@ export const useHomeLogic = () => {
     }
 
     try {
-      await addStop({
+      const formattedAddress = formatAddress(address);
+      const result = await addStop({
         stop_id: shortId,
         trip_id: activeTrip.trip_id,
         location: { latitude, longitude, address },
@@ -159,6 +165,14 @@ export const useHomeLogic = () => {
         expected_distance: 0,
         isUserLocation: false,
       });
+      if (result === null) {
+        // Show a user-friendly message
+        Alert.alert(
+          "Duplicate Location",
+          "This stop is already in your trip.",
+          [{ text: "OK" }],
+        );
+      }
 
       googleInputRef.current?.clear();
 
