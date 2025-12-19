@@ -7,6 +7,7 @@ import {
 import { DraggableListProps, TripMarker } from "@/types/type";
 import { Grip, MapPinHouse, X } from "lucide-react-native";
 import { useMemo } from "react";
+import { useTripStore } from "@/store";
 
 export const DraggableList = ({
   stops,
@@ -18,6 +19,7 @@ export const DraggableList = ({
   onDragEndGlobal,
 }: DraggableListProps) => {
   const { height: windowHeight } = useWindowDimensions();
+  const { removeStop } = useTripStore();
   const { userLocation, draggableStops } = useMemo(() => {
     const user = stops.find((stop) => stop.isUserLocation);
     const draggable = stops.filter((stop) => !stop.isUserLocation);
@@ -81,7 +83,10 @@ export const DraggableList = ({
         <Text className="text-white flex-1 font-normal" numberOfLines={2}>
           {item.location.address}
         </Text>
-        <Pressable>
+        <Pressable
+            onPress={() => removeStop(item.stop_id)}
+          className="p-5 justify-center items-center min-w-[16] min-h-[16]"
+        >
           <X strokeWidth={1} size={16} color={"#fff"} />
         </Pressable>
       </View>
@@ -120,7 +125,7 @@ export const DraggableList = ({
       style={{ maxHeight: maxScrollHeight }}
     >
       <>{renderHeader()}</>
-
+      {/* @ts-ignore - NestableDraggableFlatList works inside NestableScrollContainer despite type warning */}
       <NestableDraggableFlatList
         data={draggableStops}
         keyExtractor={(item) => item.stop_id}
@@ -133,8 +138,8 @@ export const DraggableList = ({
           onDragEndGlobal?.();
         }}
         containerStyle={{ flex: 1 }}
-        activationDistance={20}
-        dragHitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+        // activationDistance={20}
+        // dragHitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
         showsVerticalScrollIndicator={true}
       />
     </NestableScrollContainer>

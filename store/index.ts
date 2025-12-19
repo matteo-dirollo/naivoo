@@ -114,7 +114,10 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
       set((state) => ({
         activeTrip: created,
-        userTrips: [...state.userTrips, created],
+        userTrips: [
+          ...state.userTrips.map((t) => ({ ...t, active_trip: false })),
+          created,
+        ],
       }));
     } catch (error: any) {
       if (error.response) {
@@ -182,24 +185,30 @@ export const useTripStore = create<TripStore>((set, get) => ({
   addStop: async (stop: Omit<TripMarker, "stop_id">) => {
     const trip = get().activeTrip;
     if (!trip) return null;
-
     try {
       const res = await api.post(`/stop`, stop);
-
       // Check if API returned null (duplicate found)
       if (res.data.data === null) {
         console.log("Duplicate stop detected, skipping add");
         return null;
       }
-
       const createdStop = res.data.data;
-
-      set((state) => ({
-        activeTrip: {
-          ...state.activeTrip!,
-          stops: [...state.activeTrip!.stops, createdStop],
-        },
-      }));
+      set((state) => {
+        if (!state.activeTrip) return state;
+        let updatedStops = [...state.activeTrip.stops];
+        // If the new stop is a user location, remove any existing user location stops
+        if (createdStop.isUserLocation) {
+          updatedStops = updatedStops.filter((s) => !s.isUserLocation);
+        }
+        // Add the new stop
+        updatedStops.push(createdStop);
+        return {
+          activeTrip: {
+            ...state.activeTrip,
+            stops: updatedStops,
+          },
+        };
+      });
 
       return createdStop;
     } catch (error: any) {

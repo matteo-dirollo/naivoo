@@ -22,7 +22,14 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    // Check if a stop with the same address already exists for this trip
+    if (isUserLocation) {
+      await sql`
+        DELETE FROM trip_stops
+        WHERE trip_id = ${trip_id}
+          AND isuserlocation = true;
+      `;
+    }
+
     const existingStops = await sql`
       SELECT stop_id, location
       FROM trip_stops
