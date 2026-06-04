@@ -48,3 +48,20 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+
+Commands to start the project:
+
+1. Build the development version of the app for Android:
+
+   ```bash
+   eas build --platform android --profile development
+   ```
+eas build --platform android --profile development 
+
+2. Run the project after installing it on your device:
+
+   ```bash  
+npx expo start --tunnel --dev-client --clear
+    ```
+
