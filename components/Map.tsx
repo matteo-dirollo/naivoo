@@ -1,4 +1,4 @@
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import { View } from "react-native";
 import { useUserLocationStore, useTripStore } from "@/store";
 import { calculateRegion } from "@/lib/map";
@@ -12,7 +12,8 @@ const Map = () => {
   const { currentUserLocation } = useUserLocationStore();
   const userLatitude = currentUserLocation?.latitude;
   const userLongitude = currentUserLocation?.longitude;
-  const { activeTrip } = useTripStore();
+  const { activeTrip, routeCoords } = useTripStore();
+
   const region = calculateRegion({
     markers: activeTrip?.stops || [],
     userLatitude: userLatitude,
@@ -61,6 +62,13 @@ const Map = () => {
               <StopMarker width="40" height="40" text={index + 1} />
             </Marker>
           ))}
+        {routeCoords.length > 1 && (
+          <Polyline
+            coordinates={routeCoords}
+            strokeColor="#1ed7b5"
+            strokeWidth={3}
+          />
+        )}
       </MapView>
     </View>
   );

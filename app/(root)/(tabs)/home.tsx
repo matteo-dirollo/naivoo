@@ -1,7 +1,14 @@
 import React from "react";
 import Map from "@/components/Map";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
-import { Keyboard, Pressable, View } from "react-native";
+import {
+  Keyboard,
+  Platform,
+  Pressable,
+  StatusBar,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Portal } from "@gorhom/portal";
 import GoogleTextInput from "@/components/GoogleTextInput";
 import { icons } from "@/constants";
@@ -9,6 +16,8 @@ import { useHomeLogic } from "@/lib/homelogic";
 import NameTripField from "@/components/NameTripField";
 import { DraggableList } from "@/components/DraggableList";
 import { GestureDetector } from "react-native-gesture-handler";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 // TODO: set camera
 // getCamera
 // animateCamera 	camera: Camera, { duration: Number }
@@ -33,7 +42,10 @@ export default function Home() {
     handleManualReorder,
     isDragging,
     setIsDragging,
+    setDrawerOpen,
   } = useHomeLogic();
+  const androidTopMargin =
+    Platform.OS === "android" ? StatusBar.currentHeight : 0;
 
   return (
     <Pressable
@@ -46,6 +58,18 @@ export default function Home() {
       <View className="flex-1">
         <View className="absolute inset-0">
           <Map />
+          <SafeAreaView
+            className="absolute left-4 z-10"
+            style={{ marginTop: androidTopMargin }}
+          >
+            <TouchableOpacity
+              className="w-12 h-12 rounded-full bg-white items-center justify-center shadow-lg elevation-5 mt-2"
+              onPress={() => setDrawerOpen(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="menu" size={24} color="#333333" />
+            </TouchableOpacity>
+          </SafeAreaView>
         </View>
         <Portal>
           <BottomSheet

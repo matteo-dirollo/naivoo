@@ -5,12 +5,18 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import { router } from "expo-router";
 import { useFetch } from "@/lib/fetch";
 import { Trip, TripMarker } from "@/types/type";
-import { useUserLocationStore, useSheetStore, useTripStore } from "@/store";
+import {
+  useUserLocationStore,
+  useSheetStore,
+  useTripStore,
+  useDrawerStore,
+} from "@/store";
 import { getShortBase36Id, googleReverseGeocode } from "@/lib/utils";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { Gesture } from "react-native-gesture-handler";
 import { Alert, Keyboard } from "react-native";
 import { extractAddressString, formatAddress } from "@/lib/addressFormatter";
+import { getDirectionsForTrip, decodePolyline } from "@/lib/map";
 
 export const useHomeLogic = () => {
   const { user } = useUser();
@@ -21,7 +27,8 @@ export const useHomeLogic = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   const { setCurrentUserLocation } = useUserLocationStore();
-  const { fetchActiveTrip, reorderStopsManually } = useTripStore();
+  const { fetchActiveTrip, reorderStopsManually, setRouteCoords } =
+    useTripStore();
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
   const { activeTrip, addStop } = useTripStore();
   const googleInputRef = useRef<any>(null);
@@ -33,6 +40,7 @@ export const useHomeLogic = () => {
 
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["25%", "50%", "90%"], []);
+  const setDrawerOpen = useDrawerStore((state) => state.setDrawerOpen);
   const {
     snapIndex,
     openMedium,
@@ -162,6 +170,23 @@ export const useHomeLogic = () => {
       cancelled = true;
     };
   }, [setCurrentUserLocation, sheetRef, user?.id, fetchActiveTrip]);
+  useEffect(() => {
+    const stops = activeTrip?.stops ?? [];
+    if (stops.length < 2) {
+      setRouteCoords([]);
+      return;
+    }
+
+    const returnToStart = activeTrip?.return_to_start ?? false;
+
+    getDirectionsForTrip(stops, returnToStart).then((result) => {
+      if (result?.polyline) {
+        setRouteCoords(decodePolyline(result.polyline));
+      } else {
+        setRouteCoords([]);
+      }
+    });
+  }, [activeTrip?.stops, activeTrip?.return_to_start]);
 
   const handleAddStop = async ({
     latitude,
@@ -231,5 +256,6 @@ export const useHomeLogic = () => {
     handleManualReorder,
     loading,
     error,
+    setDrawerOpen,
   };
 };

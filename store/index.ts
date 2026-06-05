@@ -5,9 +5,16 @@ import {
   Trip,
   TripMarker,
   SnapPointStore,
+  DrawerStore,
 } from "@/types/type";
 import { api } from "@/lib/api";
 import { getShortBase36Id } from "@/lib/utils";
+
+export const useDrawerStore = create<DrawerStore>((set) => ({
+  isDrawerOpen: false, // Drawer is closed by default
+  setDrawerOpen: (isOpen) => set({ isDrawerOpen: isOpen }),
+  toggleDrawer: () => set((state) => ({ isDrawerOpen: !state.isDrawerOpen })),
+}));
 
 export const useUserLocationStore = create<UserLocationStore>((set) => ({
   currentUserLocation: null,
@@ -18,6 +25,9 @@ export const useUserLocationStore = create<UserLocationStore>((set) => ({
 export const useTripStore = create<TripStore>((set, get) => ({
   activeTrip: null,
   userTrips: [],
+
+  routeCoords: [],
+  setRouteCoords: (coords) => set({ routeCoords: coords }),
 
   fetchUserTrips: async (userId: string) => {
     try {

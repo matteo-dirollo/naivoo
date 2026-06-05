@@ -1,6 +1,12 @@
 import { TextInputProps, TouchableOpacityProps } from "react-native";
 import React from "react";
 
+declare interface DrawerStore {
+  isDrawerOpen: boolean;
+  setDrawerOpen: (isOpen: boolean) => void;
+  toggleDrawer: () => void;
+}
+
 declare interface User {
   id: number;
   first_name: string;
@@ -30,7 +36,7 @@ declare interface User {
   subscription_renewal_reminder_sent: boolean;
 }
 
-export interface Location {
+declare interface Location {
   latitude: number;
   longitude: number;
   address: string;
@@ -131,6 +137,9 @@ export interface UserLocationStore {
 export interface TripStore {
   activeTrip: Trip | null;
   userTrips: Trip[];
+
+  routeCoords: { latitude: number; longitude: number }[];
+  setRouteCoords: (coords: { latitude: number; longitude: number }[]) => void;
 
   // SERVER SYNC
   fetchUserTrips: (userId: string) => Promise<void>;
