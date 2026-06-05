@@ -7,9 +7,7 @@ import { formatDate, formatTime } from "@/lib/utils";
 
 const TripCard = ({
   trip: {
-    start_address,
-    start_latitude,
-    start_longitude,
+    start_location,
     stops,
     optimized_order,
     created_at,
@@ -37,7 +35,7 @@ const TripCard = ({
           <Image
             size="md"
             source={{
-              uri: `https://maps.geoapify.com/v1/staticmap?style=osm-bright&width=600&height=400&center=lonlat:${start_longitude},${start_latitude}&zoom=14&apiKey=${process.env.EXPO_PUBLIC_GEOAPIFY_API_KEY}`,
+              uri: `https://maps.geoapify.com/v1/staticmap?style=osm-bright&width=600&height=400&center=lonlat:${start_location.longitude},${start_location.latitude}&zoom=14&apiKey=${process.env.EXPO_PUBLIC_GEOAPIFY_API_KEY}`,
             }}
             alt={"Map Preview"}
             className="w-[80px] h-[90px] rounded-lg"
@@ -46,13 +44,13 @@ const TripCard = ({
             <View className="flex flex-row items-center gap-x-2">
               <Image alt={"Icon"} source={icons.to} className="w-5 h-5" />
               <Text numberOfLines={1} className={"text-md"}>
-                {start_address}
+                {start_location.address}
               </Text>
             </View>
             <View className="flex flex-row items-center gap-x-2">
               <Image alt={"Icon"} source={icons.point} className="w-5 h-5" />
               <Text numberOfLines={1} className={"text-md"}>
-                {secondLastStop ? secondLastStop.address : "N/A"}
+                {secondLastStop ? secondLastStop.location.address : "N/A"}
               </Text>
             </View>
           </View>
