@@ -18,6 +18,7 @@ import { DraggableList } from "@/components/DraggableList";
 import { GestureDetector } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { NavigationDrawer } from "@/components/NavigationDrawer";
 // TODO: set camera
 // getCamera
 // animateCamera 	camera: Camera, { duration: Number }
@@ -58,6 +59,7 @@ export default function Home() {
       <View className="flex-1">
         <View className="absolute inset-0">
           <Map />
+          <NavigationDrawer />
           <SafeAreaView
             className="absolute left-4 z-10"
             style={{ marginTop: androidTopMargin }}
@@ -71,6 +73,7 @@ export default function Home() {
             </TouchableOpacity>
           </SafeAreaView>
         </View>
+
         <Portal>
           <BottomSheet
             ref={sheetRef}
