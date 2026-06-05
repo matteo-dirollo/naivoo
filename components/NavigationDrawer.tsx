@@ -11,7 +11,7 @@ import {
 import { useDrawerStore } from "@/store";
 import { Text } from "react-native";
 import { Heading } from "@/components/ui/heading";
-import { Button } from "@/components/ui/button"; // Path to your store
+import TripsHistory from "@/components/TripsHistory"; // Path to your store
 
 export function NavigationDrawer() {
   const isDrawerOpen = useDrawerStore((state) => state.isDrawerOpen);
@@ -22,30 +22,24 @@ export function NavigationDrawer() {
       isOpen={isDrawerOpen}
       onClose={() => setDrawerOpen(false)}
       anchor="left"
-      size="md"
+      size="lg"
     >
       <DrawerBackdrop />
-      <DrawerContent className="bg-white p-4">
-        <DrawerHeader className="border-b border-gray-100 pb-3">
-          <Heading size="md">Naivoo</Heading>
+      <DrawerContent className="bg-gray-950 p-4 border-gray-900">
+        <DrawerHeader className="border-b border-y-teal-500 pb-3 mt-8">
+          <Heading size="md" className="text-white">
+            Naivoo
+          </Heading>
         </DrawerHeader>
 
         <DrawerBody className="py-4">
-          <Text className="text-sm text-gray-500">
+          <Text className="text-sm text-gray-100">
             Your menu content and navigation items go here.
           </Text>
+          <TripsHistory />
         </DrawerBody>
 
-        <DrawerFooter>
-          <Button
-            variant="outline"
-            action="secondary"
-            onPress={() => setDrawerOpen(false)}
-            className="w-full"
-          >
-            <Text>Close</Text>
-          </Button>
-        </DrawerFooter>
+        <DrawerFooter></DrawerFooter>
       </DrawerContent>
     </Drawer>
   );
