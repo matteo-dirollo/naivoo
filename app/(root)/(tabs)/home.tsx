@@ -19,6 +19,8 @@ import { GestureDetector } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigationDrawer } from "@/components/NavigationDrawer";
+import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
+import { RepeatIcon } from "lucide-react-native";
 // TODO: set camera
 // getCamera
 // animateCamera 	camera: Camera, { duration: Number }
@@ -44,6 +46,7 @@ export default function Home() {
     isDragging,
     setIsDragging,
     setDrawerOpen,
+    optimizeRoute,
   } = useHomeLogic();
   const androidTopMargin =
     Platform.OS === "android" ? StatusBar.currentHeight : 0;
@@ -118,6 +121,22 @@ export default function Home() {
                         onDragStart={() => setIsDragging(true)}
                         onDragEndGlobal={() => setIsDragging(false)}
                       />
+                      <Button
+                        variant="outline"
+                        size="md"
+                        action="primary"
+                        className="w-[80%] mx-auto mt-0.5 border-2 border-brand-500 rounded-md h-12 "
+                        onPress={optimizeRoute}
+                      >
+                        <ButtonIcon
+                          as={RepeatIcon}
+                          size="lg"
+                          className="mr-2 text-brand-500"
+                        />
+                        <ButtonText className="text-brand-500 font-medium">
+                          Reorganize Stops
+                        </ButtonText>
+                      </Button>
                     </View>
                   ) : (
                     <View className="flex-1 justify-center items-center">

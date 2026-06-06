@@ -161,9 +161,10 @@ export interface TripStore {
   updateStop: (stop_id: string, updated: Partial<TripMarker>) => Promise<void>;
 
   // OPTIMIZATION
-  setOptimizedOrder: (optimizedIds: string[]) => void;
+  optimizeRoute: () => Promise<void>;
+
   reorderStopsManually: (newStops: TripMarker[]) => void;
-  reorderStopsAccordingToOptimization: (newStops: TripMarker[]) => void;
+
 
   // CLEAR
   clearActiveTrip: () => void;

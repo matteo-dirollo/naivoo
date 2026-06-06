@@ -27,8 +27,13 @@ export const useHomeLogic = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   const { setCurrentUserLocation } = useUserLocationStore();
-  const { fetchActiveTrip, reorderStopsManually, setRouteCoords } =
-    useTripStore();
+  const {
+    fetchActiveTrip,
+    reorderStopsManually,
+    setRouteCoords,
+    optimizeRoute,
+  } = useTripStore();
+
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
   const { activeTrip, addStop } = useTripStore();
   const googleInputRef = useRef<any>(null);
@@ -147,7 +152,7 @@ export const useHomeLogic = () => {
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
             // Use the address string if we got it, otherwise use coordinates as fallback
-            address: addressStr || "Current User Location",
+            address: addressStr || "Starting Address",
           });
         }
       } catch (error) {
@@ -187,6 +192,22 @@ export const useHomeLogic = () => {
       }
     });
   }, [activeTrip?.stops, activeTrip?.return_to_start]);
+  // homelogic.ts — preview route while building the trip (no optimization yet)
+  // useEffect(() => {
+  //   const stops = activeTrip?.stops ?? [];
+  //   if (stops.length < 2) {
+  //     setRouteCoords([]);
+  //     return;
+  //   }
+  //
+  //   // Just a preview — not optimized, follows stop order as-is
+  //   getDirectionsForTrip(stops, activeTrip?.return_to_start ?? false).then(
+  //     (result) => {
+  //       if (result?.polyline) setRouteCoords(decodePolyline(result.polyline));
+  //       else setRouteCoords([]);
+  //     },
+  //   );
+  // }, [activeTrip?.stops, activeTrip?.return_to_start]);
 
   const handleAddStop = async ({
     latitude,
@@ -257,5 +278,6 @@ export const useHomeLogic = () => {
     loading,
     error,
     setDrawerOpen,
+    optimizeRoute,
   };
 };

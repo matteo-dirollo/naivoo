@@ -9,6 +9,7 @@ import {
 } from "@/types/type";
 import { api } from "@/lib/api";
 import { getShortBase36Id } from "@/lib/utils";
+import { decodePolyline, getDirectionsForTrip } from "@/lib/map";
 
 export const useDrawerStore = create<DrawerStore>((set) => ({
   isDrawerOpen: false, // Drawer is closed by default
@@ -299,28 +300,54 @@ export const useTripStore = create<TripStore>((set, get) => ({
     });
   },
 
-  reorderStopsAccordingToOptimization: () => {
+  optimizeRoute: async () => {
     const trip = get().activeTrip;
-    if (!trip || !trip.optimized_order || trip.optimized_order.length === 0)
-      return;
+    if (!trip || trip.stops.length < 2) return;
 
-    const idMap = new Map(trip.stops.map((stop) => [stop.stop_id, stop]));
+    const result = await getDirectionsForTrip(trip.stops, trip.return_to_start);
+    if (!result) return;
 
-    const reordered = trip.optimized_order
-      .map((id) => idMap.get(id))
-      .filter(Boolean) as TripMarker[];
+    // Google returns indices relative to the waypoints array (stops minus
+    // origin and destination), so we need to remap them back to full stop list.
+    // The user location stop is always index 0 (origin), so waypoints are stops[1..n].
+    const waypoints = trip.stops.filter((s) => !s.isUserLocation);
+    const reorderedWaypoints = result.optimized_order.map(
+      (i: any) => waypoints[i],
+    );
+    const userLocationStop = trip.stops.find((s) => s.isUserLocation);
 
-    set({
-      activeTrip: { ...trip, stops: reordered },
+    const reorderedStops = [
+      ...(userLocationStop ? [userLocationStop] : []),
+      ...reorderedWaypoints,
+    ];
+
+    // Compute totals from legs
+    const totalDistanceKm = result.legs.reduce(
+      (sum: any, leg: any) => sum + leg.distance_m / 1000,
+      0,
+    );
+    const totalDurationMin = result.legs.reduce(
+      (sum: any, leg: any) => sum + leg.duration_s / 60,
+      0,
+    );
+
+    // Persist to DB
+    await api.put(`/trip/${trip.trip_id}`, {
+      optimized_order: reorderedStops.map((s) => s.stop_id),
+      total_distance_km: +totalDistanceKm.toFixed(2),
+      total_duration_min: +totalDurationMin.toFixed(1),
     });
-  },
 
-  setOptimizedOrder: (optimizedIds: string[]) => {
-    const trip = get().activeTrip;
-    if (!trip) return;
-
+    // Update store
     set({
-      activeTrip: { ...trip, optimized_order: optimizedIds },
+      activeTrip: {
+        ...trip,
+        stops: reorderedStops,
+        optimized_order: reorderedStops.map((s) => s.stop_id),
+        total_distance_km: +totalDistanceKm.toFixed(2),
+        total_duration_min: +totalDurationMin.toFixed(1),
+      },
+      routeCoords: decodePolyline(result.polyline),
     });
   },
 
