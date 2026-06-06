@@ -71,7 +71,7 @@ export default function Page() {
           navigate: async ({ session }) => {
             if (session?.currentTask) {
               // Check for tasks and navigate to custom UI to help users resolve them
-              console.log(session?.currentTask);
+
               return;
             }
             router.push("/(root)/(tabs)/home");
@@ -127,8 +127,7 @@ export default function Page() {
           session: signInAttempt.createdSessionId,
           navigate: async ({ session }) => {
             if (session?.currentTask) {
-              // Check for tasks and navigate to custom UI to help users resolve them
-              console.log(session?.currentTask);
+              // Check for tasks and navigate to custom UI to help users resolve the
               return;
             }
             router.push("/(root)/(tabs)/home");

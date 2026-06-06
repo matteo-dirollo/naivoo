@@ -96,7 +96,6 @@ export default function Home() {
                         onLayout={(event) => {
                           const { height } = event.nativeEvent.layout;
                           setSearchInputHeight(height);
-                          console.log("GoogleTextInput actual height:", height);
                         }}
                       >
                         <GoogleTextInput

@@ -9,13 +9,24 @@ import {
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { useDrawerStore } from "@/store";
-import { Text } from "react-native";
+import TripsHistory from "@/components/TripsHistory";
+import { useUser } from "@clerk/clerk-expo";
+
+import {
+  Avatar,
+  AvatarBadge,
+  AvatarFallbackText,
+  AvatarImage,
+} from "@/components/ui/avatar";
 import { Heading } from "@/components/ui/heading";
-import TripsHistory from "@/components/TripsHistory"; // Path to your store
+import { VStack } from "@/components/ui/vstack";
+import { Text } from "@/components/ui/text";
 
 export function NavigationDrawer() {
   const isDrawerOpen = useDrawerStore((state) => state.isDrawerOpen);
   const setDrawerOpen = useDrawerStore((state) => state.setDrawerOpen);
+  const { user, isLoaded } = useUser();
+  const email = user?.primaryEmailAddress?.emailAddress;
 
   return (
     <Drawer
@@ -25,18 +36,26 @@ export function NavigationDrawer() {
       size="lg"
     >
       <DrawerBackdrop />
-      <DrawerContent className="bg-gray-950 p-4 border-gray-900">
-        <DrawerHeader className="border-b border-y-teal-500 pb-3 mt-8">
-          <Heading size="md" className="text-white">
-            Naivoo
-          </Heading>
+      <DrawerContent className="bg-background-950 border-background-900 p-6">
+        <DrawerHeader className="border-b border-background-800 pb-3 mt-8">
+          <VStack className={"items-start"}>
+            <Avatar size="md">
+              <AvatarFallbackText>{user?.firstName}</AvatarFallbackText>
+              <AvatarImage source={{ uri: `${user?.imageUrl}` }} />
+              <AvatarBadge />
+            </Avatar>
+
+            <Heading className="text-xl font-bold text-white mt-2 text-left">
+              {email}
+            </Heading>
+            <Text className="text-sm text-primary-100">
+              Subscription Plan: Free/Paid
+            </Text>
+          </VStack>
         </DrawerHeader>
 
         <DrawerBody className="py-4">
-          <Text className="text-sm text-gray-100">
-            Your menu content and navigation items go here.
-          </Text>
-          <TripsHistory />
+          <TripsHistory userId={user?.id || ""} />
         </DrawerBody>
 
         <DrawerFooter></DrawerFooter>

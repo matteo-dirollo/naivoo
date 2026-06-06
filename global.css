@@ -28,6 +28,10 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    /* CUSTOM */
+    --color-brand-50: 169 76% 95%;
+    --color-brand-500: 169 76% 50%;
+    --color-brand-900: 169 76% 15%;
   }
 
   .dark:root {
@@ -54,5 +58,9 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    /* CUSTOM */
+    --color-brand-50: 169 76% 95%;
+    --color-brand-500: 169 76% 50%;
+    --color-brand-900: 169 76% 15%;
   }
 }

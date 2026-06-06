@@ -19,6 +19,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        brand: {
+          50: "hsl(var(--color-brand-50) / <alpha-value>)",
+          500: "hsl(var(--color-brand-500) / <alpha-value>)",
+          900: "hsl(var(--color-brand-900) / <alpha-value>)",
+        },
         primary: {
           0: "rgb(var(--color-primary-0)/<alpha-value>)",
           50: "rgb(var(--color-primary-50)/<alpha-value>)",

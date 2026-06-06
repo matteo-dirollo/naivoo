@@ -43,7 +43,6 @@ export async function GET(request: Request, { id }: { id: string }) {
       ORDER BY t.created_at DESC;
     `;
 
-    console.log("Trips fetched successfully:", trips.length);
     return Response.json({ data: trips }, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching trips - Full error:", error);

@@ -82,7 +82,7 @@ const NameTripField = ({ handlePress }: { handlePress: () => void }) => {
             />
           </Input>
           <Button
-            className="ml-auto mt-6 bg-green-600 rounded-md w-full"
+            className="ml-auto mt-6 bg-brand-500 rounded-md w-full"
             onPress={handlePressNext}
           >
             <ButtonText>Next</ButtonText>

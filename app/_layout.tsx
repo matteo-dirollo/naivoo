@@ -10,8 +10,6 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { Slot, usePathname } from "expo-router";
-import { Fab, FabIcon } from "@/components/ui/fab";
-import { MoonIcon, SunIcon } from "@/components/ui/icon";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { SafeAreaProvider } from "react-native-safe-area-context";
