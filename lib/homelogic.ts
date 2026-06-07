@@ -26,7 +26,8 @@ export const useHomeLogic = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const { setCurrentUserLocation } = useUserLocationStore();
+  const { currentUserLocation, setCurrentUserLocation } =
+    useUserLocationStore();
   const {
     fetchActiveTrip,
     reorderStopsManually,
@@ -265,5 +266,6 @@ export const useHomeLogic = () => {
     error,
     setDrawerOpen,
     optimizeRoute,
+    currentUserLocation,
   };
 };

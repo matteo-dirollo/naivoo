@@ -2,6 +2,7 @@ import React from "react";
 import Map from "@/components/Map";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import {
+  Alert,
   Keyboard,
   Platform,
   Pressable,
@@ -47,6 +48,7 @@ export default function Home() {
     setIsDragging,
     setDrawerOpen,
     optimizeRoute,
+    currentUserLocation,
   } = useHomeLogic();
   const androidTopMargin =
     Platform.OS === "android" ? StatusBar.currentHeight : 0;
@@ -126,7 +128,16 @@ export default function Home() {
                         size="md"
                         action="primary"
                         className="w-[80%] mx-auto mt-0.5 border-2 border-brand-500 rounded-md h-12 "
-                        onPress={optimizeRoute}
+                        onPress={() => {
+                          if (!currentUserLocation) {
+                            Alert.alert(
+                              "Location unavailable",
+                              "Enable GPS to optimize your route.",
+                            );
+                            return;
+                          }
+                          optimizeRoute(currentUserLocation);
+                        }}
                       >
                         <ButtonIcon
                           as={RepeatIcon}
