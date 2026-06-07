@@ -45,7 +45,7 @@ declare interface Coordinates {
 declare interface Trip {
   name: string;
   trip_id: string;
-  user_id?: string;
+  user_id: string;
 
   start_location: Coordinates;
 
@@ -118,7 +118,7 @@ declare interface InputFieldProps extends TextInputProps {
 
 declare interface DraggableListProps {
   stops: TripMarker[];
-  onReorder: (newStops: TripMarker[]) => void;
+  onReorder: (newStops: TripMarker[], draggedStopId?: string) => void;
   snapIndex: number;
   snapPoints: (string | number)[];
   searchInputHeight?: number;
@@ -163,7 +163,10 @@ export interface TripStore {
   updateStop: (stop_id: string, updated: Partial<TripMarker>) => Promise<void>;
 
   // OPTIMIZATION
-  reorderStopsManually: (newStops: TripMarker[]) => void;
+  reorderStopsManually: (
+    newStops: TripMarker[],
+    draggedStopId: string | undefined,
+  ) => void;
   setPriority: (stop_id: string, isPrioritized: boolean) => Promise<void>;
   clearAllPriorities: () => Promise<void>;
   optimizeRoute: (currentLocation: Coordinates) => Promise<void>;

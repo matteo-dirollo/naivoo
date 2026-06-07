@@ -78,8 +78,8 @@ export const useHomeLogic = () => {
   );
 
   const handleManualReorder = useCallback(
-    (newStops: TripMarker[]) => {
-      reorderStopsManually(newStops);
+    (newStops: TripMarker[], draggedStopId?: string) => {
+      reorderStopsManually(newStops, draggedStopId);
     },
     [reorderStopsManually],
   );

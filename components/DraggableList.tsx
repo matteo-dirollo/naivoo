@@ -6,7 +6,7 @@ import {
 } from "react-native-draggable-flatlist";
 import { DraggableListProps, TripMarker } from "@/types/type";
 import { Grip, MapPinHouse, X } from "lucide-react-native";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useTripStore } from "@/store";
 
 export const DraggableList = ({
@@ -25,6 +25,7 @@ export const DraggableList = ({
     const draggable = stops.filter((stop) => !stop.isUserLocation);
     return { userLocation: user, draggableStops: draggable };
   }, [stops]);
+  const draggedStopIdRef = useRef<string | null>(null);
 
   const maxScrollHeight = useMemo(() => {
     const arrayIndex = snapIndex - 1;
@@ -84,7 +85,7 @@ export const DraggableList = ({
           {item.location.address}
         </Text>
         <Pressable
-            onPress={() => removeStop(item.stop_id)}
+          onPress={() => removeStop(item.stop_id)}
           className="p-5 justify-center items-center min-w-[16] min-h-[16]"
         >
           <X strokeWidth={1} size={16} color={"#fff"} />
@@ -116,7 +117,8 @@ export const DraggableList = ({
   const handleDragEnd = ({ data }: { data: TripMarker[] }) => {
     // Reconstruct the full list with user location at the top
     const fullList = userLocation ? [userLocation, ...data] : data;
-    onReorder(fullList);
+    onReorder(fullList, draggedStopIdRef.current ?? undefined);
+    draggedStopIdRef.current = null;
   };
 
   return (
@@ -130,7 +132,9 @@ export const DraggableList = ({
         data={draggableStops}
         keyExtractor={(item) => item.stop_id}
         renderItem={renderItem}
-        onDragBegin={() => {
+        onDragBegin={(index) => {
+          // Record which stop is being dragged
+          draggedStopIdRef.current = draggableStops[index]?.stop_id ?? null;
           onDragStart?.();
         }}
         onDragEnd={({ data }) => {
