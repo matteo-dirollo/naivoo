@@ -177,37 +177,23 @@ export const useHomeLogic = () => {
   }, [setCurrentUserLocation, sheetRef, user?.id, fetchActiveTrip]);
   useEffect(() => {
     const stops = activeTrip?.stops ?? [];
-    if (stops.length < 2) {
+    const nonUserStops = stops.filter((s) => !s.isUserLocation);
+
+    if (nonUserStops.length < 1 || !currentUserLocation) {
       setRouteCoords([]);
       return;
     }
 
-    const returnToStart = activeTrip?.return_to_start ?? false;
-
-    getDirectionsForTrip(stops, returnToStart).then((result) => {
-      if (result?.polyline) {
-        setRouteCoords(decodePolyline(result.polyline));
-      } else {
-        setRouteCoords([]);
-      }
+    // Draw the route in current stop order — no reordering
+    getDirectionsForTrip(
+      nonUserStops,
+      activeTrip?.return_to_start ?? false,
+      currentUserLocation,
+    ).then((result) => {
+      if (result?.polyline) setRouteCoords(decodePolyline(result.polyline));
+      else setRouteCoords([]);
     });
-  }, [activeTrip?.stops, activeTrip?.return_to_start]);
-  // homelogic.ts — preview route while building the trip (no optimization yet)
-  // useEffect(() => {
-  //   const stops = activeTrip?.stops ?? [];
-  //   if (stops.length < 2) {
-  //     setRouteCoords([]);
-  //     return;
-  //   }
-  //
-  //   // Just a preview — not optimized, follows stop order as-is
-  //   getDirectionsForTrip(stops, activeTrip?.return_to_start ?? false).then(
-  //     (result) => {
-  //       if (result?.polyline) setRouteCoords(decodePolyline(result.polyline));
-  //       else setRouteCoords([]);
-  //     },
-  //   );
-  // }, [activeTrip?.stops, activeTrip?.return_to_start]);
+  }, [activeTrip?.stops, activeTrip?.return_to_start, currentUserLocation]);
 
   const handleAddStop = async ({
     latitude,

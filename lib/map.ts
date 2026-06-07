@@ -1,4 +1,4 @@
-import { TripMarker } from "@/types/type";
+import { Coordinates, TripMarker } from "@/types/type";
 
 const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
 
@@ -53,40 +53,38 @@ export const generateMarkersFromData = (
 export const getDirectionsForTrip = async (
   markers: TripMarker[],
   returnToStart: boolean,
+  currentLocation?: Coordinates, // new optional param
 ) => {
-  // --- Basic validation ---
-  if (!directionsAPI || markers.length < 1) {
-    return null;
-  }
+  if (!directionsAPI || markers.length < 1) return null;
 
-  // If user has only one marker and does NOT return to start → no route possible
-  if (markers.length < 2 && !returnToStart) {
-    return null;
-  }
+  // Use live GPS position as origin if provided, otherwise fall back to
+  // the first non-user stop (handles edge cases like no GPS available)
+  const nonUserStops = markers.filter((s) => !s.isUserLocation);
 
-  const origin = markers[0];
-  const destination = returnToStart ? origin : markers[markers.length - 1];
+  if (nonUserStops.length < 1) return null;
+  if (nonUserStops.length < 2 && !returnToStart) return null;
+
+  const originLocation = currentLocation ?? nonUserStops[0].location;
+  const destination = returnToStart
+    ? originLocation
+    : nonUserStops[nonUserStops.length - 1].location;
 
   const waypointMarkers = returnToStart
-    ? markers.slice(1) // All except first
-    : markers.slice(1, -1); // All between origin and destination
+    ? nonUserStops
+    : nonUserStops.slice(0, -1); // all except last (which is destination)
 
-  const originStr = `${origin.location.latitude},${origin.location.longitude}`;
-  const destinationStr = `${destination.location.latitude},${destination.location.longitude}`;
+  const originStr = `${originLocation.latitude},${originLocation.longitude}`;
+  const destinationStr = `${destination.latitude},${destination.longitude}`;
 
-  // --- Build URL ---
   let url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originStr}&destination=${destinationStr}&key=${directionsAPI}`;
 
   if (waypointMarkers.length > 0) {
     const waypointsStr = waypointMarkers
       .map((m) => `${m.location.latitude},${m.location.longitude}`)
       .join("|");
-
-    // Add optimization
     url += `&waypoints=optimize:true|${waypointsStr}`;
   }
 
-  // --- Fetch directions ---
   try {
     const response = await fetch(url);
     const json = await response.json();
@@ -97,7 +95,6 @@ export const getDirectionsForTrip = async (
     }
 
     const route = json.routes[0];
-
     return {
       polyline: route.overview_polyline.points,
       optimized_order: route.waypoint_order ?? [],

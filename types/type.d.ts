@@ -36,7 +36,7 @@ declare interface User {
   subscription_renewal_reminder_sent: boolean;
 }
 
-declare interface Location {
+declare interface Coordinates {
   latitude: number;
   longitude: number;
   address: string;
@@ -47,7 +47,7 @@ declare interface Trip {
   trip_id: string;
   user_id?: string;
 
-  start_location: Location;
+  start_location: Coordinates;
 
   stops: TripMarker[];
 
@@ -66,11 +66,13 @@ declare interface Trip {
 declare interface TripMarker {
   stop_id: string;
   trip_id: string;
-  location: Location;
+  location: Coordinates;
   expected_duration: number;
   expected_distance: number;
   time?: number;
   isUserLocation?: boolean;
+  isPrioritized?: boolean;
+  priorityPosition?: number | null;
 }
 
 declare interface ButtonProps extends TouchableOpacityProps {
@@ -127,9 +129,9 @@ declare interface DraggableListProps {
 // ----------------------- ZUSTAND: LOCATION STORE -----------------------
 
 export interface UserLocationStore {
-  currentUserLocation: Location | null;
+  currentUserLocation: Coordinates | null;
 
-  setCurrentUserLocation: (location: Location) => void;
+  setCurrentUserLocation: (location: Coordinates) => void;
 }
 
 // ----------------------- ZUSTAND: TRIP STORE -----------------------
@@ -161,10 +163,10 @@ export interface TripStore {
   updateStop: (stop_id: string, updated: Partial<TripMarker>) => Promise<void>;
 
   // OPTIMIZATION
-  optimizeRoute: () => Promise<void>;
-
   reorderStopsManually: (newStops: TripMarker[]) => void;
-
+  setPriority: (stop_id: string, isPrioritized: boolean) => Promise<void>;
+  clearAllPriorities: () => Promise<void>;
+  optimizeRoute: (currentLocation: Coordinates) => Promise<void>;
 
   // CLEAR
   clearActiveTrip: () => void;

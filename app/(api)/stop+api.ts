@@ -49,30 +49,31 @@ export async function POST(request: Request) {
     }
 
     const [newStop] = await sql`
-            INSERT INTO trip_stops (
-                stop_id,
-                trip_id,
-                location,
-                expected_duration,
-                expected_distance,
-                isuserlocation
-            )
-            VALUES (
-                       ${stop_id},
-                       ${trip_id},
-                       ${JSON.stringify(location)},
-                       ${expected_duration || 0},
-                       ${expected_distance || 0},
-                       ${isUserLocation ?? false}
-                   )
-                RETURNING 
+      INSERT INTO trip_stops (stop_id,
+                              trip_id,
+                              location,
+                              expected_duration,
+                              expected_distance,
+                              isuserlocation,
+                              is_prioritized,
+                              priority_position)
+      VALUES (${stop_id},
+              ${trip_id},
+              ${JSON.stringify(location)},
+              ${expected_duration || 0},
+              ${expected_distance || 0},
+              ${isUserLocation ?? false}, false, null
+             ) 
+        RETURNING 
         stop_id,
         trip_id,
         location,
         expected_duration,
         expected_distance,
-        isuserlocation::boolean as "isUserLocation";
-        `;
+        isuserlocation::boolean as "isUserLocation",
+        is_prioritized::boolean as "isPrioritized",
+        priority_position as "priorityPosition"
+    `;
 
     return Response.json({ data: newStop }, { status: 201 });
   } catch (error) {
@@ -149,6 +150,36 @@ export async function DELETE(request: Request) {
     );
   } catch (error) {
     console.error("Error deleting stop:", error);
+    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const sql = neon(process.env.DATABASE_URL!);
+    const { stop_id, isPrioritized, priorityPosition } = await request.json();
+
+    if (!stop_id) {
+      return Response.json({ error: "stop_id is required" }, { status: 400 });
+    }
+
+    const [updated] = await sql`
+      UPDATE trip_stops
+      SET
+        is_prioritized = ${isPrioritized},
+        priority_position = ${isPrioritized ? priorityPosition : null}
+      WHERE stop_id = ${stop_id}
+      RETURNING
+        stop_id, trip_id, location,
+        expected_duration, expected_distance,
+        isuserlocation::boolean as "isUserLocation",
+        is_prioritized::boolean as "isPrioritized",
+        priority_position
+    `;
+
+    return Response.json({ data: updated }, { status: 200 });
+  } catch (error) {
+    console.error("Error updating stop priority:", error);
     return Response.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
