@@ -28,7 +28,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
         [id]: isOpen !== undefined ? isOpen : !state.menus[id],
       },
     })),
-  isMenuOpen: (id) => !!get().menus[id],
+  isMenuOpen: (id) => get().menus[id],
 }));
 
 export const useUserLocationStore = create<UserLocationStore>((set) => ({
@@ -611,7 +611,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
         // @ts-ignore
         return segResult.optimized_order
           .map((i: number) => segStops[i])
-          .filter((s): s is TripMarker => s != null);
+          .filter((s: any): s is TripMarker => s != null);
       }),
     );
 

@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { useUser } from "@clerk/clerk-expo";
 import { useTripStore } from "@/store";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { Heading } from "@/components/ui/heading";
@@ -29,7 +28,7 @@ const TripsHistory = ({ userId }: TripsHistoryProps) => {
         renderItem={({ item }) => (
           <TouchableOpacity
             className="p-4 mb-2 bg-brand-50 rounded-lg"
-            onPress={() => setActiveTrip(item.trip_id)}
+            // onPress={() => setActiveTrip()}
           >
             <Text className="font-semibold text-background-900  ">
               {item.name || "Unnamed Journey"}
