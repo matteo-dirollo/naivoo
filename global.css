@@ -29,9 +29,17 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     /* CUSTOM */
-    --color-brand-50: 169 76% 95%;
-    --color-brand-500: 169 76% 50%;
+    --color-brand-50:  169 76% 95%;
+    --color-brand-100: 169 76% 90%;
+    --color-brand-200: 169 76% 80%;
+    --color-brand-300: 169 76% 70%;
+    --color-brand-400: 169 76% 60%;
+    --color-brand-500: 169 76% 50%; /* Your Base */
+    --color-brand-600: 169 76% 40%;
+    --color-brand-700: 169 76% 30%;
+    --color-brand-800: 169 76% 20%;
     --color-brand-900: 169 76% 15%;
+    --color-brand-950: 169 76% 10%;
   }
 
   .dark:root {

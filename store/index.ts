@@ -372,31 +372,33 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!trip) return;
 
     const nonUserStops = newStops.filter((s) => !s.isUserLocation);
+    const newOrder = nonUserStops.map((s) => s.stop_id);
 
     const stopsWithPriority: TripMarker[] = newStops.map((s) => {
       if (s.isUserLocation) return s;
       const newIndex = nonUserStops.findIndex((n) => n.stop_id === s.stop_id);
-      // Only lock the stop the user actually dragged
       if (s.stop_id === draggedStopId) {
         return { ...s, isPrioritized: true, priorityPosition: newIndex };
       }
-      // Already locked → just update its position number
       if (s.isPrioritized) {
         return { ...s, priorityPosition: newIndex };
       }
       return s;
     });
 
-    set({ activeTrip: { ...trip, stops: stopsWithPriority } });
+    // Keep optimized_order in sync so optimizeRoute reads the right order
+    set({
+      activeTrip: {
+        ...trip,
+        stops: stopsWithPriority,
+        optimized_order: newOrder,
+      },
+    });
 
-    // Persist the new order to DB immediately so optimizeRoute can read it
     api
-      .put(`/trip/${trip.trip_id}`, {
-        optimized_order: nonUserStops.map((s) => s.stop_id),
-      })
+      .put(`/trip/${trip.trip_id}`, { optimized_order: newOrder })
       .catch(console.error);
 
-    // Persist priority flags
     stopsWithPriority
       .filter((s) => !s.isUserLocation && s.isPrioritized)
       .forEach((s) => {

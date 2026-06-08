@@ -5,11 +5,12 @@ import {
   RenderItemParams,
 } from "react-native-draggable-flatlist";
 import { DraggableListProps, TripMarker } from "@/types/type";
-import { Grip, MapPinHouse, EllipsisVertical } from "lucide-react-native";
+import { Grip, MapPinHouse, Lock, RefreshCw } from "lucide-react-native";
 import { useMemo, useRef } from "react";
 import { useTripStore } from "@/store";
-import { Button, ButtonIcon } from "@/components/ui/button";
 import FlatListItemMenu from "@/components/FlatListItemMenu";
+import { Heading } from "@/components/ui/heading";
+import { MenuSeparator } from "@/components/ui/menu";
 
 export const DraggableList = ({
   stops,
@@ -21,7 +22,7 @@ export const DraggableList = ({
   onDragEndGlobal,
 }: DraggableListProps) => {
   const { height: windowHeight } = useWindowDimensions();
-  const { removeStop } = useTripStore();
+  const { removeStop, activeTrip } = useTripStore();
   const { userLocation, draggableStops } = useMemo(() => {
     const user = stops.find((stop) => stop.isUserLocation);
     const draggable = stops.filter((stop) => !stop.isUserLocation);
@@ -69,7 +70,7 @@ export const DraggableList = ({
   }: RenderItemParams<TripMarker>) => {
     return (
       <View
-        className={`flex-row items-center p-3 border-b border-b-[#444] bg-[#141714] ${
+        className={`flex-row items-center p-3 border-b border-b-background-800 bg-background-950 ${
           isActive ? "opacity-50" : ""
         }`}
       >
@@ -83,11 +84,19 @@ export const DraggableList = ({
           <Grip strokeWidth={1} size={16} color={"#fff"} />
         </Pressable>
         <View className="mr-4" />
-        <Text className="text-white flex-1 font-normal" numberOfLines={2}>
+        <Text
+          className="text-background-300 flex-1 font-normal"
+          numberOfLines={2}
+        >
           {item.location.address}
         </Text>
+        {item.isPrioritized && (
+          <View className="mr-1">
+            <Lock strokeWidth={1} size={12} color={"#1ed7b5"} />
+          </View>
+        )}
 
-        <View className="p-5 justify-center items-center min-w-[16] min-h-[16]">
+        <View className="px-2 justify-center items-center min-w-[16] min-h-[12]">
           <FlatListItemMenu menuId={item.stop_id} />
         </View>
       </View>
@@ -98,18 +107,39 @@ export const DraggableList = ({
     if (!userLocation) return null;
 
     return (
-      <View className="flex-row items-center border-b border-b-[#444] bg-[#0d3b66] p-3">
-        <View className="p-5 justify-center items-center min-w-[14] min-h-[14]">
+      <View className="flex items-start border-b border-b-[#444] p-3 gap-8">
+        <View className="flex w-full">
+          <Heading className="text-background-500 px-3 my-2">
+            {activeTrip?.name || "Untitled Trip"}
+          </Heading>
+          <View className="p-3">
+            <Text className="font-normal text-background-400">Route Setup</Text>
+          </View>
+        </View>
+        <View className="flex-row justify-center items-center min-w-[16] min-h-[8] mx-4 gap-8">
           <MapPinHouse
             color="#fff"
             strokeWidth={1}
-            className="text-[#ccc] w-6 h-6"
+            className="text-background-300 w-6 h-6"
           />
+
+          <Text
+            className="text-background-300 flex-1 font-normal"
+            numberOfLines={2}
+          >
+            Start from current location
+          </Text>
         </View>
-        <View className="mr-4" />
-        <Text className="text-white flex-1 font-bold" numberOfLines={2}>
-          {userLocation.location.address}
-        </Text>
+        <View className="flex-row justify-center items-center min-w-[16] min-h-[8] mx-4 gap-8">
+          <RefreshCw
+            color="#fff"
+            strokeWidth={1}
+            className="text-background-300 w-6 h-6"
+          />
+          <Text className="text-background-300 flex-1 font-normal">
+            Round Trip
+          </Text>
+        </View>
       </View>
     );
   };
@@ -123,7 +153,7 @@ export const DraggableList = ({
 
   return (
     <NestableScrollContainer
-      className="flex-1 my-2"
+      className="flex-1"
       style={{ maxHeight: maxScrollHeight }}
     >
       <>{renderHeader()}</>

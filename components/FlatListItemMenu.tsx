@@ -13,7 +13,10 @@ interface FlatListItemMenuProps {
 const FlatListItemMenu = ({ menuId }: FlatListItemMenuProps) => {
   const isOpen = useMenuStore((state) => state.isMenuOpen(menuId));
   const toggleMenu = useMenuStore((state) => state.toggleMenu);
-  const { removeStop } = useTripStore();
+  const { removeStop, setPriority, activeTrip } = useTripStore();
+  const stop = activeTrip?.stops.find((s) => s.stop_id === menuId);
+  const isLocked = stop?.isPrioritized ?? false;
+
   return (
     <Menu
       className="p-1 bg-background-900 border-background-900 "
@@ -75,10 +78,25 @@ const FlatListItemMenu = ({ menuId }: FlatListItemMenuProps) => {
           <MenuItem
             key="Delete Stop"
             textValue="Delete Stop"
-            onPress={() => removeStop(menuId)}
+            onPress={() => {
+              removeStop(menuId);
+              toggleMenu(menuId, false);
+            }}
           >
             <MenuItemLabel className="text-white" size="sm">
               Delete Stop
+            </MenuItemLabel>
+          </MenuItem>
+          <MenuItem
+            key="LockToggle"
+            textValue={isLocked ? "Unlock Position" : "Lock Position"}
+            onPress={() => {
+              setPriority(menuId, !isLocked);
+              toggleMenu(menuId, false);
+            }}
+          >
+            <MenuItemLabel className="text-white" size="sm">
+              {isLocked ? "🔓 Unlock Position" : "🔒 Lock Position"}
             </MenuItemLabel>
           </MenuItem>
           <MenuItem
