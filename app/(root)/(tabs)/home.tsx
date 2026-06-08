@@ -24,10 +24,6 @@ import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { EllipsisVertical, RepeatIcon } from "lucide-react-native";
 import FlatListItemMenu from "@/components/FlatListItemMenu";
 // TODO: set camera
-// getCamera
-// animateCamera 	camera: Camera, { duration: Number }
-// Animate the camera to a new view. You can pass a partial camera object here;
-// any property not given will remain unmodified. duration is not supported on iOS.
 
 export default function Home() {
   const {
@@ -94,7 +90,7 @@ export default function Home() {
           >
             <GestureDetector gesture={contentGesture}>
               <BottomSheetScrollView style={{ flex: 1 }}>
-                <View className="flex-1 px-4 pb-6 space-y-4">
+                <View className="flex-1 pb-6 space-y-4">
                   {hasActiveTrip ? (
                     <View className="flex w-full mx-auto space-x-5">
                       <View
@@ -105,17 +101,17 @@ export default function Home() {
                         }}
                       >
                         <View className="flex flex-row items-center w-full">
-                          <View className="flex flex-1 justify-center z-0">
+                          <View className="flex flex-1 justify-center z-0 px-3">
                             <GoogleTextInput
                               ref={googleInputRef}
                               icon={icons.search}
-                              containerStyle={"bg-[#2D322C] rounded-xl"}
+                              containerStyle={"bg-[#1F1F1F] rounded-xl"}
                               handlePress={handleAddStop}
                               onTextInputFocus={onPressInputField}
-                              textInputBackgroundColor="#2D322C"
+                              textInputBackgroundColor="#1F1F1F"
                             />
                           </View>
-                          <View className="flex-shrink-0 absolute right-2 top-1/2 -translate-y-1/2 z-50">
+                          <View className="flex-shrink-0 absolute right-2 top-1/2 -translate-y-1/2 z-50 px-3">
                             <FlatListItemMenu menuId="google-text-input" />
                           </View>
                         </View>
@@ -134,7 +130,7 @@ export default function Home() {
                         variant="outline"
                         size="md"
                         action="primary"
-                        className="w-[80%] mx-auto mt-0.5 border-2 border-brand-500 rounded-md h-12 "
+                        className="w-[80%] mx-auto mt-1 border-2 border-brand-500 rounded-md h-12 "
                         onPress={() => {
                           if (!currentUserLocation) {
                             Alert.alert(

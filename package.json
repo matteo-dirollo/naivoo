@@ -21,7 +21,7 @@
     "@gorhom/bottom-sheet": "^5.2.8",
     "@gorhom/portal": "^1.0.14",
     "@legendapp/list": "^2.0.16",
-    "@legendapp/motion": "^2.5.3",
+    "@legendapp/motion": "^2.4.0",
     "@neondatabase/serverless": "^1.0.2",
     "@react-native-vector-icons/ant-design": "^13.1.2",
     "@react-navigation/bottom-tabs": "^7.4.0",

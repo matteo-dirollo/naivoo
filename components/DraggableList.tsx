@@ -10,7 +10,6 @@ import { useMemo, useRef } from "react";
 import { useTripStore } from "@/store";
 import FlatListItemMenu from "@/components/FlatListItemMenu";
 import { Heading } from "@/components/ui/heading";
-import { MenuSeparator } from "@/components/ui/menu";
 
 export const DraggableList = ({
   stops,
@@ -22,7 +21,7 @@ export const DraggableList = ({
   onDragEndGlobal,
 }: DraggableListProps) => {
   const { height: windowHeight } = useWindowDimensions();
-  const { removeStop, activeTrip } = useTripStore();
+  const { activeTrip } = useTripStore();
   const { userLocation, draggableStops } = useMemo(() => {
     const user = stops.find((stop) => stop.isUserLocation);
     const draggable = stops.filter((stop) => !stop.isUserLocation);
@@ -70,7 +69,7 @@ export const DraggableList = ({
   }: RenderItemParams<TripMarker>) => {
     return (
       <View
-        className={`flex-row items-center p-3 border-b border-b-background-800 bg-background-950 ${
+        className={`flex-row items-center px-2 border-b border-b-background-800 bg-background-950 z-0 ${
           isActive ? "opacity-50" : ""
         }`}
       >
@@ -107,13 +106,18 @@ export const DraggableList = ({
     if (!userLocation) return null;
 
     return (
-      <View className="flex items-start border-b border-b-[#444] p-3 gap-8">
+      <View className="flex items-start border-b border-b-[#444] px-3 pt-3 gap-4 mt-2 z-0">
         <View className="flex w-full">
           <Heading className="text-background-500 px-3 my-2">
             {activeTrip?.name || "Untitled Trip"}
           </Heading>
-          <View className="p-3">
-            <Text className="font-normal text-background-400">Route Setup</Text>
+          <View
+            style={{ marginHorizontal: -16 }}
+            className="bg-background-900 px-8 py-2 mb-1"
+          >
+            <Text className="font-semibold text-background-500 text-sm uppercase tracking-widest">
+              Route Setup
+            </Text>
           </View>
         </View>
         <View className="flex-row justify-center items-center min-w-[16] min-h-[8] mx-4 gap-8">
@@ -140,6 +144,16 @@ export const DraggableList = ({
             Round Trip
           </Text>
         </View>
+        <View className="flex w-full">
+          <View
+            style={{ marginHorizontal: -16 }}
+            className="bg-background-900 px-8 py-2"
+          >
+            <Text className="font-semibold text-background-500 text-sm uppercase tracking-widest">
+              Stops
+            </Text>
+          </View>
+        </View>
       </View>
     );
   };
@@ -153,7 +167,7 @@ export const DraggableList = ({
 
   return (
     <NestableScrollContainer
-      className="flex-1"
+      className="flex-1 z-0"
       style={{ maxHeight: maxScrollHeight }}
     >
       <>{renderHeader()}</>

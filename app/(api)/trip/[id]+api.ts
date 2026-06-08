@@ -30,7 +30,9 @@ export async function GET(request: Request, { id }: { id: string }) {
               'location', ts.location,
               'expected_duration', ts.expected_duration,
               'expected_distance', ts.expected_distance,
-              'isUserLocation', ts.isuserlocation
+              'isUserLocation', ts.isuserlocation,
+              'isPrioritized',    ts.is_prioritized,
+              'priorityPosition', ts.priority_position
             )
               ORDER BY ts.stop_id
           ) FILTER (WHERE ts.stop_id IS NOT NULL),
