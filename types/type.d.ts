@@ -7,6 +7,12 @@ declare interface DrawerStore {
   toggleDrawer: () => void;
 }
 
+export interface MenuState {
+  menus: Record<string, boolean>; // This stores ALL menu states
+  toggleMenu: (id: string, isOpen?: boolean) => void;
+  isMenuOpen: (id: string) => boolean;
+}
+
 declare interface User {
   id: number;
   first_name: string;
@@ -149,6 +155,7 @@ export interface TripStore {
   saveActiveTrip: () => Promise<void>; // inserts or updates DB
 
   // LOCAL STATE
+  // TODO: CHANGE LOGIC
   setActiveTrip: (trip: Trip | null) => void;
   setUserTrips: (trips: Trip[]) => void;
 

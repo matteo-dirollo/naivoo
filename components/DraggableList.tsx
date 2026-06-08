@@ -5,9 +5,11 @@ import {
   RenderItemParams,
 } from "react-native-draggable-flatlist";
 import { DraggableListProps, TripMarker } from "@/types/type";
-import { Grip, MapPinHouse, X } from "lucide-react-native";
+import { Grip, MapPinHouse, EllipsisVertical } from "lucide-react-native";
 import { useMemo, useRef } from "react";
 import { useTripStore } from "@/store";
+import { Button, ButtonIcon } from "@/components/ui/button";
+import FlatListItemMenu from "@/components/FlatListItemMenu";
 
 export const DraggableList = ({
   stops,
@@ -84,12 +86,10 @@ export const DraggableList = ({
         <Text className="text-white flex-1 font-normal" numberOfLines={2}>
           {item.location.address}
         </Text>
-        <Pressable
-          onPress={() => removeStop(item.stop_id)}
-          className="p-5 justify-center items-center min-w-[16] min-h-[16]"
-        >
-          <X strokeWidth={1} size={16} color={"#fff"} />
-        </Pressable>
+
+        <View className="p-5 justify-center items-center min-w-[16] min-h-[16]">
+          <FlatListItemMenu menuId={item.stop_id} />
+        </View>
       </View>
     );
   };

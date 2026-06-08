@@ -21,7 +21,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigationDrawer } from "@/components/NavigationDrawer";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
-import { RepeatIcon } from "lucide-react-native";
+import { EllipsisVertical, RepeatIcon } from "lucide-react-native";
+import FlatListItemMenu from "@/components/FlatListItemMenu";
 // TODO: set camera
 // getCamera
 // animateCamera 	camera: Camera, { duration: Number }
@@ -93,27 +94,33 @@ export default function Home() {
           >
             <GestureDetector gesture={contentGesture}>
               <BottomSheetScrollView style={{ flex: 1 }}>
-                <View className="flex-1 p-5 space-y-4">
+                <View className="flex-1 px-4 pb-6 space-y-4">
                   {hasActiveTrip ? (
-                    <View className="flex-1 w-full mx-auto space-x-5">
+                    <View className="flex w-full mx-auto space-x-5">
                       <View
-                        className="w-full"
+                        className="w-full relative"
                         onLayout={(event) => {
                           const { height } = event.nativeEvent.layout;
                           setSearchInputHeight(height);
                         }}
                       >
-                        <GoogleTextInput
-                          ref={googleInputRef}
-                          icon={icons.search}
-                          containerStyle={
-                            "bg-[#2D322C] flex flex-row items-center justify-center relative rounded-xl"
-                          }
-                          handlePress={handleAddStop}
-                          onTextInputFocus={onPressInputField}
-                          textInputBackgroundColor="#2D322C"
-                        />
+                        <View className="flex flex-row items-center w-full">
+                          <View className="flex flex-1 justify-center z-0">
+                            <GoogleTextInput
+                              ref={googleInputRef}
+                              icon={icons.search}
+                              containerStyle={"bg-[#2D322C] rounded-xl"}
+                              handlePress={handleAddStop}
+                              onTextInputFocus={onPressInputField}
+                              textInputBackgroundColor="#2D322C"
+                            />
+                          </View>
+                          <View className="flex-shrink-0 absolute right-2 top-1/2 -translate-y-1/2 z-50">
+                            <FlatListItemMenu menuId="google-text-input" />
+                          </View>
+                        </View>
                       </View>
+
                       <DraggableList
                         stops={activeTrip?.stops || []}
                         onReorder={handleManualReorder}

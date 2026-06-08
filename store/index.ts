@@ -7,6 +7,7 @@ import {
   SnapPointStore,
   DrawerStore,
   Coordinates,
+  MenuState,
 } from "@/types/type";
 import { api } from "@/lib/api";
 import { getShortBase36Id } from "@/lib/utils";
@@ -16,6 +17,18 @@ export const useDrawerStore = create<DrawerStore>((set) => ({
   isDrawerOpen: false, // Drawer is closed by default
   setDrawerOpen: (isOpen) => set({ isDrawerOpen: isOpen }),
   toggleDrawer: () => set((state) => ({ isDrawerOpen: !state.isDrawerOpen })),
+}));
+
+export const useMenuStore = create<MenuState>((set, get) => ({
+  menus: {},
+  toggleMenu: (id, isOpen) =>
+    set((state) => ({
+      menus: {
+        ...state.menus,
+        [id]: isOpen !== undefined ? isOpen : !state.menus[id],
+      },
+    })),
+  isMenuOpen: (id) => !!get().menus[id],
 }));
 
 export const useUserLocationStore = create<UserLocationStore>((set) => ({
@@ -102,7 +115,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
   setActiveTrip: (trip) => set({ activeTrip: trip }),
 
   setUserTrips: (trips) => set({ userTrips: trips }),
-
   // -----------------------------
   // TRIP CRUD
   // -----------------------------
