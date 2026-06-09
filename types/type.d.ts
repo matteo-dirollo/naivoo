@@ -1,16 +1,19 @@
 import { TextInputProps, TouchableOpacityProps } from "react-native";
 import React from "react";
 
-declare interface DrawerStore {
-  isDrawerOpen: boolean;
-  setDrawerOpen: (isOpen: boolean) => void;
-  toggleDrawer: () => void;
+export interface DrawerStore {
+  activeDrawerId: string | null;
+  setDrawerOpen: (id: string, isOpen: boolean) => void;
+  // Computed property to check if a specific drawer is open
+  isDrawerOpen: (id: string) => boolean;
 }
-
+export type MenuCategory = "trip" | "stop" | "google-input" | "undefined";
 export interface MenuState {
-  menus: Record<string, boolean>; // This stores ALL menu states
-  toggleMenu: (id: string, isOpen?: boolean) => void;
+  menus: Record<string, boolean>;
+  menuTypes: Record<string, MenuCategory>;
+  toggleMenu: (id: string, category: MenuCategory, isOpen?: boolean) => void;
   isMenuOpen: (id: string) => boolean;
+  getMenuType: (id: string) => MenuCategory | undefined; // Helper to retrieve type
 }
 
 declare interface User {
@@ -156,7 +159,8 @@ export interface TripStore {
 
   // LOCAL STATE
   // TODO: CHANGE LOGIC
-  setActiveTrip: (trip: Trip | null) => void;
+  setActiveTrip: (trip_id: string) => Promise<void>;
+  setTripInactive: (trip_id: string) => Promise<void>;
   setUserTrips: (trips: Trip[]) => void;
 
   // CRUD
@@ -165,7 +169,10 @@ export interface TripStore {
   deleteTrip: (trip_id: string) => Promise<void>;
 
   // STOP MANAGEMENT
-  addStop: (stop: TripMarker) => Promise<void>;
+  addStop: (
+    stop: Omit<TripMarker, "stop_id">,
+    currentLocation: Coordinates,
+  ) => Promise<void>;
   removeStop: (stop_id: string) => Promise<void>;
   updateStop: (stop_id: string, updated: Partial<TripMarker>) => Promise<void>;
 

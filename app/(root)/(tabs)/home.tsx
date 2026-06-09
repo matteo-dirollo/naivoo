@@ -21,7 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigationDrawer } from "@/components/NavigationDrawer";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
-import { EllipsisVertical, RepeatIcon } from "lucide-react-native";
+import { RepeatIcon } from "lucide-react-native";
 import FlatListItemMenu from "@/components/FlatListItemMenu";
 // TODO: set camera
 
@@ -61,14 +61,14 @@ export default function Home() {
       <View className="flex-1">
         <View className="absolute inset-0">
           <Map />
-          <NavigationDrawer />
+          <NavigationDrawer drawerId="main-nav" />
           <SafeAreaView
             className="absolute left-4 z-10"
             style={{ marginTop: androidTopMargin }}
           >
             <TouchableOpacity
               className="w-12 h-12 rounded-full bg-white items-center justify-center shadow-lg elevation-5 mt-2"
-              onPress={() => setDrawerOpen(true)}
+              onPress={() => setDrawerOpen("main-nav", true)}
               activeOpacity={0.7}
             >
               <Ionicons name="menu" size={24} color="#333333" />
@@ -100,8 +100,8 @@ export default function Home() {
                           setSearchInputHeight(height);
                         }}
                       >
-                        <View className="flex flex-row items-center w-full">
-                          <View className="flex flex-1 justify-center z-0 px-3">
+                        <View className="flex flex-row items-center w-full px-6">
+                          <View className="flex flex-1 justify-center px-3">
                             <GoogleTextInput
                               ref={googleInputRef}
                               icon={icons.search}
@@ -111,8 +111,11 @@ export default function Home() {
                               textInputBackgroundColor="#1F1F1F"
                             />
                           </View>
-                          <View className="flex-shrink-0 absolute right-2 top-1/2 -translate-y-1/2 z-50 px-3">
-                            <FlatListItemMenu menuId="google-text-input" />
+                          <View className="flex-shrink-0 absolute right-0 top-1/2 -translate-y-1/2 px-3">
+                            <FlatListItemMenu
+                              menuId="google-text-input"
+                              menuType="google-input"
+                            />
                           </View>
                         </View>
                       </View>
@@ -130,7 +133,7 @@ export default function Home() {
                         variant="outline"
                         size="md"
                         action="primary"
-                        className="w-[80%] mx-auto mt-1 border-2 border-brand-500 rounded-md h-12 "
+                        className="w-[80%] mx-auto mt-4 border-2 border-brand-500 rounded-md h-12 "
                         onPress={() => {
                           if (!currentUserLocation) {
                             Alert.alert(
