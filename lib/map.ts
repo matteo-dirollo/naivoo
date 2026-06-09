@@ -43,7 +43,6 @@ export const generateMarkersFromData = (
     ? Object.fromEntries(optimizedOrder.map((id, index) => [id, index]))
     : {};
 
-  // Just return the stops with their order index attached
   return stops.map((stop) => ({
     ...stop,
     orderIndex: orderMap[stop.stop_id] ?? 9999,
@@ -53,37 +52,35 @@ export const generateMarkersFromData = (
 export const getDirectionsForTrip = async (
   markers: TripMarker[],
   returnToStart: boolean,
-  currentLocation?: Coordinates, // new optional param
+  currentLocation?: Coordinates,
 ) => {
   if (!directionsAPI || markers.length < 1) return null;
 
-  // Use live GPS position as origin if provided, otherwise fall back to
-  // the first non-user stop (handles edge cases like no GPS available)
   const nonUserStops = markers.filter((s) => !s.isUserLocation);
-
   if (nonUserStops.length < 1) return null;
-  if (nonUserStops.length < 2 && !returnToStart) return null;
 
   const originLocation = currentLocation ?? nonUserStops[0].location;
-  const destination = returnToStart
-    ? originLocation
-    : nonUserStops[nonUserStops.length - 1].location;
-
-  const waypointMarkers = returnToStart
-    ? nonUserStops
-    : nonUserStops.slice(0, -1); // all except last (which is destination)
-
   const originStr = `${originLocation.latitude},${originLocation.longitude}`;
-  const destinationStr = `${destination.latitude},${destination.longitude}`;
 
-  let url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originStr}&destination=${destinationStr}&key=${directionsAPI}`;
+  // When returnToStart: origin = destination = current location, all stops are waypoints.
+  // When not returnToStart: origin = current location, destination = current location too,
+  // so ALL stops go into waypoints=optimize:true and Google can freely reorder them.
+  // Previously the last stop was used as destination, which fixed it in place and made
+  // reordering impossible when there were only 2 stops.
+  const destinationStr = returnToStart ? originStr : originStr; // always round-trip through origin so all stops are free waypoints
 
-  if (waypointMarkers.length > 0) {
-    const waypointsStr = waypointMarkers
-      .map((m) => `${m.location.latitude},${m.location.longitude}`)
-      .join("|");
-    url += `&waypoints=optimize:true|${waypointsStr}`;
-  }
+  const waypointsStr = nonUserStops
+    .map((m) => `${m.location.latitude},${m.location.longitude}`)
+    .join("|");
+
+  const url =
+    `https://maps.googleapis.com/maps/api/directions/json` +
+    `?origin=${originStr}` +
+    `&destination=${destinationStr}` +
+    `&waypoints=optimize:true|${waypointsStr}` +
+    `&key=${directionsAPI}`;
+
+  console.log("[getDirectionsForTrip] url:", url);
 
   try {
     const response = await fetch(url);
@@ -95,6 +92,11 @@ export const getDirectionsForTrip = async (
     }
 
     const route = json.routes[0];
+    console.log(
+      "[getDirectionsForTrip] waypoint_order from Google:",
+      route.waypoint_order,
+    );
+
     return {
       polyline: route.overview_polyline.points,
       optimized_order: route.waypoint_order ?? [],
@@ -145,10 +147,8 @@ export const calculateRegion = ({
       : []),
   ];
 
-  // 🟢 No markers, no user → fallback region
   if (allPoints.length === 0) return DEFAULT_REGION;
 
-  // 🟢 Only user location → center on user
   if (allPoints.length === 1) {
     return {
       latitude: allPoints[0].latitude,
@@ -172,7 +172,6 @@ export const calculateRegion = ({
   let latitudeDelta = (maxLat - minLat) * 1.4;
   let longitudeDelta = (maxLng - minLng) * 1.4;
 
-  // Safety minimums (avoids overly-zoomed map)
   if (latitudeDelta < 0.01) latitudeDelta = 0.01;
   if (longitudeDelta < 0.01) longitudeDelta = 0.01;
 
@@ -183,51 +182,3 @@ export const calculateRegion = ({
     longitudeDelta,
   };
 };
-
-// export const calculateDriverTimes = async ({
-//   markers,
-//   userLatitude,
-//   userLongitude,
-//   destinationLatitude,
-//   destinationLongitude,
-// }: {
-//   markers: TripMarker[];
-//   userLatitude: number | null;
-//   userLongitude: number | null;
-//   destinationLatitude: number | null;
-//   destinationLongitude: number | null;
-// }) => {
-//   if (
-//     !userLatitude ||
-//     !userLongitude ||
-//     !destinationLatitude ||
-//     !destinationLongitude
-//   )
-//     return;
-//
-//   try {
-//     const timesPromises = markers.map(async (marker) => {
-//       const responseToUser = await fetch(
-//         `https://maps.googleapis.com/maps/api/directions/json?origin=${marker.latitude},${marker.longitude}&destination=${userLatitude},${userLongitude}&key=${directionsAPI}`,
-//       );
-//       const dataToUser = await responseToUser.json();
-//       const timeToUser = dataToUser.routes[0].legs[0].duration.value; // Time in seconds
-//
-//       const responseToDestination = await fetch(
-//         `https://maps.googleapis.com/maps/api/directions/json?origin=${userLatitude},${userLongitude}&destination=${destinationLatitude},${destinationLongitude}&key=${directionsAPI}`,
-//       );
-//       const dataToDestination = await responseToDestination.json();
-//       const timeToDestination =
-//         dataToDestination.routes[0].legs[0].duration.value; // Time in seconds
-//
-//       const totalTime = (timeToUser + timeToDestination) / 60; // Total time in minutes
-//       const price = (totalTime * 0.5).toFixed(2); // Calculate price based on time
-//
-//       return { ...marker, time: totalTime, price };
-//     });
-//
-//     return await Promise.all(timesPromises);
-//   } catch (error) {
-//     console.error("Error calculating driver times:", error);
-//   }
-// };

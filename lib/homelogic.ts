@@ -26,6 +26,9 @@ export const useHomeLogic = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Guard against double-firing handleAddStop
+  const isAddingStop = useRef(false);
+
   const { currentUserLocation, setCurrentUserLocation } =
     useUserLocationStore();
   const {
@@ -38,7 +41,6 @@ export const useHomeLogic = () => {
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
   const { activeTrip, addStop } = useTripStore();
   const googleInputRef = useRef<any>(null);
-  const shortId = getShortBase36Id(5);
 
   const contentGesture = Gesture.Native().simultaneousWithExternalGesture(
     Gesture.Pan().runOnJS(true),
@@ -69,9 +71,8 @@ export const useHomeLogic = () => {
     router.replace("/(auth)/sign-in");
   }, [signOut]);
 
-  // Destination selection
   const handleDestinationPress = useCallback(
-    (location: { latitude: number; longitude: number; address: string }) => {
+    (_location: { latitude: number; longitude: number; address: string }) => {
       // router.push("/(root)/find-ride");
     },
     [],
@@ -84,7 +85,6 @@ export const useHomeLogic = () => {
     [reorderStopsManually],
   );
 
-  // Fetch recent trips
   const {
     data: recentTrips,
     loading,
@@ -107,7 +107,6 @@ export const useHomeLogic = () => {
 
         let addressStr = "";
 
-        // Try Expo's reverse geocoding first
         try {
           const address = await Location.reverseGeocodeAsync({
             latitude: pos.coords.latitude,
@@ -115,32 +114,20 @@ export const useHomeLogic = () => {
           });
 
           if (address?.[0]) {
-            // Cleaner way to build address from Expo
-            const parts = [
-              address[0].name,
-              address[0].street,
-              address[0].city,
-              address[0].region,
-              address[0].country,
-            ].filter(Boolean);
-
             addressStr = extractAddressString(address);
           }
         } catch (expoError) {
           console.log("Expo reverse geocode failed, trying Google:", expoError);
 
-          // Fallback to Google Geocoding
           try {
             const googleAddress = await googleReverseGeocode(
               pos.coords.latitude,
               pos.coords.longitude,
             );
 
-            // Use formatted_address directly from Google response
             if (googleAddress?.formatted_address) {
               addressStr = googleAddress.formatted_address;
             } else if (googleAddress?.name && googleAddress?.region) {
-              // Fallback to manual construction if formatted_address isn't available
               addressStr = `${googleAddress.name}, ${googleAddress.region}`;
             }
           } catch (googleError) {
@@ -152,17 +139,14 @@ export const useHomeLogic = () => {
           setCurrentUserLocation({
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
-            // Use the address string if we got it, otherwise use coordinates as fallback
             address: addressStr || "Starting Address",
           });
         }
       } catch (error) {
         console.log("Location error:", error);
-        // Consider setting a default location or showing an error to user
       }
     };
 
-    // ADD THIS: Fetch active trip when component mounts or user changes
     const initializeData = async () => {
       if (user?.id) {
         await fetchActiveTrip(user.id);
@@ -176,6 +160,7 @@ export const useHomeLogic = () => {
       cancelled = true;
     };
   }, [setCurrentUserLocation, sheetRef, user?.id, fetchActiveTrip]);
+
   useEffect(() => {
     const stops = activeTrip?.stops ?? [];
     const nonUserStops = stops.filter((s) => !s.isUserLocation);
@@ -185,7 +170,6 @@ export const useHomeLogic = () => {
       return;
     }
 
-    // Draw the route in current stop order — no reordering
     getDirectionsForTrip(
       nonUserStops,
       activeTrip?.return_to_start ?? false,
@@ -205,30 +189,39 @@ export const useHomeLogic = () => {
     longitude: number;
     address: string;
   }) => {
+    // Prevent double-fire from rapid taps or re-renders
+    if (isAddingStop.current) return;
+    isAddingStop.current = true;
+
     if (!activeTrip) {
       console.warn("No active trip to add stop to");
+      isAddingStop.current = false;
       return;
     }
     if (!currentUserLocation) {
       Alert.alert("Location unavailable", "Enable GPS to add stops.");
+      isAddingStop.current = false;
       return;
     }
 
     try {
+      // Generate a fresh ID per call — never reuse a module-level shortId
+      const stopId = getShortBase36Id(5);
       const formattedAddress = formatAddress(address);
+
       const result = await addStop(
         {
-          stop_id: shortId,
+          stop_id: stopId,
           trip_id: activeTrip.trip_id,
-          location: { latitude, longitude, address },
+          location: { latitude, longitude, address: formattedAddress },
           expected_duration: 0,
           expected_distance: 0,
           isUserLocation: false,
         },
         currentUserLocation,
       );
+
       if (result === null) {
-        // Show a user-friendly message
         Alert.alert(
           "Duplicate Location",
           "This stop is already in your trip.",
@@ -237,11 +230,12 @@ export const useHomeLogic = () => {
       }
 
       googleInputRef.current?.clear();
-
       Keyboard.dismiss();
       setIsInputFocused(false);
     } catch (error) {
       console.error("Failed to add stop:", error);
+    } finally {
+      isAddingStop.current = false;
     }
   };
 

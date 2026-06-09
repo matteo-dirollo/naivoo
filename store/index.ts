@@ -54,7 +54,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
   userTrips: [],
 
   routeCoords: [],
-  setRouteCoords: (coords) => set({ routeCoords: coords }),
+  setRouteCoords: (coords: { latitude: number; longitude: number }[]) =>
+    set({ routeCoords: coords }),
 
   fetchUserTrips: async (userId: string) => {
     try {
@@ -68,7 +69,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
       } else {
         console.error("Error:", error.message);
       }
-      // Optionally set empty array on error
       set({ userTrips: [] });
     }
   },
@@ -76,28 +76,21 @@ export const useTripStore = create<TripStore>((set, get) => ({
   fetchActiveTrip: async (userId: string) => {
     try {
       const res = await api.get(`/trip/${userId}`);
-
-      const trips = res.data.data;
-      const active = trips.find((t: Trip) => t.active_trip);
-
+      const trips: Trip[] = res.data.data;
+      const active = trips.find((t) => t.active_trip);
       set({ activeTrip: active || null });
     } catch (error: any) {
       console.error("fetchActiveTrip Error Details:");
-
       if (error.response) {
-        // Server responded with error status
         console.error("Status:", error.response.status);
         console.error("Data:", error.response.data);
         console.error("Headers:", error.response.headers);
       } else if (error.request) {
-        // Request was made but no response
         console.error("No response received");
         console.error("Request:", error.request);
       } else {
-        // Error in setting up request
         console.error("Error:", error.message);
       }
-
       set({ activeTrip: null });
     }
   },
@@ -125,40 +118,25 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // -----------------------------
 
   setActiveTrip: async (trip_id: string) => {
-    // 1. Find the trip in the current list
     const trip = get().userTrips.find((t) => t.trip_id === trip_id);
-
     if (!trip) {
       console.error("Trip not found in local state");
       return;
     }
-
-    // 2. Optimistically update local state immediately for responsiveness
     set({ activeTrip: trip });
-
-    // 3. Sync with your backend
     try {
       await api.put(`/trip/${trip_id}`, { active_trip: true });
-      // If your backend changes other fields (like a timestamp),
-      // you might want to re-fetch or merge the response here.
     } catch (error) {
       console.error("Failed to sync active trip:", error);
-      // Optional: Revert if the server call fails
     }
   },
 
   setTripInactive: async (trip_id: string) => {
     try {
-      // 1. Call your API to set active_trip to false in the database
       await api.put(`/trip/${trip_id}`, { active_trip: false });
-
-      // 2. Update local state
       set((state) => ({
-        // Set activeTrip to null if this was the active one
         activeTrip:
           state.activeTrip?.trip_id === trip_id ? null : state.activeTrip,
-
-        // Update the status in the userTrips array
         userTrips: state.userTrips.map((t) =>
           t.trip_id === trip_id ? { ...t, active_trip: false } : t,
         ),
@@ -169,28 +147,24 @@ export const useTripStore = create<TripStore>((set, get) => ({
     }
   },
 
-  setUserTrips: (trips) => set({ userTrips: trips }),
+  setUserTrips: (trips: Trip[]) => set({ userTrips: trips }),
+
   // -----------------------------
   // TRIP CRUD
   // -----------------------------
 
   createTrip: async (data: Partial<Trip>) => {
     try {
-      // Create the initial stop for user location
       const userLocationStop = {
         stop_id: getShortBase36Id(),
         location: data.start_location!,
         isUserLocation: true,
       };
-
-      // Send trip data with initial stop
       const res = await api.post(`/trip/create`, {
         ...data,
         stops: [userLocationStop],
       });
-
       const created = res.data.data;
-
       set((state) => ({
         activeTrip: created,
         userTrips: [
@@ -214,7 +188,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
     try {
       const res = await api.put(`/trip/${trip_id}`, updated);
       const updatedTrip = res.data.data;
-
       set((state) => ({
         activeTrip:
           state.activeTrip?.trip_id === trip_id
@@ -239,7 +212,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
   deleteTrip: async (trip_id: string) => {
     try {
       await api.delete(`/trip/${trip_id}`);
-
       set((state) => ({
         activeTrip:
           state.activeTrip?.trip_id === trip_id ? null : state.activeTrip,
@@ -273,10 +245,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
         return null;
       }
 
-      const createdStop = res.data.data;
+      const createdStop: TripMarker = res.data.data;
 
-      // Build the updated stops list ourselves so we don't depend on
-      // Zustand flushing before optimizeRoute reads get().activeTrip
       let updatedStops = [...trip.stops];
       if (createdStop.isUserLocation) {
         updatedStops = updatedStops.filter((s) => !s.isUserLocation);
@@ -284,15 +254,10 @@ export const useTripStore = create<TripStore>((set, get) => ({
       updatedStops.push(createdStop);
 
       const updatedTrip: Trip = { ...trip, stops: updatedStops };
-
-      // Write to state first
       set({ activeTrip: updatedTrip });
 
-      // Then optimize — but force it to use updatedTrip, not whatever get() returns
       const nonUserStops = updatedStops.filter((s) => !s.isUserLocation);
       if (nonUserStops.length >= 1) {
-        // Temporarily patch activeTrip so optimizeRoute sees the new stop
-        // get().activeTrip is now updatedTrip since set() is synchronous in Zustand
         await get().optimizeRoute(currentLocation);
       }
 
@@ -306,7 +271,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
   removeStop: async (stop_id: string) => {
     try {
       await api.delete(`/stop`, { data: { stop_id } });
-
       set((state) => ({
         activeTrip: state.activeTrip
           ? {
@@ -332,8 +296,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   updateStop: async (stop_id: string, updated: Partial<TripMarker>) => {
     try {
       const res = await api.put(`/stop`, { stop_id, ...updated });
-      const newStop = res.data.data;
-
+      const newStop: TripMarker = res.data.data;
       set((state) => ({
         activeTrip: state.activeTrip
           ? {
@@ -368,10 +331,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const currentIndex = nonUserStops.findIndex((s) => s.stop_id === stop_id);
     const priorityPosition = isPrioritized ? currentIndex : null;
 
-    // 1. Snapshot previous stops for rollback
     const previousStops = trip.stops;
 
-    // 2. Update local state immediately (optimistic)
     set((state) => ({
       activeTrip: state.activeTrip
         ? {
@@ -385,12 +346,10 @@ export const useTripStore = create<TripStore>((set, get) => ({
         : null,
     }));
 
-    // 3. Sync with backend, rollback on failure
     try {
       await api.patch(`/stop`, { stop_id, isPrioritized, priorityPosition });
     } catch (error) {
       console.error("Failed to update stop priority:", error);
-      // Rollback to previous state
       set((state) => ({
         activeTrip: state.activeTrip
           ? { ...state.activeTrip, stops: previousStops }
@@ -403,7 +362,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = get().activeTrip;
     if (!trip) return;
 
-    // Clear all in parallel
     await Promise.all(
       trip.stops
         .filter((s) => s.isPrioritized)
@@ -449,7 +407,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
       return s;
     });
 
-    // Keep optimized_order in sync so optimizeRoute reads the right order
     set({
       activeTrip: {
         ...trip,
@@ -479,72 +436,45 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = get().activeTrip;
     if (!trip) return;
 
+    // Capture the user-location stop once at the top, from the snapshot.
+    // persist() must NOT re-derive this from freshTrip.stops because
+    // freshTrip.stops already contains the full stop list including the new
+    // stop — combining it with finalStops (which also has the new stop) is
+    // what caused the client-side duplication.
+    const userLocationStop = trip.stops.find((s) => s.isUserLocation) ?? null;
+
     const nonUserStops = trip.stops.filter((s) => !s.isUserLocation);
     if (nonUserStops.length < 1) return;
 
-    if (nonUserStops.length === 1) {
-      const result = await getDirectionsForTrip(
-        nonUserStops,
-        trip.return_to_start ?? false,
-        currentLocation,
-      );
-      if (result?.polyline) {
-        set({ routeCoords: decodePolyline(result.polyline) });
-      }
-      return;
-    }
-
-    // Respect any existing manual order as the baseline
-    const byId = new Map(nonUserStops.map((s) => [s.stop_id, s]));
-
-    const alreadyOrdered: TripMarker[] =
-      trip.optimized_order?.length > 0
-        ? trip.optimized_order
-            .map((id) => byId.get(id))
-            .filter((s): s is TripMarker => s != null)
-        : nonUserStops;
-
-    const unstagedStops = nonUserStops.filter(
-      (s) => !(trip.optimized_order ?? []).includes(s.stop_id),
-    );
-
-    const orderedStops: TripMarker[] = [...alreadyOrdered, ...unstagedStops];
-
-    const totalCount = orderedStops.length;
-
-    // priorityPosition was stored from nonUserStops indices — no offset needed
-    const prioritized = orderedStops
-      .filter((s) => s.isPrioritized && s.priorityPosition != null)
-      .map((s) => ({
-        ...s,
-        priorityPosition: Math.max(0, s.priorityPosition ?? 0),
-      }))
-      .sort((a, b) => (a.priorityPosition ?? 0) - (b.priorityPosition ?? 0));
-
-    const free = orderedStops.filter((s) => !s.isPrioritized);
-
+    // ── Helper: persist final stops to backend and update local state ──
     const persist = async (
       finalStops: TripMarker[],
       polyline: string,
-      legs: any[],
+      legs: Array<{ distance_m: number; duration_s: number }>,
     ) => {
+      const freshTrip = get().activeTrip;
+      if (!freshTrip) return;
+
       const totalDistanceKm = legs.reduce(
-        (sum: number, leg: any) => sum + leg.distance_m / 1000,
+        (sum, leg) => sum + leg.distance_m / 1000,
         0,
       );
       const totalDurationMin = legs.reduce(
-        (sum: number, leg: any) => sum + leg.duration_s / 60,
+        (sum, leg) => sum + leg.duration_s / 60,
         0,
       );
-      await api.put(`/trip/${trip.trip_id}`, {
+
+      await api.put(`/trip/${freshTrip.trip_id}`, {
         optimized_order: finalStops.map((s) => s.stop_id),
         total_distance_km: +totalDistanceKm.toFixed(2),
         total_duration_min: +totalDurationMin.toFixed(1),
       });
-      const userLocationStop = trip.stops.find((s) => s.isUserLocation);
+
+      // Use the snapshot's userLocationStop — never re-read from freshTrip.stops
+      // to avoid prepending a stop that is already present in finalStops.
       set({
         activeTrip: {
-          ...trip,
+          ...freshTrip,
           stops: userLocationStop
             ? [userLocationStop, ...finalStops]
             : finalStops,
@@ -556,26 +486,89 @@ export const useTripStore = create<TripStore>((set, get) => ({
       });
     };
 
+    if (nonUserStops.length === 1) {
+      const result = await getDirectionsForTrip(
+        nonUserStops,
+        trip.return_to_start ?? false,
+        currentLocation,
+      );
+      if (result?.polyline) {
+        // Use persist so stops are always assembled in one place
+        console.log(
+          "[optimizeRoute] single-stop persist with:",
+          nonUserStops.map((s) => s.stop_id),
+        );
+        await persist(nonUserStops, result.polyline, result.legs);
+      }
+      return;
+    }
+
+    // Reconstruct order from optimized_order, then append any stops not yet
+    // in it (newly added). A single Set tracks which stop_ids have been
+    // included so nothing can appear twice regardless of stale IDs.
+    const byId = new Map(nonUserStops.map((s) => [s.stop_id, s]));
+    const seen = new Set<string>();
+    const orderedStops: TripMarker[] = [];
+
+    for (const id of trip.optimized_order ?? []) {
+      const stop = byId.get(id);
+      if (stop && !seen.has(id)) {
+        orderedStops.push(stop);
+        seen.add(id);
+      }
+    }
+    for (const stop of nonUserStops) {
+      if (!seen.has(stop.stop_id)) {
+        orderedStops.push(stop);
+        seen.add(stop.stop_id);
+      }
+    }
+
+    const totalCount = orderedStops.length;
+
+    const prioritized = orderedStops
+      .filter((s) => s.isPrioritized && s.priorityPosition != null)
+      .map((s) => ({
+        ...s,
+        priorityPosition: Math.max(0, s.priorityPosition ?? 0),
+      }))
+      .sort((a, b) => (a.priorityPosition ?? 0) - (b.priorityPosition ?? 0));
+
+    const free = orderedStops.filter((s) => !s.isPrioritized);
+
+    // All stops are passed as waypoints to Google (no fixed destination),
+    // so waypoint_order indexes into the full stops array.
     const applyOptimizedOrder = (
       order: number[],
       stops: TripMarker[],
     ): TripMarker[] => {
-      if (!order?.length) return stops;
-
-      // Google's waypoint_order indexes into the WAYPOINTS only (all stops except
-      // the last one when returnToStart=false). Reconstruct correctly:
-      const destination = stops[stops.length - 1];
-      const waypoints = stops.slice(0, -1);
+      console.log(
+        "[applyOptimizedOrder] order:",
+        order,
+        "stops.length:",
+        stops.length,
+        "ids:",
+        stops.map((s) => s.stop_id),
+      );
+      if (!order?.length) {
+        console.log("[applyOptimizedOrder] no order — returning stops as-is");
+        return stops;
+      }
 
       const reordered = order
-        .map((i) => waypoints[i])
+        .map((i) => stops[i])
         .filter((s): s is TripMarker => s != null);
 
-      // Any waypoint Google didn't mention (safety net)
-      const seen = new Set(reordered.map((s) => s.stop_id));
-      const missed = waypoints.filter((s) => !seen.has(s.stop_id));
+      // Safety: append any stops Google didn't mention
+      const seenIds = new Set(reordered.map((s) => s.stop_id));
+      const missed = stops.filter((s) => !seenIds.has(s.stop_id));
 
-      return [...reordered, ...missed, destination];
+      const result = [...reordered, ...missed];
+      console.log(
+        "[applyOptimizedOrder] result ids:",
+        result.map((s) => s.stop_id),
+      );
+      return result;
     };
 
     // ── All stops locked — respect exact order, draw polyline only ──
@@ -586,7 +579,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
         currentLocation,
       );
       if (!result) return;
-      // Still persist so distance/duration/order are saved
       await persist(orderedStops, result.polyline, result.legs);
       return;
     }
@@ -598,10 +590,20 @@ export const useTripStore = create<TripStore>((set, get) => ({
         false,
         currentLocation,
       );
+      console.log(
+        "[optimizeRoute] directions result:",
+        result?.optimized_order,
+        "status ok:",
+        !!result,
+      );
       if (!result) return;
       const finalStops = applyOptimizedOrder(
         result.optimized_order,
         orderedStops,
+      );
+      console.log(
+        "[optimizeRoute] finalStops ids:",
+        finalStops.map((s) => s.stop_id),
       );
       if (finalStops.length !== totalCount) {
         console.error("optimizeRoute: stop count mismatch (free path)", {
@@ -615,8 +617,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
     }
 
     // ── Mixed: locked stops pin their positions; free stops fill the gaps ──
-    // (Steps 1–5 stay the same, just fix remapOrder → applyOptimizedOrder in Step 4)
-
     const skeleton: (TripMarker | null)[] = Array(totalCount).fill(null);
     const claimedPositions = new Set<number>();
     for (const locked of prioritized) {
@@ -662,7 +662,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
       });
     }
 
-    // assign free stops to runs (cost matrix, same as before)
     const runStops: TripMarker[][] = runs.map(() => []);
     if (runs.length === 1) {
       runStops[0] = [...free];
@@ -688,7 +687,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
         });
         runStops[bestRun].push(stop);
       }
-      // rebalance overflow
       for (let i = 0; i < runs.length; i++) {
         while (runStops[i].length > runs[i].slotIndices.length) {
           const overflow = runStops[i].pop()!;
@@ -706,7 +704,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
       }
     }
 
-    // optimize each segment — FIX: use applyOptimizedOrder, not remapOrder
     const optimizedRuns: TripMarker[][] = await Promise.all(
       runs.map(async (run, runIndex) => {
         const segStops = runStops[runIndex];
@@ -732,7 +729,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
         );
         if (!segResult?.optimized_order?.length) return segStops;
 
-        // Use applyOptimizedOrder and strip the sentinel destination
         return applyOptimizedOrder(
           segResult.optimized_order,
           markersForApi,
@@ -740,7 +736,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
       }),
     );
 
-    // fill skeleton
     let runIdx = 0;
     for (const run of runs) {
       const optimized = optimizedRuns[runIdx++];
@@ -777,12 +772,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
 }));
 
 export const useSheetStore = create<SnapPointStore>((set, get) => ({
-  snapIndex: 1, // default 25%
+  snapIndex: 1,
   isInputFocused: false,
   sheetRef: null,
 
   setSheetRef: (ref) => set({ sheetRef: ref }),
-  setSnapIndex: (index) => set({ snapIndex: index }),
+  setSnapIndex: (index: number) => set({ snapIndex: index }),
   setIsInputFocused: (v: boolean) => set({ isInputFocused: v }),
 
   closeSheet: () => {
