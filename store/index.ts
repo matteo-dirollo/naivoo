@@ -261,17 +261,13 @@ export const useTripStore = create<TripStore>((set, get) => ({
   // STOP MANAGEMENT
   // -----------------------------
 
-  addStop: async (
-    stop: Omit<TripMarker, "stop_id">,
-    currentLocation: Coordinates,
-  ) => {
+  addStop: async (stop: TripMarker, currentLocation: Coordinates) => {
     const trip = get().activeTrip;
     if (!trip) return null;
 
     try {
       const res = await api.post(`/stop`, stop);
 
-      // 1. Handle API response logic
       if (res.data.data === null) {
         console.log("Duplicate stop detected, skipping add");
         return null;
@@ -279,27 +275,26 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
       const createdStop = res.data.data;
 
-      // 2. Perform state update
-      set((state) => {
-        if (!state.activeTrip) return state;
+      // Build the updated stops list ourselves so we don't depend on
+      // Zustand flushing before optimizeRoute reads get().activeTrip
+      let updatedStops = [...trip.stops];
+      if (createdStop.isUserLocation) {
+        updatedStops = updatedStops.filter((s) => !s.isUserLocation);
+      }
+      updatedStops.push(createdStop);
 
-        let updatedStops = [...state.activeTrip.stops];
-        if (createdStop.isUserLocation) {
-          updatedStops = updatedStops.filter((s) => !s.isUserLocation);
-        }
-        updatedStops.push(createdStop);
+      const updatedTrip: Trip = { ...trip, stops: updatedStops };
 
-        return {
-          activeTrip: {
-            ...state.activeTrip,
-            stops: updatedStops,
-          },
-        };
-      });
+      // Write to state first
+      set({ activeTrip: updatedTrip });
 
-      // 3. Immediately trigger optimization using the new state
-      // We await this so the UI can handle loading states if necessary
-      await get().optimizeRoute(currentLocation);
+      // Then optimize — but force it to use updatedTrip, not whatever get() returns
+      const nonUserStops = updatedStops.filter((s) => !s.isUserLocation);
+      if (nonUserStops.length >= 1) {
+        // Temporarily patch activeTrip so optimizeRoute sees the new stop
+        // get().activeTrip is now updatedTrip since set() is synchronous in Zustand
+        await get().optimizeRoute(currentLocation);
+      }
 
       return createdStop;
     } catch (error) {
@@ -487,19 +482,33 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const nonUserStops = trip.stops.filter((s) => !s.isUserLocation);
     if (nonUserStops.length < 1) return;
 
+    if (nonUserStops.length === 1) {
+      const result = await getDirectionsForTrip(
+        nonUserStops,
+        trip.return_to_start ?? false,
+        currentLocation,
+      );
+      if (result?.polyline) {
+        set({ routeCoords: decodePolyline(result.polyline) });
+      }
+      return;
+    }
+
     // Respect any existing manual order as the baseline
     const byId = new Map(nonUserStops.map((s) => [s.stop_id, s]));
-    const orderedStops: TripMarker[] =
+
+    const alreadyOrdered: TripMarker[] =
       trip.optimized_order?.length > 0
-        ? [
-            ...trip.optimized_order
-              .map((id) => byId.get(id))
-              .filter((s): s is TripMarker => s != null),
-            ...nonUserStops.filter(
-              (s) => !trip.optimized_order.includes(s.stop_id),
-            ),
-          ]
+        ? trip.optimized_order
+            .map((id) => byId.get(id))
+            .filter((s): s is TripMarker => s != null)
         : nonUserStops;
+
+    const unstagedStops = nonUserStops.filter(
+      (s) => !(trip.optimized_order ?? []).includes(s.stop_id),
+    );
+
+    const orderedStops: TripMarker[] = [...alreadyOrdered, ...unstagedStops];
 
     const totalCount = orderedStops.length;
 
@@ -552,12 +561,21 @@ export const useTripStore = create<TripStore>((set, get) => ({
       stops: TripMarker[],
     ): TripMarker[] => {
       if (!order?.length) return stops;
+
+      // Google's waypoint_order indexes into the WAYPOINTS only (all stops except
+      // the last one when returnToStart=false). Reconstruct correctly:
+      const destination = stops[stops.length - 1];
+      const waypoints = stops.slice(0, -1);
+
       const reordered = order
-        .map((i) => stops[i])
+        .map((i) => waypoints[i])
         .filter((s): s is TripMarker => s != null);
-      // append any stops Google didn't mention (safety net)
+
+      // Any waypoint Google didn't mention (safety net)
       const seen = new Set(reordered.map((s) => s.stop_id));
-      return [...reordered, ...stops.filter((s) => !seen.has(s.stop_id))];
+      const missed = waypoints.filter((s) => !seen.has(s.stop_id));
+
+      return [...reordered, ...missed, destination];
     };
 
     // ── All stops locked — respect exact order, draw polyline only ──

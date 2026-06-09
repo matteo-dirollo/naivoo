@@ -209,17 +209,24 @@ export const useHomeLogic = () => {
       console.warn("No active trip to add stop to");
       return;
     }
+    if (!currentUserLocation) {
+      Alert.alert("Location unavailable", "Enable GPS to add stops.");
+      return;
+    }
 
     try {
       const formattedAddress = formatAddress(address);
-      const result = await addStop({
-        stop_id: shortId,
-        trip_id: activeTrip.trip_id,
-        location: { latitude, longitude, address },
-        expected_duration: 0,
-        expected_distance: 0,
-        isUserLocation: false,
-      });
+      const result = await addStop(
+        {
+          stop_id: shortId,
+          trip_id: activeTrip.trip_id,
+          location: { latitude, longitude, address },
+          expected_duration: 0,
+          expected_distance: 0,
+          isUserLocation: false,
+        },
+        currentUserLocation,
+      );
       if (result === null) {
         // Show a user-friendly message
         Alert.alert(

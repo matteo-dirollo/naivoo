@@ -170,9 +170,9 @@ export interface TripStore {
 
   // STOP MANAGEMENT
   addStop: (
-    stop: Omit<TripMarker, "stop_id">,
+    stop: TripMarker,
     currentLocation: Coordinates,
-  ) => Promise<void>;
+  ) => Promise<TripMarker | null>;
   removeStop: (stop_id: string) => Promise<void>;
   updateStop: (stop_id: string, updated: Partial<TripMarker>) => Promise<void>;
 
