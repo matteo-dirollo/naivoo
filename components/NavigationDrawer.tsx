@@ -21,9 +21,11 @@ import {
 import { Heading } from "@/components/ui/heading";
 import { VStack } from "@/components/ui/vstack";
 import { Text } from "@/components/ui/text";
-
-export function NavigationDrawer() {
-  const isDrawerOpen = useDrawerStore((state) => state.isDrawerOpen);
+interface NavigationDrawerProps {
+  drawerId: string;
+}
+export function NavigationDrawer({ drawerId }: NavigationDrawerProps) {
+  const isDrawerOpen = useDrawerStore((state) => state.isDrawerOpen(drawerId));
   const setDrawerOpen = useDrawerStore((state) => state.setDrawerOpen);
   const { user, isLoaded } = useUser();
   const email = user?.primaryEmailAddress?.emailAddress;
@@ -31,7 +33,7 @@ export function NavigationDrawer() {
   return (
     <Drawer
       isOpen={isDrawerOpen}
-      onClose={() => setDrawerOpen(false)}
+      onClose={() => setDrawerOpen(drawerId, false)}
       anchor="left"
       size="lg"
     >

@@ -96,7 +96,7 @@ export const DraggableList = ({
         )}
 
         <View className="px-2 justify-center items-center min-w-[16] min-h-[12]">
-          <FlatListItemMenu menuId={item.stop_id} />
+          <FlatListItemMenu menuId={item.stop_id} menuType="stop" />
         </View>
       </View>
     );
@@ -112,8 +112,8 @@ export const DraggableList = ({
             {activeTrip?.name || "Untitled Trip"}
           </Heading>
           <View
-            style={{ marginHorizontal: -16 }}
-            className="bg-background-900 px-8 py-2 mb-1"
+            style={{ marginHorizontal: -16, backgroundColor: "#1a1a1a" }}
+            className="px-8 py-2 mb-1"
           >
             <Text className="font-semibold text-background-500 text-sm uppercase tracking-widest">
               Route Setup
@@ -146,8 +146,8 @@ export const DraggableList = ({
         </View>
         <View className="flex w-full">
           <View
-            style={{ marginHorizontal: -16 }}
-            className="bg-background-900 px-8 py-2"
+            style={{ marginHorizontal: -16, backgroundColor: "#1a1a1a" }}
+            className="px-8 py-2"
           >
             <Text className="font-semibold text-background-500 text-sm uppercase tracking-widest">
               Stops
@@ -167,7 +167,7 @@ export const DraggableList = ({
 
   return (
     <NestableScrollContainer
-      className="flex-1 z-0"
+      className="flex-1"
       style={{ maxHeight: maxScrollHeight }}
     >
       <>{renderHeader()}</>

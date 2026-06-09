@@ -76,7 +76,7 @@ const GoogleTextInput = forwardRef(
               width: "100%",
               borderRadius: 0,
               zIndex: 1000,
-              elevation: 30,
+              elevation: 50,
             },
             row: {
               backgroundColor: textInputBackgroundColor,
