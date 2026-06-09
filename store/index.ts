@@ -435,19 +435,22 @@ export const useTripStore = create<TripStore>((set, get) => ({
           ]
         : nonUserStops;
 
+    const totalCount = orderedStops.length;
+
+    // Locked stops sorted by the absolute position the user manually assigned.
     const prioritized = orderedStops
       .filter((s) => s.isPrioritized && s.priorityPosition != null)
       .sort((a, b) => (a.priorityPosition ?? 0) - (b.priorityPosition ?? 0));
 
+    // Free stops are everything not locked.
     const free = orderedStops.filter((s) => !s.isPrioritized);
 
-    // ── getDirectionsForTrip contract (from lib/map.ts) ──
-    // - currentLocation  → Google origin
-    // - returnToStart=false: last marker = fixed destination, rest = waypoints
-    // - returnToStart=true:  ALL markers = waypoints, origin = destination
-    // - optimized_order  → 0-based indices into the waypoints only
-    //
-    // remapOrder reconstructs the full ordered array correctly.
+    // ── helper: remap Google's optimized_order indices back to TripMarker[] ──
+    // getDirectionsForTrip contract:
+    //   returnToStart=false → last marker is fixed destination, optimized_order
+    //                         covers only the waypoints (all but last)
+    //   returnToStart=true  → ALL markers are waypoints, optimized_order covers
+    //                         every index
     const remapOrder = (
       order: number[],
       stops: TripMarker[],
@@ -457,16 +460,13 @@ export const useTripStore = create<TripStore>((set, get) => ({
       if (stops.length === 1) return stops;
 
       if (returnToStart) {
-        // All stops are waypoints — order covers every index
         const reordered = order
           .map((i) => stops[i])
           .filter((s): s is TripMarker => s != null);
-        // Defensive: add any stop that didn't appear in the order
         const seen = new Set(reordered.map((s) => s.stop_id));
         const missed = stops.filter((s) => !seen.has(s.stop_id));
         return [...reordered, ...missed];
       } else {
-        // Last stop is the fixed destination — order covers stops[0..n-2]
         const waypoints = stops.slice(0, -1);
         const destination = stops[stops.length - 1];
         const reordered = order
@@ -478,46 +478,17 @@ export const useTripStore = create<TripStore>((set, get) => ({
       }
     };
 
-    // ── All stops locked — just draw the polyline ──
-    if (free.length === 0) {
-      const result = await getDirectionsForTrip(
-        orderedStops,
-        trip.return_to_start,
-        currentLocation,
-      );
-      if (!result) return;
-      set({ routeCoords: decodePolyline(result.polyline) });
-      return;
-    }
-
-    // ── No locks — optimize all stops freely ──
-    if (prioritized.length === 0) {
-      const result = await getDirectionsForTrip(
-        free,
-        trip.return_to_start,
-        currentLocation,
-      );
-      if (!result) return;
-
-      const finalStops = remapOrder(
-        result.optimized_order,
-        free,
-        trip.return_to_start,
-      );
-
-      if (finalStops.length !== free.length) {
-        console.error("optimizeRoute: stop count mismatch (free path)", {
-          expected: free.length,
-          got: finalStops.length,
-        });
-        return;
-      }
-
-      const totalDistanceKm = result.legs.reduce(
+    // ── helper: persist result and update store ──
+    const persist = async (
+      finalStops: TripMarker[],
+      polyline: string,
+      legs: any[],
+    ) => {
+      const totalDistanceKm = legs.reduce(
         (sum: number, leg: any) => sum + leg.distance_m / 1000,
         0,
       );
-      const totalDurationMin = result.legs.reduce(
+      const totalDurationMin = legs.reduce(
         (sum: number, leg: any) => sum + leg.duration_s / 60,
         0,
       );
@@ -539,135 +510,246 @@ export const useTripStore = create<TripStore>((set, get) => ({
           total_distance_km: +totalDistanceKm.toFixed(2),
           total_duration_min: +totalDurationMin.toFixed(1),
         },
-        routeCoords: decodePolyline(result.polyline),
+        routeCoords: decodePolyline(polyline),
+      });
+    };
+
+    // ── All stops locked — respect exact order, just draw the polyline ──
+    if (free.length === 0) {
+      const result = await getDirectionsForTrip(
+        orderedStops,
+        false,
+        currentLocation,
+      );
+      if (!result) return;
+      set({ routeCoords: decodePolyline(result.polyline) });
+      return;
+    }
+
+    // ── No locks — optimize all stops freely (one-way trip) ──
+    if (prioritized.length === 0) {
+      const result = await getDirectionsForTrip(free, false, currentLocation);
+      if (!result) return;
+
+      const finalStops = remapOrder(result.optimized_order, free, false);
+
+      if (finalStops.length !== free.length) {
+        console.error("optimizeRoute: stop count mismatch (free path)", {
+          expected: free.length,
+          got: finalStops.length,
+        });
+        return;
+      }
+
+      await persist(finalStops, result.polyline, result.legs);
+      return;
+    }
+
+    // ── Mixed: locked stops hold their exact priorityPosition indices;
+    //    free stops are optimized by Google and slotted into the remaining
+    //    positions in the final array.
+    //
+    // Step 1 — build a skeleton array of length totalCount.
+    //   Locked stops are pinned at their priorityPosition.
+    //   Positions that exceed array bounds are clamped to the last free slot.
+    const skeleton: (TripMarker | null)[] = Array(totalCount).fill(null);
+    const claimedPositions = new Set<number>();
+
+    for (const locked of prioritized) {
+      // Clamp position to valid range
+      const pos = Math.min(
+        Math.max(locked.priorityPosition ?? 0, 0),
+        totalCount - 1,
+      );
+      // If two locked stops claim the same slot, shift the newcomer right
+      let finalPos = pos;
+      while (claimedPositions.has(finalPos)) {
+        finalPos = Math.min(finalPos + 1, totalCount - 1);
+      }
+      skeleton[finalPos] = locked;
+      claimedPositions.add(finalPos);
+    }
+
+    // Step 2 — identify contiguous runs of free slots in the skeleton.
+    //   Each run is optimized independently so Google knows the real
+    //   origin (the locked stop or user location just before the run)
+    //   and destination (the locked stop just after the run).
+    type FreeRun = {
+      slotIndices: number[];
+      origin: Coordinates;
+      destination: Coordinates | null;
+    };
+    const runs: FreeRun[] = [];
+    let ri = 0;
+    while (ri < totalCount) {
+      if (skeleton[ri] !== null) {
+        ri++;
+        continue;
+      }
+
+      // Collect contiguous nulls
+      const slotIndices: number[] = [];
+      while (ri < totalCount && skeleton[ri] === null) {
+        slotIndices.push(ri);
+        ri++;
+      }
+
+      // Origin: the locked stop immediately before this run, or currentLocation
+      const prevLocked =
+        slotIndices[0] > 0 ? skeleton[slotIndices[0] - 1] : null;
+      const segOrigin: Coordinates = prevLocked
+        ? prevLocked.location
+        : currentLocation;
+
+      // Destination: the locked stop immediately after this run (null = no fixed end)
+      const afterIdx = slotIndices[slotIndices.length - 1] + 1;
+      const nextLocked = afterIdx < totalCount ? skeleton[afterIdx] : null;
+      const segDestination: Coordinates | null = nextLocked
+        ? nextLocked.location
+        : null;
+
+      runs.push({
+        slotIndices,
+        origin: segOrigin,
+        destination: segDestination,
+      });
+    }
+
+    // Sanity check: total free slots must equal free stops
+    const totalFreeSlots = runs.reduce(
+      (sum, r) => sum + r.slotIndices.length,
+      0,
+    );
+    if (totalFreeSlots !== free.length) {
+      console.error("optimizeRoute: free slot count mismatch", {
+        freeSlots: totalFreeSlots,
+        freeStops: free.length,
       });
       return;
     }
 
-    // ── Mixed: locked anchors + free stops ──
+    // Step 3 — distribute free stops across runs by geographic proximity.
+    //   Each free stop is assigned to the run whose corridor it sits closest
+    //   to, measured as the minimum distance to either the run's origin or
+    //   destination anchor. This ensures Google optimizes each segment with
+    //   the stops that actually belong to that part of the route.
     //
-    // anchorPoints = [currentLocation, lock0, lock1, ..., lockN]
-    // segments[i]  = free stops closest to anchorPoints[i]
-    // Always produces (prioritized.length + 1) segments.
-    const anchorPoints: Coordinates[] = [
-      currentLocation,
-      ...prioritized.map((s) => s.location),
-    ];
-
-    const segments: TripMarker[][] = Array.from(
-      { length: anchorPoints.length },
-      () => [],
-    );
+    //   If a run has more/fewer slots than stops assigned by proximity we fall
+    //   back to filling remaining slots with the closest unassigned stops, so
+    //   slot counts always stay consistent with the skeleton.
+    const runStops: TripMarker[][] = runs.map(() => []);
 
     for (const stop of free) {
-      let best = 0;
+      let bestRun = 0;
       let bestDist = Infinity;
-      anchorPoints.forEach((anchor, idx) => {
-        const d = Math.hypot(
-          stop.location.latitude - anchor.latitude,
-          stop.location.longitude - anchor.longitude,
+      runs.forEach((run, idx) => {
+        const distToOrigin = Math.hypot(
+          stop.location.latitude - run.origin.latitude,
+          stop.location.longitude - run.origin.longitude,
         );
+        const distToDestination = run.destination
+          ? Math.hypot(
+              stop.location.latitude - run.destination.latitude,
+              stop.location.longitude - run.destination.longitude,
+            )
+          : Infinity;
+        const d = Math.min(distToOrigin, distToDestination);
         if (d < bestDist) {
           bestDist = d;
-          best = idx;
+          bestRun = idx;
         }
       });
-      segments[best].push(stop);
+      runStops[bestRun].push(stop);
     }
 
-    const optimizedSegments: TripMarker[][] = await Promise.all(
-      segments.map(async (segStops, segIdx) => {
-        if (segStops.length === 0) return [];
-        if (segStops.length === 1) return segStops;
+    // If proximity assignment left some runs with too many or too few stops
+    // relative to their slot count, rebalance by moving overflow stops to
+    // the nearest under-filled run.
+    const rebalance = () => {
+      for (let i = 0; i < runs.length; i++) {
+        while (runStops[i].length > runs[i].slotIndices.length) {
+          // Pop the overflow stop and give it to the run with the most slack
+          const overflow = runStops[i].pop()!;
+          let targetRun = -1;
+          let maxSlack = -1;
+          runs.forEach((run, idx) => {
+            const slack = run.slotIndices.length - runStops[idx].length;
+            if (slack > maxSlack) {
+              maxSlack = slack;
+              targetRun = idx;
+            }
+          });
+          if (targetRun !== -1) runStops[targetRun].push(overflow);
+        }
+      }
+    };
+    rebalance();
 
-        const segOrigin = anchorPoints[segIdx];
-        const segDestination =
-          segIdx < anchorPoints.length - 1
-            ? anchorPoints[segIdx + 1]
-            : trip.return_to_start
-              ? currentLocation
-              : anchorPoints[anchorPoints.length - 1];
+    const optimizedRuns: TripMarker[][] = await Promise.all(
+      runs.map(async (run, runIndex) => {
+        const segStops = runStops[runIndex];
 
-        // Append a dummy destination marker so getDirectionsForTrip
-        // treats segStops as the waypoints and segDestination as the endpoint.
-        // The dummy is NOT isUserLocation so it won't be filtered out.
-        const markersWithDest: TripMarker[] = [
-          ...segStops,
-          {
-            stop_id: `__dest_${segIdx}`,
-            trip_id: trip.trip_id,
-            location: segDestination,
-            expected_duration: 0,
-            expected_distance: 0,
-          },
-        ];
+        if (segStops.length <= 1) return segStops;
+
+        // If there is a fixed locked stop after this run, append a dummy marker
+        // so getDirectionsForTrip treats it as the endpoint and only optimizes
+        // the real stops as waypoints.
+        const markersForApi: TripMarker[] = run.destination
+          ? [
+              ...segStops,
+              {
+                stop_id: `__dest_seg`,
+                trip_id: trip.trip_id,
+                location: run.destination,
+                expected_duration: 0,
+                expected_distance: 0,
+              },
+            ]
+          : segStops;
 
         const segResult = await getDirectionsForTrip(
-          markersWithDest,
+          markersForApi,
           false,
-          segOrigin,
+          run.origin,
         );
         if (!segResult?.optimized_order?.length) return segStops;
 
-        // optimized_order now correctly covers segStops (all except dest dummy)
-        // @ts-ignore
-        return segResult.optimized_order
-          .map((i: number) => segStops[i])
-          .filter((s: any): s is TripMarker => s != null);
+        return remapOrder(
+          segResult.optimized_order,
+          markersForApi,
+          false,
+        ).filter((s) => !s.stop_id.startsWith("__dest_"));
       }),
     );
 
-    // Assemble: [seg0…, lock0, seg1…, lock1, …, lockN-1, segN…]
-    const finalStops: TripMarker[] = [];
-    prioritized.forEach((locked, idx) => {
-      finalStops.push(...(optimizedSegments[idx] ?? []));
-      finalStops.push(locked);
-    });
-    finalStops.push(...(optimizedSegments[prioritized.length] ?? []));
+    // Step 4 — fill skeleton slots with each run's optimized stops.
+    let runIdx = 0;
+    for (const run of runs) {
+      const optimized = optimizedRuns[runIdx++];
+      for (let s = 0; s < run.slotIndices.length; s++) {
+        skeleton[run.slotIndices[s]] = optimized[s] ?? null;
+      }
+    }
 
-    if (finalStops.filter(Boolean).length !== orderedStops.length) {
+    const finalStops = skeleton.filter((s): s is TripMarker => s != null);
+
+    if (finalStops.length !== totalCount) {
       console.error("optimizeRoute: stop count mismatch (mixed path)", {
-        expected: orderedStops.length,
-        got: finalStops.filter(Boolean).length,
+        expected: totalCount,
+        got: finalStops.length,
       });
       return;
     }
 
+    // Step 5 — fetch the full polyline for the assembled route.
     const fullResult = await getDirectionsForTrip(
       finalStops,
-      trip.return_to_start,
+      false,
       currentLocation,
     );
     if (!fullResult) return;
 
-    const totalDistanceKm = fullResult.legs.reduce(
-      (sum: number, leg: any) => sum + leg.distance_m / 1000,
-      0,
-    );
-    const totalDurationMin = fullResult.legs.reduce(
-      (sum: number, leg: any) => sum + leg.duration_s / 60,
-      0,
-    );
-
-    await api.put(`/trip/${trip.trip_id}`, {
-      optimized_order: finalStops.map((s) => s.stop_id),
-      total_distance_km: +totalDistanceKm.toFixed(2),
-      total_duration_min: +totalDurationMin.toFixed(1),
-    });
-
-    const userLocationStop = trip.stops.find((s) => s.isUserLocation);
-    set({
-      activeTrip: {
-        ...trip,
-        stops: userLocationStop
-          ? [userLocationStop, ...finalStops]
-          : finalStops,
-        optimized_order: finalStops.map((s) => s.stop_id),
-        total_distance_km: +totalDistanceKm.toFixed(2),
-        total_duration_min: +totalDurationMin.toFixed(1),
-      },
-      routeCoords: decodePolyline(fullResult.polyline),
-    });
+    await persist(finalStops, fullResult.polyline, fullResult.legs);
   },
 
   // -----------------------------
