@@ -17,6 +17,8 @@ import { Gesture } from "react-native-gesture-handler";
 import { Alert, Keyboard, Platform, StatusBar } from "react-native";
 import { extractAddressString, formatAddress } from "@/lib/addressFormatter";
 import { getDirectionsForTrip, decodePolyline } from "@/lib/map";
+import { useNavigationStore } from "@/store/navigationStore";
+import { MapHandle } from "@/components/Map";
 
 export const useHomeLogic = () => {
   const { user } = useUser();
@@ -41,6 +43,18 @@ export const useHomeLogic = () => {
     setRouteCoords,
     optimizeRoute,
   } = useTripStore();
+  const {
+    isNavigating,
+    currentStopIndex,
+    viewMode,
+    startNavigation,
+    stopNavigation,
+    setViewMode,
+    markCurrentStopDone,
+    skipCurrentStop,
+    advanceToNextStop,
+    goToPrevStop,
+  } = useNavigationStore();
 
   const hasActiveTrip = useTripStore((state) => state.activeTrip !== null);
   const { activeTrip, addStop } = useTripStore();
@@ -244,6 +258,62 @@ export const useHomeLogic = () => {
     }
   };
 
+  const mapRef = useRef<MapHandle>(null);
+  const nonUserStops = (activeTrip?.stops ?? []).filter(
+    (s) => !s.isUserLocation,
+  );
+
+  const currentStop = nonUserStops[currentStopIndex] ?? null;
+  const isLastStop = currentStopIndex === nonUserStops.length - 1;
+
+  const handleStartRoute = () => {
+    if (!currentUserLocation) {
+      Alert.alert("Location unavailable", "Enable GPS to start navigation.");
+      return;
+    }
+    if (nonUserStops.length === 0) {
+      Alert.alert("No stops", "Add at least one stop before starting.");
+      return;
+    }
+    startNavigation();
+    // Snap sheet to small so map is more visible
+    sheetRef.current?.snapToIndex(0);
+  };
+
+  const handleStopNavigation = () => {
+    stopNavigation();
+    sheetRef.current?.snapToIndex(1);
+  };
+
+  const handleToggleView = () => {
+    setViewMode(viewMode === "navigation" ? "overview" : "navigation");
+  };
+
+  const handleRecenter = () => {
+    mapRef.current?.recenter();
+  };
+
+  const handleMarkDone = () => {
+    if (!activeTrip) return;
+    markCurrentStopDone(activeTrip.stops);
+  };
+
+  const handleSkip = () => {
+    if (!activeTrip) return;
+    skipCurrentStop(activeTrip.stops);
+  };
+
+  const handleFinishTrip = () => {
+    Alert.alert("Trip Complete!", "You've reached all your stops.", [
+      {
+        text: "OK",
+        onPress: handleStopNavigation,
+      },
+    ]);
+  };
+
+  const navSnapPoints = ["20%", "40%"];
+
   return {
     hasActiveTrip,
     sheetRef,
@@ -275,5 +345,27 @@ export const useHomeLogic = () => {
     currentUserLocation,
     androidTopMargin,
     pathname,
+    isNavigating,
+    currentStopIndex,
+    viewMode,
+    startNavigation,
+    stopNavigation,
+    setViewMode,
+    markCurrentStopDone,
+    skipCurrentStop,
+    advanceToNextStop,
+    goToPrevStop,
+    mapRef,
+    nonUserStops,
+    currentStop,
+    isLastStop,
+    handleStartRoute,
+    handleStopNavigation,
+    handleToggleView,
+    handleRecenter,
+    handleMarkDone,
+    handleSkip,
+    handleFinishTrip,
+    navSnapPoints,
   };
 };

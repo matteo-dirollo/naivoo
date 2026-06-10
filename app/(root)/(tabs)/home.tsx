@@ -1,5 +1,5 @@
-import React, { useRef } from "react";
-import Map, { MapHandle } from "@/components/Map";
+import React from "react";
+import Map from "@/components/Map";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import {
   Alert,
@@ -21,151 +21,59 @@ import { NavigationDrawer } from "@/components/NavigationDrawer";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { FastForward, RepeatIcon, X } from "lucide-react-native";
 import FlatListItemMenu from "@/components/FlatListItemMenu";
-import { useNavigationStore } from "@/store/navigationStore";
 import MapViewControls from "@/components/MapViewControls";
 import NextStopCard from "@/components/NextStopCard";
 // TODO: set camera
 
 export default function Home() {
-  const {
-    hasActiveTrip,
-    sheetRef,
-    setIsInputFocused,
-    onPressInputField,
-    searchInputHeight,
-    setSearchInputHeight,
-    contentGesture,
-    snapPoints,
-    snapIndex,
-    setSnapIndex,
-    activeTrip,
-    googleInputRef,
-    handleAddStop,
-    handleManualReorder,
-    isDragging,
-    setIsDragging,
-    setDrawerOpen,
-    optimizeRoute,
-    currentUserLocation,
-    androidTopMargin,
-    pathname,
-  } = useHomeLogic();
+  const home = useHomeLogic();
 
-  const {
-    isNavigating,
-    currentStopIndex,
-    viewMode,
-    startNavigation,
-    stopNavigation,
-    setViewMode,
-    markCurrentStopDone,
-    skipCurrentStop,
-    advanceToNextStop,
-    goToPrevStop,
-  } = useNavigationStore();
-
-  const mapRef = useRef<MapHandle>(null);
-
-  // Derive the ordered (non-user) stops for navigation
-  const nonUserStops = (activeTrip?.stops ?? []).filter(
-    (s) => !s.isUserLocation,
-  );
-
-  const currentStop = nonUserStops[currentStopIndex] ?? null;
-  const isLastStop = currentStopIndex === nonUserStops.length - 1;
-
-  const handleStartRoute = () => {
-    if (!currentUserLocation) {
-      Alert.alert("Location unavailable", "Enable GPS to start navigation.");
-      return;
-    }
-    if (nonUserStops.length === 0) {
-      Alert.alert("No stops", "Add at least one stop before starting.");
-      return;
-    }
-    startNavigation();
-    // Snap sheet to small so map is more visible
-    sheetRef.current?.snapToIndex(0);
-  };
-
-  const handleStopNavigation = () => {
-    stopNavigation();
-    sheetRef.current?.snapToIndex(1);
-  };
-
-  const handleToggleView = () => {
-    setViewMode(viewMode === "navigation" ? "overview" : "navigation");
-  };
-
-  const handleRecenter = () => {
-    mapRef.current?.recenter();
-  };
-
-  const handleMarkDone = () => {
-    if (!activeTrip) return;
-    markCurrentStopDone(activeTrip.stops);
-  };
-
-  const handleSkip = () => {
-    if (!activeTrip) return;
-    skipCurrentStop(activeTrip.stops);
-  };
-
-  const handleFinishTrip = () => {
-    Alert.alert("Trip Complete!", "You've reached all your stops.", [
-      {
-        text: "OK",
-        onPress: handleStopNavigation,
-      },
-    ]);
-  };
-
-  // Navigation snap points: smaller sheet during navigation
-  const navSnapPoints = ["20%", "40%"];
   return (
     <Pressable
       className="flex-1"
       onPress={() => {
         Keyboard.dismiss();
-        setIsInputFocused(false);
+        home.setIsInputFocused(false);
       }}
     >
       <View className="flex-1">
         <View className="absolute inset-0">
-          <Map ref={mapRef} />
+          <Map ref={home.mapRef} />
           <NavigationDrawer drawerId="main-nav" />
 
           {/* Top-left: hamburger (planning mode) or X (navigation mode) */}
           <SafeAreaView
             className="absolute left-4 z-10"
-            style={{ marginTop: androidTopMargin }}
+            style={{ marginTop: home.androidTopMargin }}
           >
-            {pathname === "/home" && (
+            {home.pathname === "/home" && (
               <TouchableOpacity
                 className="w-12 h-12 rounded-full bg-white items-center justify-center shadow-lg elevation-5 mt-2"
                 onPress={
-                  isNavigating
-                    ? handleStopNavigation
-                    : () => setDrawerOpen("main-nav", true)
+                  home.isNavigating
+                    ? home.handleStopNavigation
+                    : () => home.setDrawerOpen("main-nav", true)
                 }
                 activeOpacity={0.7}
               >
-                {isNavigating ? (
+                {home.isNavigating ? (
                   <X size={22} color="#141714" strokeWidth={2.5} />
                 ) : (
-                  <Ionicons name="menu" size={24} color="#333333" />
+                  <Ionicons name="menu" size={22} color="#333333" />
                 )}
               </TouchableOpacity>
             )}
           </SafeAreaView>
 
           {/* Map view controls: only during navigation, anchored top-right above sheet */}
-          {isNavigating && (
+          {home.isNavigating && (
             <View
               style={{
                 position: "absolute",
                 right: 12,
-                bottom: (isNavigating ? navSnapPoints[0] : snapPoints[1])
+                bottom: (
+                  home.isNavigating ? home.navSnapPoints[0] : home.snapPoints[1]
+                )
                   ? undefined
                   : 200,
                 // Position just above the bottom sheet handle
@@ -175,9 +83,9 @@ export default function Home() {
               // Place it 20% + some padding above bottom
             >
               <MapViewControls
-                viewMode={viewMode}
-                onToggleView={handleToggleView}
-                onRecenter={handleRecenter}
+                viewMode={home.viewMode}
+                onToggleView={home.handleToggleView}
+                onRecenter={home.handleRecenter}
               />
             </View>
           )}
@@ -185,57 +93,61 @@ export default function Home() {
 
         <Portal>
           <BottomSheet
-            ref={sheetRef}
+            ref={home.sheetRef}
             index={1}
-            onChange={setSnapIndex}
-            snapPoints={isNavigating ? navSnapPoints : snapPoints}
+            onChange={home.setSnapIndex}
+            snapPoints={
+              home.isNavigating ? home.navSnapPoints : home.snapPoints
+            }
             enablePanDownToClose={false}
-            enableContentPanningGesture={!isDragging}
+            enableContentPanningGesture={!home.isDragging}
             activeOffsetY={[-10, 10]}
             backgroundStyle={{ backgroundColor: "#141714" }}
             handleIndicatorStyle={{ backgroundColor: "#849081" }}
           >
-            {isNavigating ? (
+            {home.isNavigating ? (
               /* ── NAVIGATION MODE ── */
               <View style={{ flex: 1 }}>
-                {currentStop ? (
+                {home.currentStop ? (
                   <NextStopCard
-                    stop={currentStop}
-                    stopNumber={currentStopIndex + 1}
-                    totalStops={nonUserStops.length}
-                    onMarkDone={handleMarkDone}
-                    onSkip={handleSkip}
-                    onPrev={goToPrevStop}
-                    onNext={advanceToNextStop}
-                    canGoPrev={currentStopIndex > 0}
-                    canGoNext={currentStopIndex < nonUserStops.length - 1}
-                    isLastStop={isLastStop}
-                    onFinishTrip={handleFinishTrip}
+                    stop={home.currentStop}
+                    stopNumber={home.currentStopIndex + 1}
+                    totalStops={home.nonUserStops.length}
+                    onMarkDone={home.handleMarkDone}
+                    onSkip={home.handleSkip}
+                    onPrev={home.goToPrevStop}
+                    onNext={home.advanceToNextStop}
+                    canGoPrev={home.currentStopIndex > 0}
+                    canGoNext={
+                      home.currentStopIndex < home.nonUserStops.length - 1
+                    }
+                    isLastStop={home.isLastStop}
+                    onFinishTrip={home.handleFinishTrip}
                   />
                 ) : null}
               </View>
             ) : (
               /* ── PLANNING MODE ── */
-              <GestureDetector gesture={contentGesture}>
+              <GestureDetector gesture={home.contentGesture}>
                 <BottomSheetScrollView style={{ flex: 1 }}>
                   <View className="flex-1 pb-6 space-y-4">
-                    {hasActiveTrip ? (
+                    {home.hasActiveTrip ? (
                       <View className="flex w-full mx-auto space-x-5">
                         <View
                           className="w-full relative"
                           onLayout={(event) => {
                             const { height } = event.nativeEvent.layout;
-                            setSearchInputHeight(height);
+                            home.setSearchInputHeight(height);
                           }}
                         >
                           <View className="flex flex-row items-center w-full px-6">
                             <View className="flex flex-1 justify-center px-3">
                               <GoogleTextInput
-                                ref={googleInputRef}
+                                ref={home.googleInputRef}
                                 icon={icons.search}
                                 containerStyle={"bg-[#1F1F1F] rounded-xl"}
-                                handlePress={handleAddStop}
-                                onTextInputFocus={onPressInputField}
+                                handlePress={home.handleAddStop}
+                                onTextInputFocus={home.onPressInputField}
                                 textInputBackgroundColor="#1F1F1F"
                               />
                             </View>
@@ -249,13 +161,13 @@ export default function Home() {
                         </View>
 
                         <DraggableList
-                          stops={activeTrip?.stops || []}
-                          onReorder={handleManualReorder}
-                          snapIndex={snapIndex}
-                          snapPoints={snapPoints}
-                          searchInputHeight={searchInputHeight}
-                          onDragStart={() => setIsDragging(true)}
-                          onDragEndGlobal={() => setIsDragging(false)}
+                          stops={home.activeTrip?.stops || []}
+                          onReorder={home.handleManualReorder}
+                          snapIndex={home.snapIndex}
+                          snapPoints={home.snapPoints}
+                          searchInputHeight={home.searchInputHeight}
+                          onDragStart={() => home.setIsDragging(true)}
+                          onDragEndGlobal={() => home.setIsDragging(false)}
                         />
 
                         <View className="flex-row items-center gap-4 w-full px-6 mt-4">
@@ -265,14 +177,14 @@ export default function Home() {
                             action="primary"
                             className="flex-1 border-2 border-brand-500 rounded-md h-12"
                             onPress={() => {
-                              if (!currentUserLocation) {
+                              if (!home.currentUserLocation) {
                                 Alert.alert(
                                   "Location unavailable",
                                   "Enable GPS to optimize your route.",
                                 );
                                 return;
                               }
-                              optimizeRoute(currentUserLocation);
+                              home.optimizeRoute(home.currentUserLocation);
                             }}
                           >
                             <ButtonIcon
@@ -290,7 +202,7 @@ export default function Home() {
                             size="md"
                             action="primary"
                             className="flex-1 bg-brand-500 rounded-md h-12"
-                            onPress={handleStartRoute}
+                            onPress={home.handleStartRoute}
                           >
                             <ButtonIcon
                               as={FastForward}
@@ -305,7 +217,7 @@ export default function Home() {
                       </View>
                     ) : (
                       <View className="flex-1 justify-center items-center">
-                        <NameTripField handlePress={onPressInputField} />
+                        <NameTripField handlePress={home.onPressInputField} />
                       </View>
                     )}
                   </View>

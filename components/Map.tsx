@@ -16,7 +16,6 @@ import { darkMapStyle } from "@/constants";
 export interface MapHandle {
   recenter: () => void;
 }
-
 const Map = forwardRef<MapHandle>((_, ref) => {
   const mapRef = useRef<MapView>(null);
   const { currentUserLocation } = useUserLocationStore();
@@ -31,7 +30,6 @@ const Map = forwardRef<MapHandle>((_, ref) => {
     userLongitude,
   });
 
-  // Expose recenter to parent
   useImperativeHandle(ref, () => ({
     recenter: () => {
       applyCamera();
