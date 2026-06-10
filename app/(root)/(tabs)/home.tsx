@@ -21,8 +21,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigationDrawer } from "@/components/NavigationDrawer";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
-import { RepeatIcon } from "lucide-react-native";
+import { FastForward, RepeatIcon } from "lucide-react-native";
 import FlatListItemMenu from "@/components/FlatListItemMenu";
+import { usePathname } from "expo-router";
 // TODO: set camera
 
 export default function Home() {
@@ -49,6 +50,7 @@ export default function Home() {
   } = useHomeLogic();
   const androidTopMargin =
     Platform.OS === "android" ? StatusBar.currentHeight : 0;
+  const pathname = usePathname();
 
   return (
     <Pressable
@@ -66,13 +68,15 @@ export default function Home() {
             className="absolute left-4 z-10"
             style={{ marginTop: androidTopMargin }}
           >
-            <TouchableOpacity
-              className="w-12 h-12 rounded-full bg-white items-center justify-center shadow-lg elevation-5 mt-2"
-              onPress={() => setDrawerOpen("main-nav", true)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="menu" size={24} color="#333333" />
-            </TouchableOpacity>
+            {pathname === "/home" ? (
+              <TouchableOpacity
+                className="w-12 h-12 rounded-full bg-white items-center justify-center shadow-lg elevation-5 mt-2"
+                onPress={() => setDrawerOpen("main-nav", true)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="menu" size={24} color="#333333" />
+              </TouchableOpacity>
+            ) : null}
           </SafeAreaView>
         </View>
 
@@ -129,31 +133,57 @@ export default function Home() {
                         onDragStart={() => setIsDragging(true)}
                         onDragEndGlobal={() => setIsDragging(false)}
                       />
-                      <Button
-                        variant="outline"
-                        size="md"
-                        action="primary"
-                        className="w-[80%] mx-auto mt-4 border-2 border-brand-500 rounded-md h-12 "
-                        onPress={() => {
-                          if (!currentUserLocation) {
-                            Alert.alert(
-                              "Location unavailable",
-                              "Enable GPS to optimize your route.",
-                            );
-                            return;
-                          }
-                          optimizeRoute(currentUserLocation);
-                        }}
-                      >
-                        <ButtonIcon
-                          as={RepeatIcon}
-                          size="lg"
-                          className="mr-2 text-brand-500"
-                        />
-                        <ButtonText className="text-brand-500 font-medium">
-                          Reorganize Stops
-                        </ButtonText>
-                      </Button>
+                      <View className="flex-row items-center gap-4 w-full px-6 mt-4">
+                        <Button
+                          variant="outline"
+                          size="md"
+                          action="primary"
+                          className="flex-1 border-2 border-brand-500 rounded-md h-12"
+                          onPress={() => {
+                            if (!currentUserLocation) {
+                              Alert.alert(
+                                "Location unavailable",
+                                "Enable GPS to optimize your route.",
+                              );
+                              return;
+                            }
+                            optimizeRoute(currentUserLocation);
+                          }}
+                        >
+                          <ButtonIcon
+                            as={RepeatIcon}
+                            size="lg"
+                            className="mr-2 text-brand-500"
+                          />
+                          <ButtonText className="text-brand-500 font-medium">
+                            Reorganize Stops
+                          </ButtonText>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="md"
+                          action="primary"
+                          className="flex-1 bg-brand-500 rounded-md h-12"
+                          onPress={() => {
+                            if (!currentUserLocation) {
+                              Alert.alert(
+                                "Location unavailable",
+                                "Enable GPS to optimize your route.",
+                              );
+                              return;
+                            }
+                          }}
+                        >
+                          <ButtonIcon
+                            as={FastForward}
+                            size="lg"
+                            className="mr-2"
+                          />
+                          <ButtonText className="text-background-900 font-medium">
+                            Start Route
+                          </ButtonText>
+                        </Button>
+                      </View>
                     </View>
                   ) : (
                     <View className="flex-1 justify-center items-center">
