@@ -35,6 +35,31 @@ export function decodePolyline(
   return points;
 }
 
+/**
+ * Extracts a high-resolution polyline by decoding every step's polyline
+ * across all legs and concatenating them. This road-snaps precisely,
+ * unlike overview_polyline which is a lossy simplification.
+ */
+function extractDetailedPolyline(
+  legs: any[],
+): { latitude: number; longitude: number }[] {
+  const points: { latitude: number; longitude: number }[] = [];
+
+  for (const leg of legs) {
+    for (const step of leg.steps) {
+      const stepPoints = decodePolyline(step.polyline.points);
+      // Avoid duplicating the junction point between steps
+      if (points.length > 0 && stepPoints.length > 0) {
+        points.push(...stepPoints.slice(1));
+      } else {
+        points.push(...stepPoints);
+      }
+    }
+  }
+
+  return points;
+}
+
 export const generateMarkersFromData = (
   stops: TripMarker[],
   optimizedOrder?: string[],
@@ -61,13 +86,7 @@ export const getDirectionsForTrip = async (
 
   const originLocation = currentLocation ?? nonUserStops[0].location;
   const originStr = `${originLocation.latitude},${originLocation.longitude}`;
-
-  // When returnToStart: origin = destination = current location, all stops are waypoints.
-  // When not returnToStart: origin = current location, destination = current location too,
-  // so ALL stops go into waypoints=optimize:true and Google can freely reorder them.
-  // Previously the last stop was used as destination, which fixed it in place and made
-  // reordering impossible when there were only 2 stops.
-  const destinationStr = returnToStart ? originStr : originStr; // always round-trip through origin so all stops are free waypoints
+  const destinationStr = returnToStart ? originStr : originStr;
 
   const waypointsStr = nonUserStops
     .map((m) => `${m.location.latitude},${m.location.longitude}`)
@@ -97,8 +116,15 @@ export const getDirectionsForTrip = async (
       route.waypoint_order,
     );
 
+    // Use per-step polylines for road-accurate rendering instead of
+    // the lossy overview_polyline
+    const detailedPolylinePoints = extractDetailedPolyline(route.legs);
+
     return {
+      // Keep a dummy encoded string for callers that pass it to decodePolyline —
+      // we return the already-decoded points separately as detailedPoints
       polyline: route.overview_polyline.points,
+      detailedPoints: detailedPolylinePoints,
       optimized_order: route.waypoint_order ?? [],
       legs: route.legs.map((leg: any) => ({
         distance_m: leg.distance.value,

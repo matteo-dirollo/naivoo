@@ -451,6 +451,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       finalStops: TripMarker[],
       polyline: string,
       legs: Array<{ distance_m: number; duration_s: number }>,
+      routePoints: { latitude: number; longitude: number }[],
     ) => {
       const freshTrip = get().activeTrip;
       if (!freshTrip) return;
@@ -482,7 +483,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
           total_distance_km: +totalDistanceKm.toFixed(2),
           total_duration_min: +totalDurationMin.toFixed(1),
         },
-        routeCoords: decodePolyline(polyline),
+        routeCoords: routePoints,
       });
     };
 
@@ -498,7 +499,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
           "[optimizeRoute] single-stop persist with:",
           nonUserStops.map((s) => s.stop_id),
         );
-        await persist(nonUserStops, result.polyline, result.legs);
+        await persist(
+          nonUserStops,
+          result.polyline,
+          result.legs,
+          result.detailedPoints ?? [],
+        );
       }
       return;
     }
@@ -579,7 +585,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
         currentLocation,
       );
       if (!result) return;
-      await persist(orderedStops, result.polyline, result.legs);
+      await persist(
+        orderedStops,
+        result.polyline,
+        result.legs,
+        result.detailedPoints ?? [],
+      );
       return;
     }
 
@@ -612,7 +623,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
         });
         return;
       }
-      await persist(finalStops, result.polyline, result.legs);
+      await persist(
+        finalStops,
+        result.polyline,
+        result.legs,
+        result.detailedPoints ?? [],
+      );
       return;
     }
 
@@ -759,7 +775,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
       currentLocation,
     );
     if (!fullResult) return;
-    await persist(finalStops, fullResult.polyline, fullResult.legs);
+    await persist(
+      finalStops,
+      fullResult.polyline,
+      fullResult.legs,
+      fullResult.detailedPoints ?? [],
+    );
   },
 
   // -----------------------------

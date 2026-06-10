@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import * as Location from "expo-location";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { useFetch } from "@/lib/fetch";
 import { Trip, TripMarker } from "@/types/type";
 import {
@@ -14,7 +14,7 @@ import {
 import { getShortBase36Id, googleReverseGeocode } from "@/lib/utils";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { Gesture } from "react-native-gesture-handler";
-import { Alert, Keyboard } from "react-native";
+import { Alert, Keyboard, Platform, StatusBar } from "react-native";
 import { extractAddressString, formatAddress } from "@/lib/addressFormatter";
 import { getDirectionsForTrip, decodePolyline } from "@/lib/map";
 
@@ -25,6 +25,10 @@ export const useHomeLogic = () => {
   const [searchInputHeight, setSearchInputHeight] = useState<number>(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  const androidTopMargin =
+    Platform.OS === "android" ? StatusBar.currentHeight : 0;
+  const pathname = usePathname();
 
   // Guard against double-firing handleAddStop
   const isAddingStop = useRef(false);
@@ -72,9 +76,7 @@ export const useHomeLogic = () => {
   }, [signOut]);
 
   const handleDestinationPress = useCallback(
-    (_location: { latitude: number; longitude: number; address: string }) => {
-      // router.push("/(root)/find-ride");
-    },
+    (_location: { latitude: number; longitude: number; address: string }) => {},
     [],
   );
 
@@ -161,6 +163,7 @@ export const useHomeLogic = () => {
     };
   }, [setCurrentUserLocation, sheetRef, user?.id, fetchActiveTrip]);
 
+  // Keep route polyline up to date using high-res step polylines
   useEffect(() => {
     const stops = activeTrip?.stops ?? [];
     const nonUserStops = stops.filter((s) => !s.isUserLocation);
@@ -175,8 +178,12 @@ export const useHomeLogic = () => {
       activeTrip?.return_to_start ?? false,
       currentUserLocation,
     ).then((result) => {
-      if (result?.polyline) setRouteCoords(decodePolyline(result.polyline));
-      else setRouteCoords([]);
+      if (result?.detailedPoints && result.detailedPoints.length > 0) {
+        // Use the high-res per-step decoded points directly
+        setRouteCoords(result.detailedPoints);
+      } else {
+        setRouteCoords([]);
+      }
     });
   }, [activeTrip?.stops, activeTrip?.return_to_start, currentUserLocation]);
 
@@ -189,7 +196,6 @@ export const useHomeLogic = () => {
     longitude: number;
     address: string;
   }) => {
-    // Prevent double-fire from rapid taps or re-renders
     if (isAddingStop.current) return;
     isAddingStop.current = true;
 
@@ -205,7 +211,6 @@ export const useHomeLogic = () => {
     }
 
     try {
-      // Generate a fresh ID per call — never reuse a module-level shortId
       const stopId = getShortBase36Id(5);
       const formattedAddress = formatAddress(address);
 
@@ -268,5 +273,7 @@ export const useHomeLogic = () => {
     setDrawerOpen,
     optimizeRoute,
     currentUserLocation,
+    androidTopMargin,
+    pathname,
   };
 };

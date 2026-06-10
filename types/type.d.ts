@@ -4,7 +4,6 @@ import React from "react";
 export interface DrawerStore {
   activeDrawerId: string | null;
   setDrawerOpen: (id: string, isOpen: boolean) => void;
-  // Computed property to check if a specific drawer is open
   isDrawerOpen: (id: string) => boolean;
 }
 export type MenuCategory = "trip" | "stop" | "google-input" | "undefined";
@@ -13,8 +12,10 @@ export interface MenuState {
   menuTypes: Record<string, MenuCategory>;
   toggleMenu: (id: string, category: MenuCategory, isOpen?: boolean) => void;
   isMenuOpen: (id: string) => boolean;
-  getMenuType: (id: string) => MenuCategory | undefined; // Helper to retrieve type
+  getMenuType: (id: string) => MenuCategory | undefined;
 }
+
+export type MapViewMode = "overview" | "navigation";
 
 declare interface User {
   id: number;
@@ -23,24 +24,20 @@ declare interface User {
   email: string;
   profile_image_url: string;
 
-  // Trial
-  has_used_trial: boolean; // The user can only use 7-day trial ONCE
+  has_used_trial: boolean;
   trial_started_at: string | null;
   trial_expires_at: string | null;
 
-  // Subscription
   plan: "free" | "trial" | "premium" | "expired";
   subscription_started_at: string | null;
   subscription_expires_at: string | null;
-  will_auto_renew: boolean; // Important
-  cancellation_at_period_end: boolean; // Stripe-like logic for scheduled cancel
+  will_auto_renew: boolean;
+  cancellation_at_period_end: boolean;
 
-  // Billing Provider Data (mandatory if using Stripe, Checkout.com, Paddle)
-  payment_customer_id: string | null; // Stripe customer ID
-  payment_subscription_id: string | null; // Stripe subscription ID
-  payment_method_last4: string | null; // Convenience only
+  payment_customer_id: string | null;
+  payment_subscription_id: string | null;
+  payment_method_last4: string | null;
 
-  // Internal App Metrics
   total_trips?: number;
   subscription_renewal_reminder_sent: boolean;
 }
@@ -62,8 +59,7 @@ declare interface Trip {
 
   return_to_start: boolean;
 
-  // Returned by Google Directions API ("optimize:true")
-  optimized_order: string[]; // array of stop_id in optimized order
+  optimized_order: string[];
 
   total_distance_km: number;
   total_duration_min: number;
@@ -82,6 +78,9 @@ declare interface TripMarker {
   isUserLocation?: boolean;
   isPrioritized?: boolean;
   priorityPosition?: number | null;
+  // Navigation status (local-only, not persisted to DB)
+  isDone?: boolean;
+  isSkipped?: boolean;
 }
 
 declare interface ButtonProps extends TouchableOpacityProps {
@@ -135,15 +134,10 @@ declare interface DraggableListProps {
   onDragEndGlobal?: () => void;
 }
 
-// ----------------------- ZUSTAND: LOCATION STORE -----------------------
-
 export interface UserLocationStore {
   currentUserLocation: Coordinates | null;
-
   setCurrentUserLocation: (location: Coordinates) => void;
 }
-
-// ----------------------- ZUSTAND: TRIP STORE -----------------------
 
 export interface TripStore {
   activeTrip: Trip | null;
@@ -152,23 +146,18 @@ export interface TripStore {
   routeCoords: { latitude: number; longitude: number }[];
   setRouteCoords: (coords: { latitude: number; longitude: number }[]) => void;
 
-  // SERVER SYNC
   fetchUserTrips: (userId: string) => Promise<void>;
   fetchActiveTrip: (userId: string) => Promise<void>;
-  saveActiveTrip: () => Promise<void>; // inserts or updates DB
+  saveActiveTrip: () => Promise<void>;
 
-  // LOCAL STATE
-  // TODO: CHANGE LOGIC
   setActiveTrip: (trip_id: string) => Promise<void>;
   setTripInactive: (trip_id: string) => Promise<void>;
   setUserTrips: (trips: Trip[]) => void;
 
-  // CRUD
   createTrip: (trip: Trip) => Promise<void>;
   updateTrip: (trip_id: string, updated: Partial<Trip>) => Promise<void>;
   deleteTrip: (trip_id: string) => Promise<void>;
 
-  // STOP MANAGEMENT
   addStop: (
     stop: TripMarker,
     currentLocation: Coordinates,
@@ -176,7 +165,6 @@ export interface TripStore {
   removeStop: (stop_id: string) => Promise<void>;
   updateStop: (stop_id: string, updated: Partial<TripMarker>) => Promise<void>;
 
-  // OPTIMIZATION
   reorderStopsManually: (
     newStops: TripMarker[],
     draggedStopId: string | undefined,
@@ -185,7 +173,6 @@ export interface TripStore {
   clearAllPriorities: () => Promise<void>;
   optimizeRoute: (currentLocation: Coordinates) => Promise<void>;
 
-  // CLEAR
   clearActiveTrip: () => void;
   clearUserTrips: () => void;
   clearAllTrips: () => void;
@@ -200,9 +187,22 @@ export interface SnapPointStore {
   setSheetRef: (ref: React.RefObject<BottomSheet>) => void;
   setIsInputFocused: (v: boolean) => void;
 
-  // Optional helpers
-  closeSheet: () => void; // 10%
-  openSmall: () => void; // 25%
-  openMedium: () => void; // 50%
-  openLarge: () => void; // 90%
+  closeSheet: () => void;
+  openSmall: () => void;
+  openMedium: () => void;
+  openLarge: () => void;
+}
+
+export interface NavigationStore {
+  isNavigating: boolean;
+  currentStopIndex: number;
+  viewMode: MapViewMode;
+
+  startNavigation: () => void;
+  stopNavigation: () => void;
+  setViewMode: (mode: MapViewMode) => void;
+  advanceToNextStop: () => void;
+  goToPrevStop: () => void;
+  markCurrentStopDone: (stops: TripMarker[]) => void;
+  skipCurrentStop: (stops: TripMarker[]) => void;
 }
