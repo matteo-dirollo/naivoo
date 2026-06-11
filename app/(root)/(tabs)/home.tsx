@@ -67,23 +67,20 @@ export default function Home() {
 
           {/* Map view controls: only during navigation, anchored top-right above sheet */}
           {home.isNavigating && (
-            <View
-              style={{
-                bottom: (
-                  home.isNavigating ? home.navSnapPoints[0] : home.snapPoints[1]
-                )
-                  ? undefined
-                  : 200,
-                // Position just above the bottom sheet handle
-                top: undefined,
-              }}
-              className="absolute right-3"
-            >
-              <MapViewControls
-                viewMode={home.viewMode}
-                onToggleView={home.handleToggleView}
-                onRecenter={home.handleRecenter}
-              />
+            <View className="absolute inset-0 z-10 pointer-events-none">
+              <View className="absolute right-3 bottom-[56%] mb-4 pointer-events-auto">
+                <MapViewControls
+                  viewMode={home.viewMode}
+                  onToggleView={() =>
+                    home.setViewMode(
+                      home.viewMode === "navigation"
+                        ? "overview"
+                        : "navigation",
+                    )
+                  }
+                  onRecenter={() => home.mapRef?.current?.recenter()}
+                />
+              </View>
             </View>
           )}
         </View>
