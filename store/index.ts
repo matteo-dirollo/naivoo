@@ -11,7 +11,7 @@ import {
 } from "@/types/type";
 import { api } from "@/lib/api";
 import { getShortBase36Id } from "@/lib/utils";
-import { decodePolyline, getDirectionsForTrip } from "@/lib/map";
+import { getDirectionsForTrip } from "@/lib/map";
 
 export const useDrawerStore = create<DrawerStore>((set, get) => ({
   activeDrawerId: null,
