@@ -69,8 +69,6 @@ export default function Home() {
           {home.isNavigating && (
             <View
               style={{
-                position: "absolute",
-                right: 12,
                 bottom: (
                   home.isNavigating ? home.navSnapPoints[0] : home.snapPoints[1]
                 )
@@ -79,8 +77,7 @@ export default function Home() {
                 // Position just above the bottom sheet handle
                 top: undefined,
               }}
-              className="absolute right-3 bottom-[22%]"
-              // Place it 20% + some padding above bottom
+              className="absolute right-3"
             >
               <MapViewControls
                 viewMode={home.viewMode}
