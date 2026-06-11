@@ -66,6 +66,7 @@ export const useHomeLogic = () => {
 
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["25%", "50%", "90%"], []);
+
   const setDrawerOpen = useDrawerStore((state) => state.setDrawerOpen);
   const {
     snapIndex,
@@ -262,7 +263,6 @@ export const useHomeLogic = () => {
   const nonUserStops = (activeTrip?.stops ?? []).filter(
     (s) => !s.isUserLocation,
   );
-
   const currentStop = nonUserStops[currentStopIndex] ?? null;
   const isLastStop = currentStopIndex === nonUserStops.length - 1;
 
@@ -276,21 +276,12 @@ export const useHomeLogic = () => {
       return;
     }
     startNavigation();
-    // Snap sheet to small so map is more visible
     sheetRef.current?.snapToIndex(0);
   };
 
   const handleStopNavigation = () => {
     stopNavigation();
     sheetRef.current?.snapToIndex(1);
-  };
-
-  const handleToggleView = () => {
-    setViewMode(viewMode === "navigation" ? "overview" : "navigation");
-  };
-
-  const handleRecenter = () => {
-    mapRef.current?.recenter();
   };
 
   const handleMarkDone = () => {
@@ -305,14 +296,11 @@ export const useHomeLogic = () => {
 
   const handleFinishTrip = () => {
     Alert.alert("Trip Complete!", "You've reached all your stops.", [
-      {
-        text: "OK",
-        onPress: handleStopNavigation,
-      },
+      { text: "OK", onPress: handleStopNavigation },
     ]);
   };
 
-  const navSnapPoints = ["20%", "40%"];
+  const navSnapPoints = ["20%", "44%"];
 
   return {
     hasActiveTrip,
@@ -361,8 +349,6 @@ export const useHomeLogic = () => {
     isLastStop,
     handleStartRoute,
     handleStopNavigation,
-    handleToggleView,
-    handleRecenter,
     handleMarkDone,
     handleSkip,
     handleFinishTrip,

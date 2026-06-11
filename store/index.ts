@@ -465,21 +465,44 @@ export const useTripStore = create<TripStore>((set, get) => ({
         0,
       );
 
+      // Write leg distance/duration back onto each stop.
+      // legs[i] = journey from the previous point (origin or stop[i-1]) to stop[i].
+      const stopsWithMeta: TripMarker[] = finalStops.map((stop, i) => {
+        const leg = legs[i];
+        if (!leg) return stop;
+        return {
+          ...stop,
+          expected_distance: leg.distance_m,
+          expected_duration: leg.duration_s,
+        };
+      });
+
+      // Persist distance/duration for each stop (fire-and-forget)
+      stopsWithMeta.forEach((stop) => {
+        if (stop.expected_distance || stop.expected_duration) {
+          api
+            .put(`/stop`, {
+              stop_id: stop.stop_id,
+              expected_distance: stop.expected_distance,
+              expected_duration: stop.expected_duration,
+            })
+            .catch(console.error);
+        }
+      });
+
       await api.put(`/trip/${freshTrip.trip_id}`, {
-        optimized_order: finalStops.map((s) => s.stop_id),
+        optimized_order: stopsWithMeta.map((s) => s.stop_id),
         total_distance_km: +totalDistanceKm.toFixed(2),
         total_duration_min: +totalDurationMin.toFixed(1),
       });
 
-      // Use the snapshot's userLocationStop — never re-read from freshTrip.stops
-      // to avoid prepending a stop that is already present in finalStops.
       set({
         activeTrip: {
           ...freshTrip,
           stops: userLocationStop
-            ? [userLocationStop, ...finalStops]
-            : finalStops,
-          optimized_order: finalStops.map((s) => s.stop_id),
+            ? [userLocationStop, ...stopsWithMeta]
+            : stopsWithMeta,
+          optimized_order: stopsWithMeta.map((s) => s.stop_id),
           total_distance_km: +totalDistanceKm.toFixed(2),
           total_duration_min: +totalDurationMin.toFixed(1),
         },
