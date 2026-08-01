@@ -62,6 +62,8 @@ eas build --platform android --profile development
 2. Run the project after installing it on your device:
 
    ```bash  
+   
 npx expo start --tunnel --dev-client --clear
+
     ```
 
