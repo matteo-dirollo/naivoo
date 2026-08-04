@@ -132,10 +132,11 @@ const Map = forwardRef<MapHandle>((_, ref) => {
               }}
               title={stop.location.address}
               opacity={isDone || isSkipped ? 0.4 : 1}
+              anchor={{ x: 0.5, y: 0.95 }}
             >
               <StopMarker
-                width="40"
-                height="40"
+                width={30}
+                height={44}
                 text={index + 1}
                 highlight={isCurrent}
                 done={isDone}

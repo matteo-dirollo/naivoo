@@ -10,12 +10,12 @@ import Svg, {
 import { View } from "react-native";
 
 interface StopMarkerProps {
-  width?: any;
-  height?: any;
+  width: number;
+  height: number;
   text: any;
-  highlight?: boolean; // current stop during navigation
-  done?: boolean; // already visited
-  skipped?: boolean; // skipped by user
+  highlight?: boolean;
+  done?: boolean;
+  skipped?: boolean;
 }
 
 export default function StopMarker({
@@ -26,7 +26,6 @@ export default function StopMarker({
   done = false,
   skipped = false,
 }: StopMarkerProps) {
-  // Gradient stops change based on state
   const gradientStart = done
     ? "#4a4a4a"
     : skipped
@@ -52,12 +51,19 @@ export default function StopMarker({
         : "#1ed7b5";
 
   return (
-    <View>
-      <Svg
-        viewBox="0 0 821.52 1016.08"
-        width={width || 200}
-        height={height || 200}
-      >
+    <View
+      style={{
+        width,
+        height,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      {/*
+        viewBox matches the exact geometry of your SVG shape with extra padding
+        (-50 on all sides) so strokes and glow rings never hit the outer edge.
+      */}
+      <Svg viewBox="-50 -50 921.52 1116.08" width="100%" height="100%">
         <Defs>
           <LinearGradient
             id="marker-gradient"
@@ -74,7 +80,7 @@ export default function StopMarker({
 
         {/* Highlight ring for current stop */}
         {highlight && (
-          <Circle cx="410" cy="410" r="430" fill="rgba(30,215,181,0.15)" />
+          <Circle cx="410" cy="410" r="430" fill="rgba(30,215,181,0.2)" />
         )}
 
         <Path
@@ -85,14 +91,20 @@ export default function StopMarker({
           strokeMiterlimit={10}
         />
 
+        {/*
+          Centered Text Position:
+          x={410} with textAnchor="middle" aligns single and double digit numbers horizontally.
+          y={540} places the font baseline exactly inside the pin head bubble.
+        */}
         <Text
-          x={302.87}
-          y={522.02}
+          x={410}
+          y={540}
           fill={textColor}
-          fontFamily="Helvetica"
-          fontSize={388}
+          fontSize={380}
+          fontWeight="bold"
+          textAnchor="middle"
         >
-          {text}
+          {String(text)}
         </Text>
       </Svg>
     </View>
