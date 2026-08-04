@@ -60,10 +60,6 @@ export const useHomeLogic = () => {
   const { activeTrip, addStop } = useTripStore();
   const googleInputRef = useRef<any>(null);
 
-  const contentGesture = Gesture.Native().simultaneousWithExternalGesture(
-    Gesture.Pan().runOnJS(true),
-  );
-
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["25%", "50%", "90%"], []);
 
@@ -84,6 +80,14 @@ export const useHomeLogic = () => {
     }
     setIsInputFocused(true);
   }, [snapIndex]);
+
+  const contentGesture = useMemo(
+    () =>
+      Gesture.Native().simultaneousWithExternalGesture(
+        Gesture.Pan().runOnJS(true).enabled(!isInputFocused),
+      ),
+    [isInputFocused],
+  );
 
   const handleSignOut = useCallback(() => {
     signOut();

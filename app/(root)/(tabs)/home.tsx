@@ -100,7 +100,9 @@ export default function Home() {
                 home.isNavigating ? home.navSnapPoints : home.snapPoints
               }
               enablePanDownToClose={false}
-              enableContentPanningGesture={!home.isDragging}
+              enableContentPanningGesture={
+                !home.isDragging && !home.isInputFocused
+              }
               activeOffsetY={[-10, 10]}
               backgroundStyle={{ backgroundColor: "#141714" }}
               handleIndicatorStyle={{ backgroundColor: "#849081" }}
