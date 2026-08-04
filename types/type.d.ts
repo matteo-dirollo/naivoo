@@ -156,6 +156,10 @@ export interface TripStore {
 
   createTrip: (trip: Trip) => Promise<void>;
   updateTrip: (trip_id: string, updated: Partial<Trip>) => Promise<void>;
+  setReturnToStart: (
+    returnToStart: boolean,
+    currentLocation?: Coordinates,
+  ) => Promise<void>;
   deleteTrip: (trip_id: string) => Promise<void>;
 
   addStop: (

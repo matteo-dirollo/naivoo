@@ -300,6 +300,22 @@ export const useHomeLogic = () => {
     ]);
   };
 
+  const handleReorganize = useCallback(async () => {
+    if (!currentUserLocation) {
+      Alert.alert("Location unavailable", "Enable GPS to optimize your route.");
+      return;
+    }
+    try {
+      await optimizeRoute(currentUserLocation);
+    } catch (error) {
+      console.error("Failed to reorganize stops:", error);
+      Alert.alert(
+        "Couldn't reorganize stops",
+        "Something went wrong while optimizing your route. Please try again.",
+      );
+    }
+  }, [currentUserLocation, optimizeRoute]);
+
   const navSnapPoints = ["20%", "44%"];
 
   return {
@@ -352,6 +368,7 @@ export const useHomeLogic = () => {
     handleMarkDone,
     handleSkip,
     handleFinishTrip,
+    handleReorganize,
     navSnapPoints,
   };
 };

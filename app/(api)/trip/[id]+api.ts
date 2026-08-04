@@ -79,6 +79,7 @@ export async function PUT(request: Request, { id }: { id: string }) {
       total_duration_min,
       optimized_order,
       active_trip,
+      return_to_start,
     } = body;
 
     const [updatedTrip] = await sql`
@@ -86,8 +87,9 @@ export async function PUT(request: Request, { id }: { id: string }) {
       SET
         total_distance_km = COALESCE(${total_distance_km}, total_distance_km),
         total_duration_min = COALESCE(${total_duration_min}, total_duration_min),
-        optimized_order = COALESCE(${optimized_order}, optimized_order),
-        active_trip = COALESCE(${active_trip}, active_trip)
+        optimized_order = COALESCE(${optimized_order ? JSON.stringify(optimized_order) : null}, optimized_order),
+        active_trip = COALESCE(${active_trip}, active_trip),
+        return_to_start = COALESCE(${return_to_start}, return_to_start)
       WHERE trip_id = ${tripId}
         RETURNING *;
     `;

@@ -7,9 +7,10 @@ import {
 import { DraggableListProps, TripMarker } from "@/types/type";
 import { Grip, MapPinHouse, Lock, RefreshCw } from "lucide-react-native";
 import { useMemo, useRef } from "react";
-import { useTripStore } from "@/store";
+import { useTripStore, useUserLocationStore } from "@/store";
 import FlatListItemMenu from "@/components/FlatListItemMenu";
 import { Heading } from "@/components/ui/heading";
+import { Switch } from "@/components/ui/switch";
 
 export const DraggableList = ({
   stops,
@@ -21,13 +22,22 @@ export const DraggableList = ({
   onDragEndGlobal,
 }: DraggableListProps) => {
   const { height: windowHeight } = useWindowDimensions();
-  const { activeTrip } = useTripStore();
+  const { activeTrip, setReturnToStart } = useTripStore();
+  const { currentUserLocation } = useUserLocationStore();
   const { userLocation, draggableStops } = useMemo(() => {
     const user = stops.find((stop) => stop.isUserLocation);
     const draggable = stops.filter((stop) => !stop.isUserLocation);
     return { userLocation: user, draggableStops: draggable };
   }, [stops]);
   const draggedStopIdRef = useRef<string | null>(null);
+
+  const handleToggleReturnTrip = async (value: boolean) => {
+    try {
+      await setReturnToStart(value, currentUserLocation ?? undefined);
+    } catch (error) {
+      console.error("Failed to toggle round trip:", error);
+    }
+  };
 
   const maxScrollHeight = useMemo(() => {
     const arrayIndex = snapIndex - 1;
@@ -143,6 +153,11 @@ export const DraggableList = ({
           <Text className="text-background-300 flex-1 font-normal">
             Round Trip
           </Text>
+          <Switch
+            value={activeTrip?.return_to_start ?? false}
+            onToggle={handleToggleReturnTrip}
+            size="sm"
+          />
         </View>
         <View className="flex w-full">
           <View

@@ -78,7 +78,23 @@ export const useTripStore = create<TripStore>((set, get) => ({
       const res = await api.get(`/trip/${userId}`);
       const trips: Trip[] = res.data.data;
       const active = trips.find((t) => t.active_trip);
-      set({ activeTrip: active || null });
+
+      if (active) {
+        const validStops = (active.stops || []).filter((s) => {
+          const ok =
+            s?.location?.latitude != null && s?.location?.longitude != null;
+          if (!ok) {
+            console.warn(
+              "fetchActiveTrip: dropping stop with malformed location",
+              s?.stop_id,
+            );
+          }
+          return ok;
+        });
+        set({ activeTrip: { ...active, stops: validStops } });
+      } else {
+        set({ activeTrip: null });
+      }
     } catch (error: any) {
       console.error("fetchActiveTrip Error Details:");
       if (error.response) {
@@ -206,6 +222,49 @@ export const useTripStore = create<TripStore>((set, get) => ({
         console.error("Error:", error.message);
       }
       throw error;
+    }
+  },
+
+  // Toggles round-trip vs one-way for the active trip. Optimistically
+  // updates the UI, persists to the backend, then re-runs route
+  // optimization if there are stops — round trip vs one-way changes the
+  // destination Google Directions optimizes against, so the polyline,
+  // leg distances/durations, and potentially the stop order all need to
+  // be recomputed, not just the flag itself.
+  setReturnToStart: async (
+    returnToStart: boolean,
+    currentLocation?: Coordinates,
+  ) => {
+    const trip = get().activeTrip;
+    if (!trip) return;
+
+    const previousValue = trip.return_to_start;
+
+    set({
+      activeTrip: { ...trip, return_to_start: returnToStart },
+    });
+
+    try {
+      await api.put(`/trip/${trip.trip_id}`, {
+        return_to_start: returnToStart,
+      });
+    } catch (error: any) {
+      console.error("Failed to update return_to_start:", error);
+      // Roll back the optimistic update — the switch should snap back to
+      // its previous position if the save failed.
+      set((state) => ({
+        activeTrip: state.activeTrip
+          ? { ...state.activeTrip, return_to_start: previousValue }
+          : null,
+      }));
+      throw error;
+    }
+
+    const nonUserStops = (get().activeTrip?.stops ?? []).filter(
+      (s) => !s.isUserLocation,
+    );
+    if (nonUserStops.length > 0 && currentLocation) {
+      await get().optimizeRoute(currentLocation);
     }
   },
 
@@ -604,7 +663,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (free.length === 0) {
       const result = await getDirectionsForTrip(
         orderedStops,
-        false,
+        trip.return_to_start ?? false,
         currentLocation,
       );
       if (!result) return;
@@ -621,7 +680,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (prioritized.length === 0) {
       const result = await getDirectionsForTrip(
         orderedStops,
-        false,
+        trip.return_to_start ?? false,
         currentLocation,
       );
       console.log(
@@ -794,7 +853,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
     const fullResult = await getDirectionsForTrip(
       finalStops,
-      false,
+      trip.return_to_start ?? false,
       currentLocation,
     );
     if (!fullResult) return;
