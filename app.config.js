@@ -16,6 +16,7 @@ export default {
       assetBundlePatterns: ["**/*"],
     },
     ios: {
+      bundleIdentifier: "com.matteo92.naivoo",
       supportsTablet: true,
       config: {
         googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_IOS_API_KEY,

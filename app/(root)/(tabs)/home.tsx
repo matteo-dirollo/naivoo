@@ -19,7 +19,6 @@ import { FastForward, RepeatIcon, X } from "lucide-react-native";
 import FlatListItemMenu from "@/components/FlatListItemMenu";
 import MapViewControls from "@/components/MapViewControls";
 import NextStopCard from "@/components/NextStopCard";
-// TODO: set camera
 
 export default function Home() {
   const home = useHomeLogic();
