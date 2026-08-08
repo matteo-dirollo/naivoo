@@ -26,7 +26,6 @@ import { fetchAPI } from "@/lib/fetch";
 
 export default function SignUp() {
   const { isLoaded, signUp, setActive } = useSignUp();
-  // const [showSuccessModal, setShowSuccessModal] = useState(false);
   const router = useRouter();
 
   const [isUserNameValid, setIsUserNameValid] = useState(false);
@@ -57,7 +56,6 @@ export default function SignUp() {
     code: "",
   });
 
-  // Handle submission of sign-up form
   const onSignUpPress = async () => {
     const isNameValid = nameRegex.test(form.name);
     const isEmailValid = emailRegex.test(form.email);
@@ -71,7 +69,6 @@ export default function SignUp() {
     }
     if (!isEmailValid) {
       setIsEmailInvalid(true);
-
       return;
     }
     if (!isPasswordValid) {
@@ -84,42 +81,32 @@ export default function SignUp() {
     }
     if (!isLoaded) return;
 
-    // Start sign-up process using email and password provided
     try {
       await signUp.create({
         emailAddress: form.email,
         password: form.password,
       });
 
-      // Send user an email with verification code
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setVerification({
         ...verification,
         state: "pending",
       });
-      // Set 'pendingVerification' to true to display second form
-      // and capture OTP code
       setPendingVerification(true);
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
       if (isClerkAPIResponseError(err)) setErrors(err.errors);
       console.error(JSON.stringify(err, null, 2));
     }
   };
 
-  // Handle submission of verification form
   const onVerifyPress = async () => {
     if (!isLoaded) return;
 
     try {
-      // Use the code the user provided to attempt verification
       const signUpAttempt = await signUp.attemptEmailAddressVerification({
         code: verification.code,
       });
 
-      // If verification was completed, set the session to active
-      // and redirect the user
       if (signUpAttempt.status === "complete") {
         await fetchAPI("/(api)/user", {
           method: "POST",
@@ -141,9 +128,6 @@ export default function SignUp() {
           error: "Verification failed. Please try again.",
           state: "failed",
         });
-        // If the status is not complete, check why. User may need to
-        // complete further steps.
-        // console.error(JSON.stringify(signUpAttempt, null, 2));
       }
     } catch (err: any) {
       setVerification({
@@ -151,8 +135,6 @@ export default function SignUp() {
         error: err.errors[0].longMessage,
         state: "failed",
       });
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
       if (isClerkAPIResponseError(err)) setErrors(err.errors);
       console.error(JSON.stringify(err, null, 2));
     }
@@ -160,14 +142,14 @@ export default function SignUp() {
 
   if (pendingVerification) {
     return (
-      <SafeAreaView>
-        <Box className="px-8 rounded-lg w-full">
-          <VStack>
-            <Heading className="text-center text-typography-900">
+      <SafeAreaView className="flex-1 bg-[#181718]">
+        <Box className="px-8 rounded-lg w-full mt-16">
+          <VStack className="gap-4">
+            <Heading className="text-center text-white text-2xl">
               Verify your email
             </Heading>
           </VStack>
-          <VStack>
+          <VStack className="mt-6">
             <FormControl
               isInvalid={false}
               size="md"
@@ -176,13 +158,14 @@ export default function SignUp() {
               isRequired={true}
             >
               <FormControlLabel>
-                <FormControlLabelText className="text-typography-500">
+                <FormControlLabelText className="text-background-300">
                   Enter your code here
                 </FormControlLabelText>
               </FormControlLabel>
-              <Input>
+              <Input className="bg-[#1F1F1F] border-background-800 rounded-xl">
                 <InputField
                   type="text"
+                  className="text-white"
                   value={verification.code}
                   onChangeText={(code) =>
                     setVerification({ ...verification, code })
@@ -190,21 +173,29 @@ export default function SignUp() {
                 />
               </Input>
               <FormControlHelper>
-                <FormControlHelperText>
+                <FormControlHelperText className="text-background-500">
                   Check your inbox, an email has been sent to {form.email}.
                 </FormControlHelperText>
               </FormControlHelper>
             </FormControl>
           </VStack>
-          <VStack>
-            <Button className="ml-auto w-full" onPress={onVerifyPress}>
-              <ButtonText>Verify</ButtonText>
+          <VStack className="mt-4">
+            <Button
+              size="lg"
+              className="bg-brand-500 rounded-xl h-14 w-full"
+              onPress={onVerifyPress}
+            >
+              <ButtonText className="text-background-900 font-semibold">
+                Verify
+              </ButtonText>
             </Button>
           </VStack>
-          <VStack>
+          <VStack className="mt-3">
             {verification.error && (
               <Box>
-                <Text>{verification.error}</Text>
+                <Text className="text-red-400 text-sm">
+                  {verification.error}
+                </Text>
               </Box>
             )}
           </VStack>
@@ -213,22 +204,21 @@ export default function SignUp() {
     );
   }
 
-  // @ts-ignore
   return (
-    <SafeAreaView>
-      <Box className="w-full h-64 bg-image-500 mb-8">
+    <SafeAreaView className="flex-1 bg-[#181718]">
+      <Box className="w-full h-56 mb-6">
         <Image
           size={"2xl"}
           source={{
             uri: "https://images.unsplash.com/photo-1617721042495-04e739b9739d?q=80&w=986&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
           }}
           alt="image"
-          className="w-full h-64 mb-6"
+          className="w-full h-56"
         />
       </Box>
       <Box className="px-8 rounded-lg w-full">
         <VStack className="gap-4 mb-6">
-          <Heading className="text-center text-typography-900">Sign Up</Heading>
+          <Heading className="text-center text-white text-2xl">Sign Up</Heading>
           <VStack id="name-input">
             <FormControl
               isInvalid={isUserNameValid}
@@ -238,13 +228,14 @@ export default function SignUp() {
               isRequired={false}
             >
               <FormControlLabel>
-                <FormControlLabelText className="text-typography-500">
+                <FormControlLabelText className="text-background-300">
                   Name
                 </FormControlLabelText>
               </FormControlLabel>
-              <Input>
+              <Input className="bg-[#1F1F1F] border-background-800 rounded-xl">
                 <InputField
                   type="text"
+                  className="text-white"
                   value={form.name}
                   onChangeText={(value) => setForm({ ...form, name: value })}
                 />
@@ -252,9 +243,9 @@ export default function SignUp() {
               <FormControlError>
                 <FormControlErrorIcon
                   as={AlertCircleIcon}
-                  className="text-red-500"
+                  className="text-red-400"
                 />
-                <FormControlErrorText className="text-red-500">
+                <FormControlErrorText className="text-red-400">
                   Enter a valid name.
                 </FormControlErrorText>
               </FormControlError>
@@ -269,13 +260,14 @@ export default function SignUp() {
               isRequired={false}
             >
               <FormControlLabel>
-                <FormControlLabelText className="text-typography-500">
+                <FormControlLabelText className="text-background-300">
                   Email
                 </FormControlLabelText>
               </FormControlLabel>
-              <Input>
+              <Input className="bg-[#1F1F1F] border-background-800 rounded-xl">
                 <InputField
                   type="text"
+                  className="text-white"
                   value={form.email}
                   onChangeText={(value) => setForm({ ...form, email: value })}
                 />
@@ -284,9 +276,9 @@ export default function SignUp() {
               <FormControlError>
                 <FormControlErrorIcon
                   as={AlertCircleIcon}
-                  className="text-red-500"
+                  className="text-red-400"
                 />
-                <FormControlErrorText className="text-red-500">
+                <FormControlErrorText className="text-red-400">
                   Please enter a valid email address.
                 </FormControlErrorText>
               </FormControlError>
@@ -301,35 +293,39 @@ export default function SignUp() {
               isRequired={false}
             >
               <FormControlLabel>
-                <FormControlLabelText className="text-typography-500">
+                <FormControlLabelText className="text-background-300">
                   Password
                 </FormControlLabelText>
               </FormControlLabel>
 
               {/*@ts-ignore*/}
-              <Input textAlign="center">
+              <Input className="bg-[#1F1F1F] border-background-800 rounded-xl">
                 <InputField
                   type={showPassword ? "text" : "password"}
+                  className="text-white text-center"
                   value={form.password}
                   onChangeText={(value) =>
                     setForm({ ...form, password: value })
                   }
                 />
                 <InputSlot className="pr-3" onPress={handleState}>
-                  <InputIcon as={showPassword ? EyeIcon : EyeOffIcon} />
+                  <InputIcon
+                    as={showPassword ? EyeIcon : EyeOffIcon}
+                    className="text-background-400"
+                  />
                 </InputSlot>
               </Input>
               <FormControlHelper>
-                <FormControlHelperText>
+                <FormControlHelperText className="text-background-500">
                   Minimum password length 8 characters.
                 </FormControlHelperText>
               </FormControlHelper>
               <FormControlError>
                 <FormControlErrorIcon
                   as={AlertCircleIcon}
-                  className="text-red-500"
+                  className="text-red-400"
                 />
-                <FormControlErrorText className="text-red-500">
+                <FormControlErrorText className="text-red-400">
                   Password too short and/or missing one special character.
                 </FormControlErrorText>
               </FormControlError>
@@ -339,26 +335,39 @@ export default function SignUp() {
             {errors && (
               <Box>
                 {errors.map((el, index) => (
-                  <Text key={index}>{el.longMessage}</Text>
+                  <Text key={index} className="text-red-400 text-sm">
+                    {el.longMessage}
+                  </Text>
                 ))}
               </Box>
             )}
           </VStack>
-          <VStack id="submit-button">
-            <Button className="ml-auto w-full" onPress={onSignUpPress}>
-              <ButtonText>Sign Up</ButtonText>
+          <VStack id="submit-button" className="mt-2">
+            <Button
+              size="lg"
+              className="bg-brand-500 rounded-xl h-14 w-full"
+              onPress={onSignUpPress}
+            >
+              <ButtonText className="text-background-900 font-semibold">
+                Sign Up
+              </ButtonText>
             </Button>
           </VStack>
         </VStack>
         <VStack
           className="mt-4"
-          style={{ display: "flex", flexDirection: "row", gap: 3 }}
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap: 3,
+            justifyContent: "center",
+          }}
         >
-          <Text className="text-center text-typography-500">
+          <Text className="text-center text-background-400">
             Already have an account?
           </Text>
           <Link href="/sign-in">
-            <Text className="text-center text-typography-900 font-bold">
+            <Text className="text-center text-brand-500 font-bold">
               Sign In
             </Text>
           </Link>

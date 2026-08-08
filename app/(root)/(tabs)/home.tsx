@@ -20,11 +20,15 @@ import FlatListItemMenu from "@/components/FlatListItemMenu";
 import MapViewControls from "@/components/MapViewControls";
 import NextStopCard from "@/components/NextStopCard";
 import { useIsFocused } from "@react-navigation/native";
+import { useSubscriptionStore } from "@/store/subscriptionStore";
+import { Alert } from "react-native";
+import { router } from "expo-router";
 
 export default function Home() {
   const home = useHomeLogic();
   const clearActiveTrip = useTripStore((state) => state.clearActiveTrip);
   const isFocused = useIsFocused();
+  const hasFullAccess = useSubscriptionStore((state) => state.hasFullAccess);
 
   return (
     <ErrorBoundary
@@ -198,15 +202,42 @@ export default function Home() {
                                   variant="outline"
                                   size="md"
                                   action="primary"
-                                  className="flex-1 border-2 border-brand-500 rounded-md h-12"
-                                  onPress={home.handleReorganize}
+                                  className={`flex-1 rounded-md h-12 ${
+                                    hasFullAccess
+                                      ? "border-2 border-brand-500"
+                                      : "border-2 border-background-700 opacity-50"
+                                  }`}
+                                  onPress={
+                                    hasFullAccess
+                                      ? home.handleReorganize
+                                      : () =>
+                                          Alert.alert(
+                                            "Plan required",
+                                            "Route optimization needs an active plan. Renew from your profile to use it again.",
+                                            [
+                                              {
+                                                text: "Not now",
+                                                style: "cancel",
+                                              },
+                                              {
+                                                text: "Go to Profile",
+                                                onPress: () =>
+                                                  router.push(
+                                                    "/(root)/profile",
+                                                  ),
+                                              },
+                                            ],
+                                          )
+                                  }
                                 >
                                   <ButtonIcon
                                     as={RepeatIcon}
                                     size="lg"
-                                    className="mr-2 text-brand-500"
+                                    className={`mr-2 ${hasFullAccess ? "text-brand-500" : "text-background-500"}`}
                                   />
-                                  <ButtonText className="text-brand-500 font-medium">
+                                  <ButtonText
+                                    className={`font-medium ${hasFullAccess ? "text-brand-500" : "text-background-500"}`}
+                                  >
                                     Reorganize Stops
                                   </ButtonText>
                                 </Button>

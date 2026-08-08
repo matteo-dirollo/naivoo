@@ -15,8 +15,7 @@ const SKIP_PAYWALL = process.env.EXPO_PUBLIC_SKIP_PAYWALL === "true";
 export default function AppLayout() {
   const { user, isLoaded } = useUser();
   const { fetchActiveTrip } = useTripStore();
-  const { status, hasAccess, isLoading, fetchSubscriptionStatus } =
-    useSubscriptionStore();
+  const { status, isLoading, fetchSubscriptionStatus } = useSubscriptionStore();
 
   useEffect(() => {
     const load = async () => {
@@ -33,7 +32,12 @@ export default function AppLayout() {
     return null;
   }
 
-  if (user?.id && !hasAccess && !isLoading && !SKIP_PAYWALL) {
+  // Only block users who have NEVER subscribed. Anyone who's trialed,
+  // paid, then lapsed (past_due/canceled) keeps app access — they just
+  // lose route optimization, handled per-screen via hasFullAccess.
+  const neverSubscribed = status === "none";
+
+  if (user?.id && neverSubscribed && !isLoading && !SKIP_PAYWALL) {
     return <Redirect href="/(subscription)/paywall" />;
   }
 

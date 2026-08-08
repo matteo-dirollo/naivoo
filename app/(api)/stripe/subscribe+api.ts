@@ -22,25 +22,53 @@ export async function POST(request: Request) {
 
     const sql = neon(process.env.DATABASE_URL!);
 
-    // Make the newly-collected card the default so it's charged
-    // automatically when the trial ends.
     await stripe.customers.update(customerId, {
       invoice_settings: { default_payment_method: paymentMethodId },
     });
+
+    // ── Trial eligibility ────────────────────────────────────────────
+    // A) has this user (by our own record, independent of Stripe state)
+    //    already had a trial before?
+    const customerRows = await sql`
+      SELECT trial_used FROM stripe_customers WHERE user_id = ${userId};
+    `;
+    const userAlreadyTrialed = customerRows[0]?.trial_used ?? false;
+
+    // B) has this exact card been used for a trial before, by ANY user?
+    const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+    const fingerprint = paymentMethod.card?.fingerprint ?? null;
+
+    let cardAlreadyTrialed = false;
+    let cardUsedByDifferentUser = false;
+
+    if (fingerprint) {
+      const fpRows = await sql`
+        SELECT user_id FROM stripe_trial_card_fingerprints
+        WHERE card_fingerprint = ${fingerprint};
+      `;
+      if (fpRows.length > 0) {
+        cardAlreadyTrialed = true;
+        cardUsedByDifferentUser = fpRows[0].user_id !== userId;
+      }
+    }
+
+    const trialEligible = !userAlreadyTrialed && !cardAlreadyTrialed;
 
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: process.env.STRIPE_PRICE_ID }],
       default_payment_method: paymentMethodId,
-      trial_period_days: TRIAL_DAYS,
-      trial_settings: {
-        end_behavior: { missing_payment_method: "cancel" },
-      },
+      ...(trialEligible
+        ? {
+            trial_period_days: TRIAL_DAYS,
+            trial_settings: {
+              end_behavior: { missing_payment_method: "cancel" as const },
+            },
+          }
+        : {}),
       expand: ["latest_invoice"],
     });
 
-    // Billing-period dates live on the subscription item, not the
-    // subscription itself, as of this API version.
     const item = subscription.items.data[0];
     const periodStart = item?.current_period_start;
     const periodEnd = item?.current_period_end;
@@ -74,11 +102,30 @@ export async function POST(request: Request) {
                                    updated_at = CURRENT_TIMESTAMP;
     `;
 
+    if (trialEligible) {
+      await sql`
+        UPDATE stripe_customers SET trial_used = true WHERE user_id = ${userId};
+      `;
+      if (fingerprint) {
+        await sql`
+          INSERT INTO stripe_trial_card_fingerprints (card_fingerprint, user_id, stripe_customer_id)
+          VALUES (${fingerprint}, ${userId}, ${customerId})
+            ON CONFLICT (card_fingerprint) DO NOTHING;
+        `;
+      }
+    }
+
     return Response.json(
       {
         subscriptionId: subscription.id,
         status: subscription.status,
         trialEnd: subscription.trial_end,
+        trialGranted: trialEligible,
+        message: cardUsedByDifferentUser
+          ? "This payment method was already used for a free trial on another account, so this subscription starts immediately without a trial period."
+          : !trialEligible
+            ? "You've already used your free trial, so this subscription starts immediately."
+            : null,
       },
       { status: 201 },
     );

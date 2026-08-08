@@ -1,5 +1,5 @@
 // components/NavigationDrawer.tsx
-import React, { useCallback } from "react";
+import React from "react";
 import {
   Drawer,
   DrawerBackdrop,
@@ -30,11 +30,47 @@ import { useSubscriptionStore } from "@/store/subscriptionStore";
 interface NavigationDrawerProps {
   drawerId: string;
 }
+
+function formatShortDate(iso: string | null) {
+  if (!iso) return null;
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function usePlanLabel() {
+  const { status, trialEndsAt, currentPeriodEnd, cancelAtPeriodEnd } =
+    useSubscriptionStore();
+
+  switch (status) {
+    case "trialing": {
+      const end = formatShortDate(trialEndsAt);
+      return end ? `Free trial · ends ${end}` : "Free trial";
+    }
+    case "active": {
+      if (cancelAtPeriodEnd) {
+        const end = formatShortDate(currentPeriodEnd);
+        return end ? `Naivoo Pro · ends ${end}` : "Naivoo Pro · ending soon";
+      }
+      const renew = formatShortDate(currentPeriodEnd);
+      return renew ? `Naivoo Pro · renews ${renew}` : "Naivoo Pro";
+    }
+    case "past_due":
+      return "Payment failed — update your card";
+    case "canceled":
+      return "Plan expired";
+    default:
+      return "Free plan";
+  }
+}
+
 export function NavigationDrawer({ drawerId }: NavigationDrawerProps) {
   const isDrawerOpen = useDrawerStore((state) => state.isDrawerOpen(drawerId));
   const setDrawerOpen = useDrawerStore((state) => state.setDrawerOpen);
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const email = user?.primaryEmailAddress?.emailAddress;
+  const planLabel = usePlanLabel();
 
   const { signOut } = useClerk();
   const router = useRouter();
@@ -89,9 +125,7 @@ export function NavigationDrawer({ drawerId }: NavigationDrawerProps) {
                 <Heading className="text-xl font-bold text-white mt-2 text-left">
                   {email}
                 </Heading>
-                <Text className="text-sm text-primary-100">
-                  Subscription Plan: Free/Paid
-                </Text>
+                <Text className="text-sm text-primary-100">{planLabel}</Text>
               </VStack>
             </Pressable>
 
