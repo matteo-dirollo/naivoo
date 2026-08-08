@@ -5,7 +5,7 @@ import {
   RenderItemParams,
 } from "react-native-draggable-flatlist";
 import { DraggableListProps, TripMarker } from "@/types/type";
-import { Grip, MapPinHouse, Lock, RefreshCw } from "lucide-react-native";
+import { Grip, MapPinHouse, Lock, RefreshCw, Route } from "lucide-react-native";
 import { useMemo, useRef } from "react";
 import { useTripStore, useUserLocationStore } from "@/store";
 import FlatListItemMenu from "@/components/FlatListItemMenu";
@@ -22,7 +22,7 @@ export const DraggableList = ({
   onDragEndGlobal,
 }: DraggableListProps) => {
   const { height: windowHeight } = useWindowDimensions();
-  const { activeTrip, setReturnToStart } = useTripStore();
+  const { activeTrip, setReturnToStart, setAvoidHighways } = useTripStore();
   const { currentUserLocation } = useUserLocationStore();
   const { userLocation, draggableStops } = useMemo(() => {
     const user = stops.find((stop) => stop.isUserLocation);
@@ -36,6 +36,17 @@ export const DraggableList = ({
       await setReturnToStart(value, currentUserLocation ?? undefined);
     } catch (error) {
       console.error("Failed to toggle round trip:", error);
+    }
+  };
+
+  // Switch is labeled "Use Highways" — ON means highways are allowed
+  // (avoid_highways: false), OFF means the route avoids them
+  // (avoid_highways: true). So we flip the value before persisting.
+  const handleToggleAvoidHighways = async (useHighways: boolean) => {
+    try {
+      await setAvoidHighways(!useHighways, currentUserLocation ?? undefined);
+    } catch (error) {
+      console.error("Failed to toggle avoid highways:", error);
     }
   };
 
@@ -156,6 +167,21 @@ export const DraggableList = ({
           <Switch
             value={activeTrip?.return_to_start ?? false}
             onToggle={handleToggleReturnTrip}
+            size="sm"
+          />
+        </View>
+        <View className="flex-row justify-center items-center min-w-[16] min-h-[8] mx-4 gap-8">
+          <Route
+            color="#fff"
+            strokeWidth={1}
+            className="text-background-300 w-6 h-6"
+          />
+          <Text className="text-background-300 flex-1 font-normal">
+            Use Highways
+          </Text>
+          <Switch
+            value={!(activeTrip?.avoid_highways ?? false)}
+            onToggle={handleToggleAvoidHighways}
             size="sm"
           />
         </View>

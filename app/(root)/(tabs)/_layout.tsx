@@ -42,23 +42,23 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="trips"
-        options={{
-          title: "Trips",
-          headerShown: false,
-          tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,
-        }}
-      />
+      {/*<Tabs.Screen*/}
+      {/*  name="trips"*/}
+      {/*  options={{*/}
+      {/*    title: "Trips",*/}
+      {/*    headerShown: false,*/}
+      {/*    tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,*/}
+      {/*  }}*/}
+      {/*/>*/}
 
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          headerShown: false,
-          tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,
-        }}
-      />
+      {/*<Tabs.Screen*/}
+      {/*  name="profile"*/}
+      {/*  options={{*/}
+      {/*    title: "Profile",*/}
+      {/*    headerShown: false,*/}
+      {/*    tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,*/}
+      {/*  }}*/}
+      {/*/>*/}
     </Tabs>
   );
 }

@@ -74,32 +74,50 @@ export const generateMarkersFromData = (
   }));
 };
 
-export const getDirectionsForTrip = async (
-  markers: TripMarker[],
-  returnToStart: boolean,
-  currentLocation?: Coordinates,
-) => {
-  if (!directionsAPI || markers.length < 1) return null;
+type DirectionsResult = {
+  polyline: string;
+  detailedPoints: { latitude: number; longitude: number }[];
+  // Final visiting order of stop_ids, origin excluded, in the order the
+  // route actually travels them (destination stop included, as the last
+  // entry). Callers should use THIS instead of raw waypoint_order indices —
+  // waypoint_order alone doesn't tell you where the fixed destination sits.
+  optimized_order: string[];
+  legs: {
+    distance_m: number;
+    duration_s: number;
+    start_address: string;
+    end_address: string;
+  }[];
+};
 
-  const nonUserStops = markers.filter((s) => !s.isUserLocation);
-  if (nonUserStops.length < 1) return null;
+/**
+ * Calls the Directions API for a single fixed origin/destination pair,
+ * optimizing the order of any waypoints in between. Returns null on
+ * failure so callers can skip/ignore this candidate.
+ */
+async function fetchOptimizedRoute(
+  originStr: string,
+  destinationStr: string,
+  waypointStops: TripMarker[],
+  destinationStopId: string | null,
+  avoidHighways: boolean,
+): Promise<DirectionsResult | null> {
+  const waypointsParam =
+    waypointStops.length > 0
+      ? `&waypoints=optimize:true|${waypointStops
+          .map((m) => `${m.location.latitude},${m.location.longitude}`)
+          .join("|")}`
+      : "";
 
-  const originLocation = currentLocation ?? nonUserStops[0].location;
-  const originStr = `${originLocation.latitude},${originLocation.longitude}`;
-  const destinationStr = returnToStart ? originStr : originStr;
-
-  const waypointsStr = nonUserStops
-    .map((m) => `${m.location.latitude},${m.location.longitude}`)
-    .join("|");
+  const avoidParam = avoidHighways ? `&avoid=highways` : "";
 
   const url =
     `https://maps.googleapis.com/maps/api/directions/json` +
     `?origin=${originStr}` +
     `&destination=${destinationStr}` +
-    `&waypoints=optimize:true|${waypointsStr}` +
+    waypointsParam +
+    avoidParam +
     `&key=${directionsAPI}`;
-
-  console.log("[getDirectionsForTrip] url:", url);
 
   try {
     const response = await fetch(url);
@@ -111,21 +129,23 @@ export const getDirectionsForTrip = async (
     }
 
     const route = json.routes[0];
-    console.log(
-      "[getDirectionsForTrip] waypoint_order from Google:",
-      route.waypoint_order,
-    );
-
-    // Use per-step polylines for road-accurate rendering instead of
-    // the lossy overview_polyline
     const detailedPolylinePoints = extractDetailedPolyline(route.legs);
 
+    // waypoint_order is a list of indices into the *waypoints we sent*
+    // (never including origin/destination). Map those back to stop_ids,
+    // then append the fixed destination (if any) as the final stop.
+    const waypointOrderIndices: number[] = route.waypoint_order ?? [];
+    const orderedWaypointIds = waypointOrderIndices.map(
+      (i) => waypointStops[i]?.stop_id,
+    );
+    const optimized_order = destinationStopId
+      ? [...orderedWaypointIds, destinationStopId]
+      : orderedWaypointIds;
+
     return {
-      // Keep a dummy encoded string for callers that pass it to decodePolyline —
-      // we return the already-decoded points separately as detailedPoints
       polyline: route.overview_polyline.points,
       detailedPoints: detailedPolylinePoints,
-      optimized_order: route.waypoint_order ?? [],
+      optimized_order,
       legs: route.legs.map((leg: any) => ({
         distance_m: leg.distance.value,
         duration_s: leg.duration.value,
@@ -137,6 +157,83 @@ export const getDirectionsForTrip = async (
     console.error("Error fetching directions:", err);
     return null;
   }
+}
+
+export const getDirectionsForTrip = async (
+  markers: TripMarker[],
+  returnToStart: boolean,
+  currentLocation?: Coordinates,
+  avoidHighways: boolean = false,
+): Promise<DirectionsResult | null> => {
+  if (!directionsAPI || markers.length < 1) return null;
+
+  const nonUserStops = markers.filter((s) => !s.isUserLocation);
+  if (nonUserStops.length < 1) return null;
+
+  const originLocation = currentLocation ?? nonUserStops[0].location;
+  const originStr = `${originLocation.latitude},${originLocation.longitude}`;
+
+  // ── Round trip: closed loop back to the starting point ──────────────
+  // Destination = origin. All stops are optimizable waypoints — Google
+  // finds the shortest loop that visits every stop and returns home.
+  if (returnToStart) {
+    return fetchOptimizedRoute(
+      originStr,
+      originStr,
+      nonUserStops,
+      null,
+      avoidHighways,
+    );
+  }
+
+  // ── One-way: let Google decide which stop should be last ────────────
+  // The Directions API only optimizes the order of waypoints between a
+  // FIXED origin and destination — it never chooses the destination for
+  // you. To get the true shortest open path, we try each stop in turn as
+  // the fixed destination (with the rest as optimizable waypoints) and
+  // keep whichever candidate produces the shortest total distance.
+  if (nonUserStops.length === 1) {
+    const only = nonUserStops[0];
+    const destStr = `${only.location.latitude},${only.location.longitude}`;
+    return fetchOptimizedRoute(
+      originStr,
+      destStr,
+      [],
+      only.stop_id,
+      avoidHighways,
+    );
+  }
+
+  let bestResult: DirectionsResult | null = null;
+  let bestDistance = Infinity;
+
+  for (const candidate of nonUserStops) {
+    const destStr = `${candidate.location.latitude},${candidate.location.longitude}`;
+    const remainingWaypoints = nonUserStops.filter(
+      (s) => s.stop_id !== candidate.stop_id,
+    );
+
+    const result = await fetchOptimizedRoute(
+      originStr,
+      destStr,
+      remainingWaypoints,
+      candidate.stop_id,
+      avoidHighways,
+    );
+    if (!result) continue;
+
+    const totalDistance = result.legs.reduce(
+      (sum, leg) => sum + leg.distance_m,
+      0,
+    );
+
+    if (totalDistance < bestDistance) {
+      bestDistance = totalDistance;
+      bestResult = result;
+    }
+  }
+
+  return bestResult;
 };
 
 export const calculateRegion = ({

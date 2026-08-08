@@ -58,6 +58,7 @@ declare interface Trip {
   stops: TripMarker[];
 
   return_to_start: boolean;
+  avoid_highways: boolean;
 
   optimized_order: string[];
 
@@ -136,7 +137,7 @@ declare interface DraggableListProps {
 
 export interface UserLocationStore {
   currentUserLocation: Coordinates | null;
-  setCurrentUserLocation: (location: Coordinates) => void;
+  setCurrentUserLocation: (location: Coordinates | null) => void;
 }
 
 export interface TripStore {
@@ -158,6 +159,10 @@ export interface TripStore {
   updateTrip: (trip_id: string, updated: Partial<Trip>) => Promise<void>;
   setReturnToStart: (
     returnToStart: boolean,
+    currentLocation?: Coordinates,
+  ) => Promise<void>;
+  setAvoidHighways: (
+    avoidHighways: boolean,
     currentLocation?: Coordinates,
   ) => Promise<void>;
   deleteTrip: (trip_id: string) => Promise<void>;
@@ -209,4 +214,34 @@ export interface NavigationStore {
   goToPrevStop: () => void;
   markCurrentStopDone: (stops: TripMarker[]) => void;
   skipCurrentStop: (stops: TripMarker[]) => void;
+}
+
+export type SubscriptionStatus =
+  | "unknown" // not yet fetched
+  | "none" // signed in, never subscribed
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "canceled";
+
+export interface StripeCustomer {
+  user_id: string;
+  stripe_customer_id: string;
+  created_at: string;
+}
+
+export interface Subscription {
+  stripe_subscription_id: string;
+  user_id: string;
+  stripe_customer_id: string;
+  stripe_price_id: string;
+  status: SubscriptionStatus;
+  trial_start: string | null;
+  trial_end: string | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  default_payment_method_id: string | null;
+  created_at: string;
+  updated_at: string;
 }

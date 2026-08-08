@@ -73,6 +73,13 @@ export default {
           },
         },
       ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          merchantIdentifier: "merchant.com.naivoo.app",
+          enableGooglePay: false,
+        },
+      ],
       "expo-secure-store",
       "expo-web-browser",
     ],

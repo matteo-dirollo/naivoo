@@ -268,6 +268,41 @@ export const useTripStore = create<TripStore>((set, get) => ({
     }
   },
 
+  setAvoidHighways: async (
+    avoidHighways: boolean,
+    currentLocation?: Coordinates,
+  ) => {
+    const trip = get().activeTrip;
+    if (!trip) return;
+
+    const previousValue = trip.avoid_highways;
+
+    set({
+      activeTrip: { ...trip, avoid_highways: avoidHighways },
+    });
+
+    try {
+      await api.put(`/trip/${trip.trip_id}`, {
+        avoid_highways: avoidHighways,
+      });
+    } catch (error: any) {
+      console.error("Failed to update avoid_highways:", error);
+      set((state) => ({
+        activeTrip: state.activeTrip
+          ? { ...state.activeTrip, avoid_highways: previousValue }
+          : null,
+      }));
+      throw error;
+    }
+
+    const nonUserStops = (get().activeTrip?.stops ?? []).filter(
+      (s) => !s.isUserLocation,
+    );
+    if (nonUserStops.length > 0 && currentLocation) {
+      await get().optimizeRoute(currentLocation);
+    }
+  },
+
   deleteTrip: async (trip_id: string) => {
     try {
       await api.delete(`/trip/${trip_id}`);
@@ -574,6 +609,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
         nonUserStops,
         trip.return_to_start ?? false,
         currentLocation,
+        trip.avoid_highways ?? false,
       );
       if (result?.polyline) {
         // Use persist so stops are always assembled in one place
@@ -627,36 +663,24 @@ export const useTripStore = create<TripStore>((set, get) => ({
     // All stops are passed as waypoints to Google (no fixed destination),
     // so waypoint_order indexes into the full stops array.
     const applyOptimizedOrder = (
-      order: number[],
+      order: string[], // was number[] — optimized_order is stop_id strings
       stops: TripMarker[],
     ): TripMarker[] => {
-      console.log(
-        "[applyOptimizedOrder] order:",
-        order,
-        "stops.length:",
-        stops.length,
-        "ids:",
-        stops.map((s) => s.stop_id),
-      );
       if (!order?.length) {
-        console.log("[applyOptimizedOrder] no order — returning stops as-is");
         return stops;
       }
 
+      const byId = new Map(stops.map((s) => [s.stop_id, s]));
+
       const reordered = order
-        .map((i) => stops[i])
+        .map((id) => byId.get(id))
         .filter((s): s is TripMarker => s != null);
 
       // Safety: append any stops Google didn't mention
       const seenIds = new Set(reordered.map((s) => s.stop_id));
       const missed = stops.filter((s) => !seenIds.has(s.stop_id));
 
-      const result = [...reordered, ...missed];
-      console.log(
-        "[applyOptimizedOrder] result ids:",
-        result.map((s) => s.stop_id),
-      );
-      return result;
+      return [...reordered, ...missed];
     };
 
     // ── All stops locked — respect exact order, draw polyline only ──
@@ -665,6 +689,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
         orderedStops,
         trip.return_to_start ?? false,
         currentLocation,
+        trip.avoid_highways ?? false,
       );
       if (!result) return;
       await persist(
@@ -682,6 +707,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
         orderedStops,
         trip.return_to_start ?? false,
         currentLocation,
+        trip.avoid_highways ?? false,
       );
       console.log(
         "[optimizeRoute] directions result:",
@@ -824,6 +850,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
           markersForApi,
           false,
           run.origin,
+          trip.avoid_highways ?? false,
         );
         if (!segResult?.optimized_order?.length) return segStops;
 
@@ -855,6 +882,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       finalStops,
       trip.return_to_start ?? false,
       currentLocation,
+      trip.avoid_highways ?? false,
     );
     if (!fullResult) return;
     await persist(

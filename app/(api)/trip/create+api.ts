@@ -12,8 +12,15 @@ export async function POST(request: Request) {
     const body = (await request.json()) as Trip & {
       stops?: Omit<TripMarker, "trip_id">[];
     };
-    const { name, trip_id, user_id, start_location, return_to_start, stops } =
-      body;
+    const {
+      name,
+      trip_id,
+      user_id,
+      start_location,
+      return_to_start,
+      avoid_highways,
+      stops,
+    } = body;
 
     if (!user_id || !start_location) {
       return Response.json(
@@ -85,6 +92,7 @@ export async function POST(request: Request) {
         user_id,
         start_location,
         return_to_start,
+        avoid_highways,
         active_trip
       ) VALUES (
                  ${name},
@@ -92,6 +100,7 @@ export async function POST(request: Request) {
                  ${user_id},
                  ${JSON.stringify(start_location)},
                  ${return_to_start ?? false},
+                 ${avoid_highways ?? false},
                  true
                )
         RETURNING *;
@@ -129,7 +138,7 @@ export async function POST(request: Request) {
             expected_distance,
             isuserlocation
           ) VALUES ${placeholders}
-          RETURNING
+            RETURNING
             stop_id,
             trip_id,
             location,

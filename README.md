@@ -57,13 +57,12 @@ Commands to start the project:
    ```bash
    eas build --platform android --profile development
    ```
-eas build --platform android --profile development 
 
 2. Run the project after installing it on your device:
 
    ```bash  
-   
-npx expo start --tunnel --dev-client --clear
+
+$env:EXPO_TUNNEL_SUBDOMAIN="naivoo-test"; npx expo start --tunnel --dev-client --clear
 
     ```
 

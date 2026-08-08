@@ -42,7 +42,7 @@ const GoogleTextInput = forwardRef(
           listViewDisplayed={listViewDisplayed}
           keyboardShouldPersistTaps="handled"
           styles={{
-            container: { flex: 1, zIndex: 1000 },
+            container: { flex: 1, zIndex: 1000, width: "100%" },
             textInputContainer: {
               alignItems: "center",
               justifyContent: "center",
@@ -50,6 +50,7 @@ const GoogleTextInput = forwardRef(
               marginHorizontal: 5,
               position: "relative",
               zIndex: 1000,
+              width: "100%",
             },
             textInput: {
               backgroundColor: textInputBackgroundColor
@@ -60,7 +61,7 @@ const GoogleTextInput = forwardRef(
               marginTop: 2,
               marginHorizontal: 5,
               width: "100%",
-              height: "auto",
+              height: 36,
               borderRadius: 10,
               color: "white",
             },
@@ -102,6 +103,7 @@ const GoogleTextInput = forwardRef(
               longitude: details?.geometry.location.lng!,
               address: addressStr,
             });
+            setListViewDisplayed(false);
             googlePlacesRef.current?.clear();
           }}
           query={{
@@ -109,11 +111,11 @@ const GoogleTextInput = forwardRef(
             language: "en",
           }}
           renderLeftButton={() => (
-            <View className="justify-center items-center w-6 h-6 mr-2">
+            <View className="justify-center items-center mx-1">
               <Image
                 alt="search icon"
                 source={icon ? icon : icons.search}
-                className="w-6 h-6 ml-5"
+                className="w-6 h-6"
                 resizeMode="contain"
               />
             </View>
@@ -130,12 +132,12 @@ const GoogleTextInput = forwardRef(
                 onTextInputFocus?.();
               }, 10);
             },
-            onBlur: () => {
-              // Close list on blur
-              setTimeout(() => {
-                setListViewDisplayed(false);
-              }, 150);
-            },
+            // onBlur: () => {
+            //   // Close list on blur
+            //   setTimeout(() => {
+            //     setListViewDisplayed(false);
+            //   }, 800);
+            // },
           }}
         />
       </View>

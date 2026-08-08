@@ -196,6 +196,7 @@ export const useHomeLogic = () => {
       nonUserStops,
       activeTrip?.return_to_start ?? false,
       currentUserLocation,
+      activeTrip?.avoid_highways ?? false,
     ).then((result) => {
       if (result?.detailedPoints && result.detailedPoints.length > 0) {
         // Use the high-res per-step decoded points directly
@@ -204,7 +205,12 @@ export const useHomeLogic = () => {
         setRouteCoords([]);
       }
     });
-  }, [activeTrip?.stops, activeTrip?.return_to_start, currentUserLocation]);
+  }, [
+    activeTrip?.stops,
+    activeTrip?.return_to_start,
+    activeTrip?.avoid_highways,
+    currentUserLocation,
+  ]);
 
   const handleAddStop = async ({
     latitude,

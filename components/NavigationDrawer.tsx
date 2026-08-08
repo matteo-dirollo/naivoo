@@ -1,5 +1,5 @@
 // components/NavigationDrawer.tsx
-import React from "react";
+import React, { useCallback } from "react";
 import {
   Drawer,
   DrawerBackdrop,
@@ -8,9 +8,9 @@ import {
   DrawerBody,
   DrawerFooter,
 } from "@/components/ui/drawer";
-import { useDrawerStore } from "@/store";
+import { useDrawerStore, useTripStore, useUserLocationStore } from "@/store";
 import TripsHistory from "@/components/TripsHistory";
-import { useUser } from "@clerk/clerk-expo";
+import { useClerk, useUser } from "@clerk/clerk-expo";
 
 import {
   Avatar,
@@ -21,6 +21,12 @@ import {
 import { Heading } from "@/components/ui/heading";
 import { VStack } from "@/components/ui/vstack";
 import { Text } from "@/components/ui/text";
+import { HStack } from "@/components/ui/hstack";
+import { LogOut } from "lucide-react-native";
+import { Pressable } from "react-native";
+import { useRouter } from "expo-router";
+import { useSubscriptionStore } from "@/store/subscriptionStore";
+
 interface NavigationDrawerProps {
   drawerId: string;
 }
@@ -29,6 +35,34 @@ export function NavigationDrawer({ drawerId }: NavigationDrawerProps) {
   const setDrawerOpen = useDrawerStore((state) => state.setDrawerOpen);
   const { user, isLoaded } = useUser();
   const email = user?.primaryEmailAddress?.emailAddress;
+
+  const { signOut } = useClerk();
+  const router = useRouter();
+
+  const clearAllTrips = useTripStore((state) => state.clearAllTrips);
+  const clearSubscription = useSubscriptionStore(
+    (state) => state.clearSubscription,
+  );
+  const setCurrentUserLocation = useUserLocationStore(
+    (state) => state.setCurrentUserLocation,
+  );
+
+  const handleSignOut = async () => {
+    try {
+      clearAllTrips();
+      clearSubscription();
+      setCurrentUserLocation(null);
+      await signOut();
+      router.replace("/sign-in");
+    } catch (err) {
+      console.error("Sign out error:", err);
+    }
+  };
+
+  const handleOpenProfile = () => {
+    setDrawerOpen(drawerId, false);
+    router.push("/(root)/profile");
+  };
 
   return (
     <Drawer
@@ -40,20 +74,35 @@ export function NavigationDrawer({ drawerId }: NavigationDrawerProps) {
       <DrawerBackdrop />
       <DrawerContent className="bg-background-950 border-background-900 p-6">
         <DrawerHeader className="border-b border-background-800 pb-3 mt-8">
-          <VStack className={"items-start"}>
-            <Avatar size="md">
-              <AvatarFallbackText>{user?.firstName}</AvatarFallbackText>
-              <AvatarImage source={{ uri: `${user?.imageUrl}` }} />
-              <AvatarBadge />
-            </Avatar>
+          <HStack>
+            <Pressable
+              onPress={handleOpenProfile}
+              className="active:opacity-60"
+            >
+              <VStack className={"items-start"}>
+                <Avatar size="md">
+                  <AvatarFallbackText>{user?.firstName}</AvatarFallbackText>
+                  <AvatarImage source={{ uri: `${user?.imageUrl}` }} />
+                  <AvatarBadge />
+                </Avatar>
 
-            <Heading className="text-xl font-bold text-white mt-2 text-left">
-              {email}
-            </Heading>
-            <Text className="text-sm text-primary-100">
-              Subscription Plan: Free/Paid
-            </Text>
-          </VStack>
+                <Heading className="text-xl font-bold text-white mt-2 text-left">
+                  {email}
+                </Heading>
+                <Text className="text-sm text-primary-100">
+                  Subscription Plan: Free/Paid
+                </Text>
+              </VStack>
+            </Pressable>
+
+            <Pressable onPress={handleSignOut} className="active:opacity-60">
+              <LogOut
+                color="#fff"
+                strokeWidth={1}
+                className="text-background-300 w-6 h-6 mt-4"
+              />
+            </Pressable>
+          </HStack>
         </DrawerHeader>
 
         <DrawerBody className="py-4">

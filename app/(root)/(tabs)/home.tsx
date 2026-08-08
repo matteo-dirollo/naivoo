@@ -19,18 +19,16 @@ import { FastForward, RepeatIcon, X } from "lucide-react-native";
 import FlatListItemMenu from "@/components/FlatListItemMenu";
 import MapViewControls from "@/components/MapViewControls";
 import NextStopCard from "@/components/NextStopCard";
+import { useIsFocused } from "@react-navigation/native";
 
 export default function Home() {
   const home = useHomeLogic();
   const clearActiveTrip = useTripStore((state) => state.clearActiveTrip);
+  const isFocused = useIsFocused();
 
   return (
     <ErrorBoundary
       onReset={() => {
-        // A crash in this screen is most often caused by a malformed
-        // activeTrip (bad stop data, corrupt location, etc). Clearing it
-        // locally lets the user recover without needing to touch the DB —
-        // fetchActiveTrip will just re-fetch on next mount/navigation.
         clearActiveTrip();
       }}
     >
@@ -90,134 +88,162 @@ export default function Home() {
             )}
           </View>
 
-          <Portal>
-            <BottomSheet
-              ref={home.sheetRef}
-              index={1}
-              onChange={home.setSnapIndex}
-              snapPoints={
-                home.isNavigating ? home.navSnapPoints : home.snapPoints
-              }
-              enablePanDownToClose={false}
-              enableContentPanningGesture={
-                !home.isDragging && !home.isInputFocused
-              }
-              activeOffsetY={[-10, 10]}
-              backgroundStyle={{ backgroundColor: "#141714" }}
-              handleIndicatorStyle={{ backgroundColor: "#849081" }}
-            >
-              {home.isNavigating ? (
-                /* ── NAVIGATION MODE ── */
-                <View style={{ flex: 1 }}>
-                  {home.currentStop ? (
-                    <NextStopCard
-                      stop={home.currentStop}
-                      stopNumber={home.currentStopIndex + 1}
-                      totalStops={home.nonUserStops.length}
-                      onMarkDone={home.handleMarkDone}
-                      onSkip={home.handleSkip}
-                      onPrev={home.goToPrevStop}
-                      onNext={home.advanceToNextStop}
-                      canGoPrev={home.currentStopIndex > 0}
-                      canGoNext={
-                        home.currentStopIndex < home.nonUserStops.length - 1
-                      }
-                      isLastStop={home.isLastStop}
-                      onFinishTrip={home.handleFinishTrip}
-                    />
-                  ) : null}
-                </View>
-              ) : (
-                /* ── PLANNING MODE ── */
-                <GestureDetector gesture={home.contentGesture}>
-                  <BottomSheetScrollView style={{ flex: 1 }}>
-                    <View className="flex-1 pb-6 space-y-4">
-                      {home.hasActiveTrip ? (
-                        <View className="flex w-full mx-auto space-x-5">
-                          <View
-                            className="w-full relative"
-                            onLayout={(event) => {
-                              const { height } = event.nativeEvent.layout;
-                              home.setSearchInputHeight(height);
-                            }}
-                          >
-                            <View className="flex flex-row items-center w-full px-6">
-                              <View className="flex flex-1 justify-center px-3">
-                                <GoogleTextInput
-                                  ref={home.googleInputRef}
-                                  icon={icons.search}
-                                  containerStyle={"bg-[#1F1F1F] rounded-xl"}
-                                  handlePress={home.handleAddStop}
-                                  onTextInputFocus={home.onPressInputField}
-                                  textInputBackgroundColor="#1F1F1F"
-                                />
-                              </View>
-                              <View className="flex-shrink-0 absolute right-0 top-1/2 -translate-y-1/2 px-3">
-                                <FlatListItemMenu
-                                  menuId="google-text-input"
-                                  menuType="google-input"
-                                />
+          {/*
+            Bottom sheet only renders (into the Portal overlay) while this
+            screen is actually focused. @gorhom/bottom-sheet's Portal paints
+            into a top-level overlay layer, and Stack navigator keeps Home
+            mounted when you navigate to another screen — without this
+            guard, the sheet stays visible on top of whatever screen you
+            navigate to next (e.g. profile).
+          */}
+          {isFocused && (
+            <Portal>
+              <BottomSheet
+                ref={home.sheetRef}
+                index={1}
+                onChange={home.setSnapIndex}
+                snapPoints={
+                  home.isNavigating ? home.navSnapPoints : home.snapPoints
+                }
+                enablePanDownToClose={false}
+                enableContentPanningGesture={
+                  !home.isDragging && !home.isInputFocused
+                }
+                activeOffsetY={[-10, 10]}
+                backgroundStyle={{ backgroundColor: "#141714" }}
+                handleIndicatorStyle={{ backgroundColor: "#849081" }}
+              >
+                {home.isNavigating ? (
+                  /* ── NAVIGATION MODE ── */
+                  <View style={{ flex: 1 }}>
+                    {home.currentStop ? (
+                      <NextStopCard
+                        stop={home.currentStop}
+                        stopNumber={home.currentStopIndex + 1}
+                        totalStops={home.nonUserStops.length}
+                        onMarkDone={home.handleMarkDone}
+                        onSkip={home.handleSkip}
+                        onPrev={home.goToPrevStop}
+                        onNext={home.advanceToNextStop}
+                        canGoPrev={home.currentStopIndex > 0}
+                        canGoNext={
+                          home.currentStopIndex < home.nonUserStops.length - 1
+                        }
+                        isLastStop={home.isLastStop}
+                        onFinishTrip={home.handleFinishTrip}
+                      />
+                    ) : null}
+                  </View>
+                ) : (
+                  /* ── PLANNING MODE ── */
+                  <View className="flex-1 relative">
+                    {home.hasActiveTrip && (
+                      <View
+                        className="w-full absolute top-0 left-0 right-0 z-10"
+                        onLayout={(event) => {
+                          const { height } = event.nativeEvent.layout;
+                          home.setSearchInputHeight(height);
+                        }}
+                      >
+                        <View
+                          className="flex flex-row items-center w-full px-2"
+                          style={{ height: 48 }}
+                        >
+                          <View className="flex flex-1 justify-center pr-2">
+                            <GoogleTextInput
+                              ref={home.googleInputRef}
+                              icon={icons.search}
+                              containerStyle={"bg-[#1F1F1F] rounded-xl"}
+                              handlePress={home.handleAddStop}
+                              onTextInputFocus={home.onPressInputField}
+                              textInputBackgroundColor="#1F1F1F"
+                            />
+                          </View>
+                          <View className="flex-shrink-0 items-center justify-center">
+                            <FlatListItemMenu
+                              menuId="google-text-input"
+                              menuType="google-input"
+                            />
+                          </View>
+                        </View>
+                      </View>
+                    )}
+
+                    <GestureDetector gesture={home.contentGesture}>
+                      <BottomSheetScrollView
+                        style={{ flex: 1 }}
+                        contentContainerStyle={{
+                          paddingTop: home.hasActiveTrip
+                            ? home.searchInputHeight
+                            : 0,
+                        }}
+                      >
+                        <View className="flex-1 pb-6 space-y-4">
+                          {home.hasActiveTrip ? (
+                            <View className="flex w-full mx-auto space-x-5">
+                              <DraggableList
+                                stops={home.activeTrip?.stops || []}
+                                onReorder={home.handleManualReorder}
+                                snapIndex={home.snapIndex}
+                                snapPoints={home.snapPoints}
+                                searchInputHeight={home.searchInputHeight}
+                                onDragStart={() => home.setIsDragging(true)}
+                                onDragEndGlobal={() =>
+                                  home.setIsDragging(false)
+                                }
+                              />
+
+                              <View className="flex-row items-center gap-4 w-full px-6 mt-4">
+                                <Button
+                                  variant="outline"
+                                  size="md"
+                                  action="primary"
+                                  className="flex-1 border-2 border-brand-500 rounded-md h-12"
+                                  onPress={home.handleReorganize}
+                                >
+                                  <ButtonIcon
+                                    as={RepeatIcon}
+                                    size="lg"
+                                    className="mr-2 text-brand-500"
+                                  />
+                                  <ButtonText className="text-brand-500 font-medium">
+                                    Reorganize Stops
+                                  </ButtonText>
+                                </Button>
+
+                                <Button
+                                  variant="outline"
+                                  size="md"
+                                  action="primary"
+                                  className="flex-1 bg-brand-500 rounded-md h-12"
+                                  onPress={home.handleStartRoute}
+                                >
+                                  <ButtonIcon
+                                    as={FastForward}
+                                    size="lg"
+                                    className="mr-2"
+                                  />
+                                  <ButtonText className="text-background-900 font-medium">
+                                    Start Route
+                                  </ButtonText>
+                                </Button>
                               </View>
                             </View>
-                          </View>
-
-                          <DraggableList
-                            stops={home.activeTrip?.stops || []}
-                            onReorder={home.handleManualReorder}
-                            snapIndex={home.snapIndex}
-                            snapPoints={home.snapPoints}
-                            searchInputHeight={home.searchInputHeight}
-                            onDragStart={() => home.setIsDragging(true)}
-                            onDragEndGlobal={() => home.setIsDragging(false)}
-                          />
-
-                          <View className="flex-row items-center gap-4 w-full px-6 mt-4">
-                            <Button
-                              variant="outline"
-                              size="md"
-                              action="primary"
-                              className="flex-1 border-2 border-brand-500 rounded-md h-12"
-                              onPress={home.handleReorganize}
-                            >
-                              <ButtonIcon
-                                as={RepeatIcon}
-                                size="lg"
-                                className="mr-2 text-brand-500"
+                          ) : (
+                            <View className="flex-1 justify-center items-center">
+                              <NameTripField
+                                handlePress={home.onPressInputField}
                               />
-                              <ButtonText className="text-brand-500 font-medium">
-                                Reorganize Stops
-                              </ButtonText>
-                            </Button>
-
-                            <Button
-                              variant="outline"
-                              size="md"
-                              action="primary"
-                              className="flex-1 bg-brand-500 rounded-md h-12"
-                              onPress={home.handleStartRoute}
-                            >
-                              <ButtonIcon
-                                as={FastForward}
-                                size="lg"
-                                className="mr-2"
-                              />
-                              <ButtonText className="text-background-900 font-medium">
-                                Start Route
-                              </ButtonText>
-                            </Button>
-                          </View>
+                            </View>
+                          )}
                         </View>
-                      ) : (
-                        <View className="flex-1 justify-center items-center">
-                          <NameTripField handlePress={home.onPressInputField} />
-                        </View>
-                      )}
-                    </View>
-                  </BottomSheetScrollView>
-                </GestureDetector>
-              )}
-            </BottomSheet>
-          </Portal>
+                      </BottomSheetScrollView>
+                    </GestureDetector>
+                  </View>
+                )}
+              </BottomSheet>
+            </Portal>
+          )}
         </View>
       </Pressable>
     </ErrorBoundary>

@@ -30,6 +30,9 @@ import noResult from "@/assets/images/no-result.png";
 import onboarding1 from "@/assets/images/onboarding1.png";
 import onboarding2 from "@/assets/images/onboarding2.png";
 import onboarding3 from "@/assets/images/onboarding3.png";
+import slide1 from "@/assets/images/slide1.png";
+import slide2 from "@/assets/images/slide2.png";
+import slide3 from "@/assets/images/slide3.png";
 import signUpCar from "@/assets/images/signup-car.png";
 
 export const googlePlacesApiKey = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
@@ -43,6 +46,9 @@ export const images = {
   check,
   noResult,
   message,
+  slide1,
+  slide2,
+  slide3,
 };
 
 export const icons = {
@@ -76,24 +82,21 @@ export const icons = {
 export const onboarding = [
   {
     id: 1,
-    title: "Plan smarter routes in seconds",
-    description:
-      "Add your stops and let the app calculate the most efficient path for you.",
-    image: images.onboarding1,
+    title: "Your personal shortcut generator\n" + "every single trip.",
+    description: "",
+    image: images.slide1,
   },
   {
     id: 2,
-    title: "Organize all your destinations easily",
-    description:
-      "Save multiple addresses, reorder them, and keep everything in one place.",
-    image: images.onboarding2,
+    title: "Turn chaotic drops\n" + "into clean routes.",
+    description: "",
+    image: images.slide2,
   },
   {
     id: 3,
-    title: "Navigate with confidence",
-    description:
-      "Get the optimal trip and start your journey without wasting time.",
-    image: images.onboarding3,
+    title: "On time, every time\n" + "because your\n" + "schedule matters.",
+    description: "",
+    image: images.slide3,
   },
 ];
 
@@ -127,3 +130,5 @@ export const darkMapStyle = [
     stylers: [{ color: "#0D0F0C" }],
   },
 ];
+
+export const TRIAL_DAYS = 15;
